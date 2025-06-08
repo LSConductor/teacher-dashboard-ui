@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@ui/layout/tabs";
 import { Button } from "@ui/button";
 import BasicInfoTab from "@/components/program-editor/BasicInfoTab";
 import OutcomesTab from "@/components/program-editor/OutcomesTab";
