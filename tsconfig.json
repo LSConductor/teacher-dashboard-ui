@@ -17,7 +17,6 @@
     "baseUrl": ".",
     "paths": {
       "@components/*": ["components/*"],
-      "@components/ui/*": ["components/ui/form/*"],
       "@ui/*": ["components/ui/*"],
       "@/*": ["*"]
     }
