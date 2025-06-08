@@ -1,15 +1,18 @@
-// ✅ Server Component — do NOT add 'use client'
+// app/editor/[slug]/page.tsx
+// ✅ Server Component — DO NOT add "use client"
 
-import EditorClientPage from "@/components/program-editor/EditorClientPage";
+import dynamic from "next/dynamic";
 
-interface Props {
+const ProgramEditClientWrapper = dynamic(
+  () => import("@/components/program-editor/ProgramEditClientWrapper"),
+  { ssr: false }
+);
+
+interface PageProps {
   params: { slug: string };
 }
 
-export default async function EditorPage({ params }: Props) {
-  // ✅ Await required to safely access `params.slug` in App Router
-  await Promise.resolve(); // can replace with real fetch later if needed
-
-  const slug = params.slug;
-  return <EditorClientPage slug={slug} />;
+export default function Page({ params }: PageProps) {
+  // Server‐safe; delegates everything to the client wrapper
+  return <ProgramEditClientWrapper programSlug={params.slug} />;
 }
