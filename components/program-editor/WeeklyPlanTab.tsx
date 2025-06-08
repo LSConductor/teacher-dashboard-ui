@@ -1,6 +1,9 @@
-'use client'; // This directive is crucial for client-side components
+"use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Input } from "@ui/form/input";
+import { Textarea } from "@ui/form/textarea";
+import { Label } from "@ui/form/label";
 
 interface WeekData {
   week: string;
@@ -9,7 +12,7 @@ interface WeekData {
 }
 
 interface Props {
-  program: any; // Consider a more specific ProgramData type if possible
+  program: any; // Consider a more specific type if possible
   handleFieldChange: (field: string, value: any) => void;
 }
 
@@ -24,9 +27,7 @@ export default function WeeklyPlanTab({ program, handleFieldChange }: Props) {
   const [openWeek, setOpenWeek] = useState<number | null>(null);
 
   /**
-   * Effect hook to initialize the `weeks` state when the `program` prop becomes available.
-   * It populates `weeks` with existing data from `program.attributes.weekly_plans`
-   * or defaults to an array of 6 empty week objects if no existing data is found.
+   * Initialize weeks from program or default to 6 weeks
    */
   useEffect(() => {
     if (program?.attributes) {
@@ -37,38 +38,31 @@ export default function WeeklyPlanTab({ program, handleFieldChange }: Props) {
           : Array(6).fill({ ...initialWeekData })
       );
     }
-  }, [program]); // Dependency on `program` ensures this runs when program data loads
+  }, [program]);
 
   /**
-   * Effect hook to automatically save changes to `weekly_plans` whenever the `weeks` state updates.
-   * This propagates the changes up to the parent component (`ProgramEditClientWrapper`)
-   * which then handles the actual API save to Strapi.
+   * Persist changes when weeks state updates
    */
   useEffect(() => {
-    if (weeks.length > 0) { // Only attempt to save if weeks array has been initialized
+    if (weeks.length > 0) {
       handleFieldChange("weekly_plans", weeks);
     }
-  }, [weeks, handleFieldChange]); // Dependencies ensure this runs when `weeks` or `handleFieldChange` changes
+  }, [weeks, handleFieldChange]);
 
-  /**
-   * Updates a specific field within a week's data.
-   * @param index The index of the week to update.
-   * @param field The field name (e.g., "week", "focus", "activities").
-   * @param value The new value for the field.
-   */
-  const updateWeek = (index: number, field: keyof WeekData, value: string) => {
-    const updated = weeks.map((week, i) =>
-      i === index ? { ...week, [field]: value } : week
+  const updateWeek = (
+    index: number,
+    field: keyof WeekData,
+    value: string
+  ) => {
+    setWeeks((prev) =>
+      prev.map((w, i) => (i === index ? { ...w, [field]: value } : w))
     );
-    setWeeks(updated);
   };
 
-  // Display a loading message if program attributes are not yet available
   if (!program?.attributes) {
     return <p className="text-gray-500 text-sm">Loading weekly plan...</p>;
   }
 
-  // Render the weekly plan editor
   return (
     <div className="space-y-6">
       <p className="text-gray-700 text-sm">Click a week to expand and edit.</p>
@@ -82,23 +76,25 @@ export default function WeeklyPlanTab({ program, handleFieldChange }: Props) {
               Week {i + 1}
             </button>
 
-            {/* Render input fields only when the week is open */}
             {openWeek === i && (
               <div className="space-y-3">
-                <input
-                  className="w-full border rounded px-3 py-2"
+                <Label htmlFor={`week-name-${i}`}>Week Name</Label>
+                <Input
+                  id={`week-name-${i}`}
                   placeholder="Week name"
                   value={week.week}
                   onChange={(e) => updateWeek(i, "week", e.target.value)}
                 />
-                <input
-                  className="w-full border rounded px-3 py-2"
+                <Label htmlFor={`week-focus-${i}`}>Focus</Label>
+                <Input
+                  id={`week-focus-${i}`}
                   placeholder="Focus"
                   value={week.focus}
                   onChange={(e) => updateWeek(i, "focus", e.target.value)}
                 />
-                <textarea
-                  className="w-full border rounded px-3 py-2"
+                <Label htmlFor={`week-activities-${i}`}>Activities</Label>
+                <Textarea
+                  id={`week-activities-${i}`}
                   placeholder="Activities"
                   value={week.activities}
                   onChange={(e) => updateWeek(i, "activities", e.target.value)}

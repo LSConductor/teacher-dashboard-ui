@@ -1,18 +1,21 @@
 "use client";
 
 import React from "react";
-import { Input } from "@/ui/form/input";
+import { Input } from "@ui/form/input";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/ui/form/select";
-import { Label } from "@/ui/form/label";
+} from "@ui/form/select";
+import { Label } from "@ui/form/label";
 import dynamic from "next/dynamic";
 
-const CKEditor = dynamic(() => import("@/ui/editor/CKEditorClientWrapper"), { ssr: false });
+const CKEditor = dynamic(
+  () => import("@ui/editor/CKEditorClientWrapper"),
+  { ssr: false }
+);
 
 interface Props {
   program: any;

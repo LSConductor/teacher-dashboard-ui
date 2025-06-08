@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import CKEditorWrapper from "@/ui/editor/CKEditorWrapper";
-import { Button } from "@/ui/button";
-import { Input } from "@/ui/form/input";
-import jsPDF from "jspdf";
+import CKEditorWrapper from "@ui/editor/CKEditorWrapper";
+import { Button } from "@ui/button";
+import { Input }  from "@ui/form/input";
+import jsPDF       from "jspdf";
 
 interface Props {
   program: any;

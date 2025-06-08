@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useMemo } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/layout/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/layout/tabs";
 import BasicInfoTab from "./BasicInfoTab";
 import OutcomesTab from "./OutcomesTab";
 import WeeklyPlanTab from "./WeeklyPlanTab";
 import AssessmentTab from "./AssessmentTab";
 import ReportTab from "./ReportTab";
-import { Button } from "@/components/ui/button";
+import { Button } from "@ui/button";
 
 interface ProgramData {
   id: number;

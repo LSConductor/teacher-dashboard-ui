@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Label } from "@/ui/form/label";
-import { Textarea } from "@/ui/form/textarea";
-import { Input } from "@/ui/form/input";
-import { Button } from "@/ui/button";
-import dynamic from "next/dynamic";
+import { Label }     from "@ui/form/label";
+import { Textarea }  from "@ui/form/textarea";
+import { Input }     from "@ui/form/input";
+import { Button }    from "@ui/button";
+import dynamic       from "next/dynamic";
 
 const CKEditor = dynamic(
-  () => import("@/ui/editor/CKEditorClientWrapper"),
+  () => import("@ui/editor/CKEditorClientWrapper"),
   { ssr: false }
 );
 

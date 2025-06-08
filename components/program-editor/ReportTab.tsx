@@ -3,17 +3,17 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 
-const CKEditorWrapper = dynamic(() => import("@/ui/editor/CKEditorClientWrapper"), {
+const CKEditorWrapper = dynamic(() => import("@ui/editor/CKEditorClientWrapper"), {
   ssr: false,
 });
-import { Input } from "@/ui/form/input";
-import { Button } from "@/ui/button";
+import { Input } from "@ui/form/input";
+import { Button } from "@ui/button";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "@/ui/layout/accordion";
+} from "@ui/layout/accordion";
 import jsPDF from "jspdf";
 
 interface Props {
