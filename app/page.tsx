@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/ui/layout/card';
+import { Input } from '@ui/form/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+} from '@ui/form/select';
+import { Button } from '@ui/button';
 import Link from 'next/link';
 
 export default function TeacherProgramDashboard() {
