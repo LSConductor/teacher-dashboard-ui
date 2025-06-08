@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "next",
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "rules": {
+    // Allow `any` everywhere for now
+    "@typescript-eslint/no-explicit-any": "off",
+    // Allow empty interfaces (LabelProps, TextareaProps)
+    "@typescript-eslint/no-empty-interface": "off",
+    // Warn instead of error for unused variables (you’ll see them, but build won’t fail)
+    "@typescript-eslint/no-unused-vars": ["warn", { 
+      "vars": "all", 
+      "args": "after-used", 
+      "ignoreRestSiblings": true 
+    }],
+    // Relax strict hook deps so you don’t have to specify every function reference
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
