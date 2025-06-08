@@ -14,13 +14,21 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+
+    // **Our additions:**
+    "noImplicitAny": false,                // allow untyped params
     "baseUrl": ".",
     "paths": {
       "@components/*": ["components/*"],
-      "@ui/*": ["components/ui/*"],
-      "@/*": ["*"]
+      "@ui/*":         ["components/ui/*"],
+      "@/*":           ["*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",                 // pick up generated App Router types
+    "**/*.ts",
+    "**/*.tsx"
+  ],
   "exclude": ["node_modules"]
 }
