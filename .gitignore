@@ -45,6 +45,7 @@ environment variables
 .env.test.local
 .env.production.local
 .env.local
+!casual-hr/.env.example
 
 Vercel
 
