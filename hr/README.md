@@ -23,4 +23,6 @@ php artisan serve
 
 On DigitalOcean, use managed Postgres in Sydney (`syd1`) and set `DB_CONNECTION=pgsql` in the environment. Keep the database on the private network. Change the demo password before any shared use.
 
+This app is not a Vercel project. The Next.js builder at the repository root is the app Vercel builds. Casual HR has no `package.json`.
+
 Bookings store a link and id for a program that still lives on the primary portal. This app does not read or write that builder.
