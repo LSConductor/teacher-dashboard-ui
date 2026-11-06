@@ -56,6 +56,8 @@ php artisan serve
 
 Open `http://127.0.0.1:8000`. The seeded password for every local account is `local-staff`.
 
+Pages load `public/casual.css` directly. This directory has no `package.json` and no Vite build, so it is not a second frontend for the root Next.js app. Do not deploy Casual HR on Vercel.
+
 | Email | Role |
 | --- | --- |
 | morgan.hale@example.test | Conductor |
