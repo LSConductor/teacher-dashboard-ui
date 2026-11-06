@@ -5,10 +5,13 @@ namespace Tests\Feature;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
 use App\Models\InductionModule;
+use App\Models\Invite;
 use App\Models\Person;
 use App\Models\School;
 use App\Models\User;
 use App\Models\WwccCheck;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Database\Seeders\HrSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -264,5 +267,106 @@ class CasualHrTest extends TestCase
         $this->assertStringContainsString('S3 sample', $body);
         $this->assertStringNotContainsString($sam->wwcc->wwcc_number, $body);
         $this->assertStringNotContainsString('1990-04-12', $body);
+    }
+
+    public function test_start_gate_keeps_an_invite_on_the_link(): void
+    {
+        $this->get('/start')
+            ->assertOk()
+            ->assertSee('Casual Induction')
+            ->assertSee('invite codes stay on the link')
+            ->assertSee('Log in to portal');
+
+        $hr = User::where('email', 'hr@living.school')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+        $this->actingAs($hr)
+            ->post(route('casuals.invite', $pat))
+            ->assertSessionHas('invite_url');
+
+        $url = session('invite_url');
+        $this->assertStringContainsString('/start?code=', $url);
+
+        Auth::logout();
+        $this->flushSession();
+
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('Pat Red')
+            ->assertSee('Open my induction')
+            ->assertSee('invite codes stay on the link')
+            ->assertDontSee($pat->wwcc->wwcc_number);
+
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        $this->post('/invites/'.$query['code'], [
+            'password' => 'day-one-pass',
+            'password_confirmation' => 'day-one-pass',
+        ])->assertRedirect(route('start'));
+
+        $this->get(route('start'))
+            ->assertOk()
+            ->assertSee('Do not book')
+            ->assertSee('Open day-one')
+            ->assertSee('(02) 5632 1218')
+            ->assertSee('Day-one')
+            ->assertDontSee($pat->wwcc->wwcc_number);
+    }
+
+    public function test_casual_start_desk_is_the_return_home(): void
+    {
+        $samUser = User::where('email', 'sam.green@example.com')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+
+        $this->actingAs($samUser)
+            ->get('/start')
+            ->assertOk()
+            ->assertSee('Clear to teach')
+            ->assertSee('Open day-one')
+            ->assertSee('Open the plan')
+            ->assertSee('Call Ngulingah Director')
+            ->assertSee('Later induction')
+            ->assertDontSee($sam->wwcc->wwcc_number)
+            ->assertDontSee('1990-04-12');
+
+        $this->actingAs($samUser)
+            ->get('/casual-induction')
+            ->assertRedirect('/start');
+
+        $director = User::where('email', 'director@living.school')->first();
+        $this->actingAs($director)
+            ->get('/start')
+            ->assertOk()
+            ->assertSee('Casual list')
+            ->assertDontSee($sam->wwcc->wwcc_number);
+    }
+
+    public function test_a_used_invite_does_not_open_the_password_form(): void
+    {
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+        $token = Str::random(40);
+        Invite::create([
+            'school_id' => $pat->school_id,
+            'person_id' => $pat->id,
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addDay(),
+            'used_at' => now(),
+        ]);
+
+        $this->get(route('start', ['code' => $token]))
+            ->assertOk()
+            ->assertSee('already been used')
+            ->assertDontSee('Open my induction');
+
+        $this->get('/invites/old-link')
+            ->assertRedirect('/start?code=old-link');
+    }
+
+    public function test_login_returns_to_the_start_link(): void
+    {
+        $this->get('/start?code=come-back');
+
+        $this->post('/login', [
+            'email' => 'hr@living.school',
+            'password' => 'living-demo',
+        ])->assertRedirect('/start?code=come-back');
     }
 }

@@ -113,6 +113,9 @@
     </div>
     @auth
         <nav>
+            @if(auth()->user()->role === 'casual')
+                <a href="{{ route('start') }}">Start</a>
+            @endif
             <a href="{{ route('casuals.index') }}">List</a>
             @if(in_array(auth()->user()->role, ['hr','conductor']))
                 <a href="{{ route('templates.index') }}">Contracts</a>

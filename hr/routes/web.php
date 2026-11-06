@@ -10,12 +10,19 @@ use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\StartController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('casuals.index')
-        : view('auth.login');
+    if (auth()->check() && auth()->user()->role !== 'casual') {
+        return redirect()->route('casuals.index');
+    }
+
+    return app(StartController::class)->show(request(), app(\App\Services\ClearToTeach::class));
+});
+Route::get('/start', [StartController::class, 'show'])->name('start');
+Route::get('/casual-induction', function () {
+    return redirect()->route('start', request()->query());
 });
 
 Route::middleware('guest')->group(function () {

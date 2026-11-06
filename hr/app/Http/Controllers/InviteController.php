@@ -24,15 +24,12 @@ class InviteController extends Controller
         ]);
         Audit::record('invite.created', $person);
 
-        return back()->with('invite_url', route('invites.accept', $token));
+        return back()->with('invite_url', route('start', ['code' => $token]));
     }
 
     public function accept(string $token)
     {
-        $invite = Invite::query()->where('token_hash', hash('sha256', $token))->firstOrFail();
-        abort_if($invite->used_at || $invite->expires_at->isPast(), 410);
-
-        return view('invites.accept', ['invite' => $invite, 'token' => $token]);
+        return redirect()->route('start', ['code' => $token]);
     }
 
     public function complete(Request $request, string $token)
@@ -67,6 +64,6 @@ class InviteController extends Controller
         Audit::record('invite.accepted', $person);
         Auth::login($user);
 
-        return redirect()->route('casuals.show', $person);
+        return redirect()->route('start');
     }
 }

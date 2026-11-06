@@ -1,8 +1,13 @@
 @extends('layouts.app')
 @section('content')
-<p class="muted"><a href="{{ route('casuals.pack', $person) }}">Day-one induction</a></p>
 <h1>{{ $module->title }}</h1>
-<p class="muted">{{ $module->phase === 'day_one' ? 'Day one' : 'Later' }} · version {{ $module->version }} · {{ $person->preferred_name }}</p>
+<p class="muted">
+    <a class="link" href="{{ route('casuals.pack', $person) }}">Day-one pack</a>
+    @if(auth()->user()->role === 'casual')
+        · <a class="link" href="{{ route('start') }}">Start</a>
+    @endif
+    · {{ $module->phase === 'day_one' ? 'Day one' : 'Later' }} · version {{ $module->version }} · {{ $person->preferred_name }}
+</p>
 <div class="card">
     <pre style="white-space:pre-wrap; font-family:Georgia, serif; font-size:18px; line-height:1.45;">{{ $module->body }}</pre>
 </div>

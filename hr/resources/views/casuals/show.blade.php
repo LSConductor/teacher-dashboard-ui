@@ -129,7 +129,7 @@
 </div>
 
 <div class="card">
-    <h2>Contracts</h2>
+    <h2 id="contracts">Contracts</h2>
     @foreach($person->contracts as $contract)
         <p>{{ $contract->template->name }} · version {{ $contract->version }} · {{ $contract->status }}
             @if($contract->status === 'sent' && (auth()->user()->role === 'casual' || $canEdit))
