@@ -2,6 +2,7 @@
 @section('content')
 <h1>Contract templates</h1>
 <p class="muted">Edit a draft, then publish it. A sent contract keeps the version that was published.</p>
+<p><a class="button" href="{{ route('templates.complete') }}">Complete a contract</a></p>
 <p><a href="{{ route('export.nesa') }}">Download the NESA check (no WWCC number, no date of birth)</a></p>
 <table>
     <thead><tr><th>Name</th><th>Version</th><th>Status</th><th></th></tr></thead>

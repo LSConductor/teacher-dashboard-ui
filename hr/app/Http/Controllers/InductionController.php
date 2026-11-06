@@ -9,6 +9,39 @@ use Illuminate\Http\Request;
 
 class InductionController extends Controller
 {
+    public function pack(Person $person)
+    {
+        $this->authorize('view', $person);
+        $modules = InductionModule::query()
+            ->where('school_id', $person->school_id)
+            ->orderBy('sort')
+            ->get();
+        $person->load('acknowledgements');
+
+        return view('induction.pack', [
+            'person' => $person,
+            'modules' => $modules,
+        ]);
+    }
+
+    public function show(Person $person, InductionModule $module)
+    {
+        $this->authorize('view', $person);
+        abort_unless($module->school_id === $person->school_id, 404);
+        $done = $person->acknowledgements()
+            ->where('module_id', $module->id)
+            ->where('module_version', '>=', $module->version)
+            ->first();
+
+        return view('induction.show', [
+            'person' => $person,
+            'module' => $module,
+            'done' => $done,
+            'canAcknowledge' => in_array(request()->user()->role, ['hr', 'conductor'], true)
+                || (int) request()->user()->person_id === (int) $person->id,
+        ]);
+    }
+
     public function acknowledge(Request $request, Person $person, InductionModule $module)
     {
         $this->authorize('view', $person);
@@ -22,7 +55,11 @@ class InductionController extends Controller
             ['module_id' => $module->id, 'module_version' => $module->version],
             ['school_id' => $person->school_id, 'acknowledged_at' => now()]
         );
-        Audit::record('induction.acknowledged', $person, ['module' => $module->title, 'version' => $module->version]);
+        Audit::record('induction.acknowledged', $person, [
+            'module' => $module->title,
+            'version' => $module->version,
+            'name' => $person->preferred_name,
+        ]);
 
         return back();
     }

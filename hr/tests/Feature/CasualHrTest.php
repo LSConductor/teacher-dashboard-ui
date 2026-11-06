@@ -64,7 +64,7 @@ class CasualHrTest extends TestCase
             ])
             ->assertSessionHasErrors('booking');
 
-        $this->assertDatabaseCount('bookings', 0);
+        $this->assertDatabaseMissing('bookings', ['person_id' => $pat->id]);
     }
 
     public function test_amber_needs_a_conductor_note(): void
@@ -204,5 +204,64 @@ class CasualHrTest extends TestCase
             'email' => 'hr@living.school',
             'password' => 'living-demo',
         ])->assertRedirect(route('casuals.index'));
+    }
+
+    public function test_director_list_has_contact_actions_and_hides_wwcc(): void
+    {
+        $director = User::where('email', 'director@living.school')->first();
+        $number = Person::where('email', 'sam.green@example.com')->first()->wwcc->wwcc_number;
+
+        $this->actingAs($director)
+            ->get(route('casuals.index'))
+            ->assertOk()
+            ->assertSee('Call')
+            ->assertSee('Email')
+            ->assertSee('Open the plan')
+            ->assertDontSee($number)
+            ->assertDontSee('date of birth');
+    }
+
+    public function test_day_one_page_names_the_acknowledgement(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+        $module = InductionModule::where('title', 'Child protection and mandatory reporting')->first();
+
+        $this->actingAs($hr)
+            ->get(route('casuals.induction', [$pat, $module]))
+            ->assertOk()
+            ->assertSee('mandatory reporter')
+            ->assertSee('I, Pat Red, acknowledge this page');
+    }
+
+    public function test_director_cannot_open_the_wwcc_form(): void
+    {
+        $director = User::where('email', 'director@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+
+        $this->actingAs($director)
+            ->get(route('casuals.forms.wwcc', $sam))
+            ->assertForbidden();
+    }
+
+    public function test_completed_day_booking_does_not_merge_wwcc(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $template = ContractTemplate::where('key', 'day-booking')->where('status', 'published')->first();
+
+        $this->actingAs($hr)
+            ->post(route('templates.complete.send'), [
+                'person_id' => $sam->id,
+                'template_id' => $template->id,
+                'class_label' => 'S3 sample',
+                'booked_on' => now()->toDateString(),
+            ])
+            ->assertRedirect();
+
+        $body = Contract::query()->where('person_id', $sam->id)->where('template_id', $template->id)->first()->merged_body;
+        $this->assertStringContainsString('S3 sample', $body);
+        $this->assertStringNotContainsString($sam->wwcc->wwcc_number, $body);
+        $this->assertStringNotContainsString('1990-04-12', $body);
     }
 }

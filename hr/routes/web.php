@@ -5,6 +5,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CasualController;
 use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\FormController;
 use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\RecordController;
@@ -29,6 +30,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/casuals', [CasualController::class, 'index'])->name('casuals.index');
     Route::get('/casuals/new', [CasualController::class, 'create'])->name('casuals.create')->middleware('role:hr,conductor');
     Route::post('/casuals', [CasualController::class, 'store'])->name('casuals.store')->middleware('role:hr,conductor');
+    Route::get('/casuals/{person}/induction', [InductionController::class, 'pack'])->name('casuals.pack');
+    Route::get('/casuals/{person}/induction/{module}', [InductionController::class, 'show'])->name('casuals.induction');
+    Route::get('/casuals/{person}/forms', [FormController::class, 'index'])->name('casuals.forms');
+    Route::get('/casuals/{person}/forms/personal', [FormController::class, 'personal'])->name('casuals.forms.personal');
+    Route::post('/casuals/{person}/forms/personal', [FormController::class, 'savePersonal']);
+    Route::get('/casuals/{person}/forms/accreditation', [FormController::class, 'accreditation'])->name('casuals.forms.accreditation');
+    Route::get('/casuals/{person}/forms/wwcc', [FormController::class, 'wwcc'])->name('casuals.forms.wwcc');
+    Route::get('/casuals/{person}/forms/availability', [FormController::class, 'availability'])->name('casuals.forms.availability');
+    Route::post('/casuals/{person}/forms/availability', [FormController::class, 'saveAvailability']);
     Route::get('/casuals/{person}', [CasualController::class, 'show'])->name('casuals.show');
     Route::put('/casuals/{person}', [CasualController::class, 'update'])->name('casuals.update');
 
@@ -45,6 +55,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/casuals/{person}/invite', [InviteController::class, 'store'])->name('casuals.invite');
 
     Route::middleware('role:hr,conductor')->group(function () {
+        Route::get('/templates/complete', [ContractController::class, 'complete'])->name('templates.complete');
+        Route::post('/templates/complete', [ContractController::class, 'send'])->name('templates.complete.send');
         Route::get('/templates', [ContractController::class, 'index'])->name('templates.index');
         Route::get('/templates/{template}', [ContractController::class, 'edit'])->name('templates.edit');
         Route::put('/templates/{template}', [ContractController::class, 'update'])->name('templates.update');

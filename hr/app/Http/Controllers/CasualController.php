@@ -16,7 +16,7 @@ class CasualController extends Controller
         $user = $request->user();
         $query = Person::query()
             ->where('school_id', $user->school_id)
-            ->with(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements', 'mentor']);
+            ->with(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements', 'mentor', 'bookings']);
 
         if ($user->role === 'casual') {
             $query->where('id', $user->person_id);
@@ -42,13 +42,29 @@ class CasualController extends Controller
             return $person;
         });
 
+        $sensitive = in_array($user->role, ['hr', 'conductor'], true);
+
         if ($request->filled('light')) {
             $people = $people->where('gate.light', $request->string('light'))->values();
+        }
+        if ($sensitive && $request->filled('focus')) {
+            $focus = $request->string('focus')->toString();
+            $people = $people->filter(function (Person $person) use ($focus) {
+                return match ($focus) {
+                    'induction' => collect($person->gate['reasons'])->contains(
+                        fn ($reason) => str_contains($reason['text'], 'Day-one')
+                    ),
+                    'alignment' => ($person->accreditation->alignment ?? 'pending') === 'pending',
+                    'provisional' => in_array($person->accreditation->level ?? '', ['conditional', 'provisional'], true),
+                    'expiring' => $person->wwcc?->expires_on && $person->wwcc->expires_on->lte(now()->addDays(30)),
+                    default => true,
+                };
+            })->values();
         }
 
         return view('casuals.index', [
             'people' => $people,
-            'sensitive' => in_array($user->role, ['hr', 'conductor'], true),
+            'sensitive' => $sensitive,
         ]);
     }
 
@@ -67,7 +83,7 @@ class CasualController extends Controller
         $person->wwcc()->create(['school_id' => $person->school_id, 'outcome' => 'pending']);
         Audit::record('person.created', $person);
 
-        return redirect()->route('casuals.show', $person);
+        return redirect()->route('casuals.forms', $person);
     }
 
     public function show(Person $person, ClearToTeach $gate)

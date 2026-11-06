@@ -22,6 +22,68 @@ class ContractController extends Controller
         return view('templates.index', compact('templates'));
     }
 
+    public function complete(Request $request, ContractMerger $merger)
+    {
+        $schoolId = $request->user()->school_id;
+        $people = Person::query()->where('school_id', $schoolId)->orderBy('preferred_name')->get();
+        $templates = ContractTemplate::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'published')
+            ->orderBy('name')
+            ->get();
+        $person = $request->filled('person_id')
+            ? $people->firstWhere('id', (int) $request->input('person_id'))
+            : null;
+        $template = $request->filled('template_id')
+            ? $templates->firstWhere('id', (int) $request->input('template_id'))
+            : null;
+        $preview = ($person && $template)
+            ? $merger->merge($template, $person, array_filter([
+                'class_label' => $request->input('class_label'),
+                'booked_on' => $request->input('booked_on'),
+                'start_time' => $request->input('start_time'),
+                'finish_time' => $request->input('finish_time'),
+            ]))
+            : null;
+
+        return view('templates.complete', compact('people', 'templates', 'person', 'template', 'preview'));
+    }
+
+    public function send(Request $request, ContractMerger $merger)
+    {
+        $data = $request->validate([
+            'person_id' => ['required', 'integer'],
+            'template_id' => ['required', 'integer'],
+            'class_label' => ['nullable', 'string', 'max:120'],
+            'booked_on' => ['nullable', 'date'],
+            'start_time' => ['nullable', 'string', 'max:20'],
+            'finish_time' => ['nullable', 'string', 'max:20'],
+        ]);
+        $person = Person::query()->where('school_id', $request->user()->school_id)->findOrFail($data['person_id']);
+        $this->authorize('updateFile', $person);
+        $template = ContractTemplate::query()
+            ->where('school_id', $person->school_id)
+            ->where('status', 'published')
+            ->findOrFail($data['template_id']);
+        $contract = Contract::create([
+            'school_id' => $person->school_id,
+            'person_id' => $person->id,
+            'template_id' => $template->id,
+            'version' => $template->version,
+            'merged_body' => $merger->merge($template, $person, array_filter([
+                'class_label' => $data['class_label'] ?? null,
+                'booked_on' => $data['booked_on'] ?? null,
+                'start_time' => $data['start_time'] ?? null,
+                'finish_time' => $data['finish_time'] ?? null,
+            ])),
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
+        Audit::record('contract.sent', $contract, ['template' => $template->key, 'version' => $template->version]);
+
+        return redirect()->route('casuals.show', $person);
+    }
+
     public function edit(ContractTemplate $template)
     {
         abort_unless($template->school_id === auth()->user()->school_id, 404);
@@ -74,7 +136,12 @@ class ContractController extends Controller
             'person_id' => $person->id,
             'template_id' => $template->id,
             'version' => $template->version,
-            'merged_body' => $merger->merge($template, $person),
+            'merged_body' => $merger->merge($template, $person, array_filter([
+                'class_label' => $request->input('class_label'),
+                'booked_on' => $request->input('booked_on'),
+                'start_time' => $request->input('start_time'),
+                'finish_time' => $request->input('finish_time'),
+            ])),
             'status' => 'sent',
             'sent_at' => now(),
         ]);

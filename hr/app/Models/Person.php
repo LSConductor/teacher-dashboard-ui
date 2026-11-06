@@ -14,13 +14,15 @@ class Person extends Model
         'postal_address', 'emergency_contact_name', 'emergency_contact_mobile',
         'neighbourhood', 'stages', 'status', 'right_to_work', 'heard_about',
         'adjustments', 'payroll_declaration_lodged', 'blocked', 'block_reason',
-        'mentor_user_id',
+        'mentor_user_id', 'available_days', 'earliest_start', 'neighbourhoods',
     ];
 
     protected function casts(): array
     {
         return [
             'stages' => 'array',
+            'available_days' => 'array',
+            'neighbourhoods' => 'array',
             'payroll_declaration_lodged' => 'boolean',
             'blocked' => 'boolean',
         ];

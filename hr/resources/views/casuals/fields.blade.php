@@ -19,6 +19,8 @@
 <input id="emergency_contact_name" name="emergency_contact_name" value="{{ old('emergency_contact_name', $person->emergency_contact_name ?? '') }}">
 <label for="emergency_contact_mobile">Emergency mobile</label>
 <input id="emergency_contact_mobile" name="emergency_contact_mobile" value="{{ old('emergency_contact_mobile', $person->emergency_contact_mobile ?? '') }}">
+<label for="heard_about">How they heard of the school</label>
+<input id="heard_about" name="heard_about" value="{{ old('heard_about', $person->heard_about ?? '') }}">
 <label for="right_to_work">Right to work</label>
 <textarea id="right_to_work" name="right_to_work">{{ old('right_to_work', $person->right_to_work ?? '') }}</textarea>
 <label for="mentor_user_id">Mentor</label>

@@ -11,7 +11,7 @@
         header { background:#fff; border-bottom:1px solid var(--line); padding:14px 22px; display:flex; justify-content:space-between; gap:16px; align-items:center; }
         header strong { letter-spacing:.04em; }
         nav a, .link { color:var(--navy); font-family: system-ui, sans-serif; font-size:14px; margin-right:14px; text-decoration:none; }
-        .wrap { max-width:1080px; margin:0 auto; padding:22px; }
+        .wrap { max-width:1200px; margin:0 auto; padding:22px; }
         .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
         h1 { font-size:32px; margin:0 0 8px; }
         h2 { font-size:20px; margin:0 0 10px; }
@@ -41,6 +41,7 @@
             <a href="{{ route('casuals.index') }}">Casuals</a>
             @if(in_array(auth()->user()->role, ['hr','conductor']))
                 <a href="{{ route('templates.index') }}">Templates</a>
+                <a href="{{ route('templates.complete') }}">Complete a contract</a>
                 <a href="{{ route('audit.index') }}">Audit</a>
                 <a href="{{ route('roadmap') }}">Later</a>
             @endif

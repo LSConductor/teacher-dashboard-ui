@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Hr\ContractPack;
+use App\Hr\InductionPack;
+use App\Models\Booking;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
 use App\Models\InductionAcknowledgement;
@@ -74,38 +77,18 @@ class HrSeeder extends Seeder
         $sort = 1;
         $modules = collect();
         foreach ($dayOne as $title) {
-            $modules->push(InductionModule::firstOrCreate(
-                ['school_id' => $school->id, 'title' => $title],
-                ['body' => $title, 'phase' => 'day_one', 'version' => 1, 'sort' => $sort]
-            ));
-            $sort++;
+            $modules->push($this->module($school->id, $title, 'day_one', $sort++));
         }
         foreach ($later as $title) {
-            $modules->push(InductionModule::firstOrCreate(
-                ['school_id' => $school->id, 'title' => $title],
-                ['body' => $title, 'phase' => 'later', 'version' => 1, 'sort' => $sort]
-            ));
-            $sort++;
+            $modules->push($this->module($school->id, $title, 'later', $sort++));
         }
 
-        $body = "Living School engages {{legal_name}} ({{preferred_name}}) as a casual teacher in {{neighbourhood}}.\nEach day is offered and accepted. NESA number {{nesa_number}}. Director {{director_name}}, {{director_mobile}}.\nDated {{today}}.";
-        $template = ContractTemplate::firstOrCreate(
-            ['school_id' => $school->id, 'key' => 'casual-pool', 'version' => 1],
-            [
-                'name' => 'Casual pool engagement',
-                'body' => $body,
-                'status' => 'published',
-                'published_at' => now(),
-            ]
-        );
-        ContractTemplate::firstOrCreate(
-            ['school_id' => $school->id, 'key' => 'casual-pool', 'version' => 2],
-            [
-                'name' => 'Casual pool engagement',
-                'body' => $template->body,
-                'status' => 'draft',
-            ]
-        );
+        ContractPack::ensure($school);
+        $template = ContractTemplate::query()
+            ->where('school_id', $school->id)
+            ->where('key', 'casual-pool')
+            ->where('version', 1)
+            ->first();
 
         $green = $this->person($school->id, 'Sam Green', 'Samantha Green', 'sam.green@example.com', 'Ngulingah', $mentor->id);
         $amber = $this->person($school->id, 'Riley Amber', 'Riley Amber', 'riley.amber@example.com', 'Ngulingah', $mentor->id);
@@ -163,6 +146,26 @@ class HrSeeder extends Seeder
             );
         }
 
+        if ($green->available_days === null) {
+            $green->update([
+                'available_days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                'earliest_start' => '8:30',
+                'neighbourhoods' => ['Ngulingah'],
+            ]);
+        }
+        Booking::firstOrCreate(
+            ['person_id' => $green->id, 'booked_on' => now()->toDateString()],
+            [
+                'school_id' => $school->id,
+                'class_label' => 'S3 sample',
+                'plan_url' => 'https://portal.living.school/',
+                'program_source' => 'wordpress',
+                'external_program_id' => 'sample-s3',
+                'light_at_booking' => 'green',
+                'created_by' => $conductor->id,
+            ]
+        );
+
         $this->user('sam.green@example.com', [
             'name' => 'Sam Green',
             'password' => $password,
@@ -199,6 +202,19 @@ class HrSeeder extends Seeder
         );
 
         return $person;
+    }
+
+    private function module(int $schoolId, string $title, string $phase, int $sort): InductionModule
+    {
+        $module = InductionModule::firstOrCreate(
+            ['school_id' => $schoolId, 'title' => $title],
+            ['body' => InductionPack::body($title), 'phase' => $phase, 'version' => 1, 'sort' => $sort]
+        );
+        if ($module->body === $title) {
+            $module->update(['body' => InductionPack::body($title)]);
+        }
+
+        return $module;
     }
 
     private function user(string $email, array $attributes): User

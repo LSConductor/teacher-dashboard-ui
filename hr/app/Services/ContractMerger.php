@@ -7,7 +7,7 @@ use App\Models\Person;
 
 class ContractMerger
 {
-    public function merge(ContractTemplate $template, Person $person): string
+    public function merge(ContractTemplate $template, Person $person, array $extra = []): string
     {
         $director = \App\Models\User::query()
             ->where('school_id', $person->school_id)
@@ -25,6 +25,11 @@ class ContractMerger
             '{{director_name}}' => $director?->name ?? 'Learning Neighbourhood Director',
             '{{director_mobile}}' => $director?->mobile ?? '',
             '{{today}}' => now()->timezone('Australia/Sydney')->toFormattedDateString(),
+            '{{class_label}}' => $extra['class_label'] ?? 'to be confirmed',
+            '{{booked_on}}' => $extra['booked_on'] ?? now()->timezone('Australia/Sydney')->toDateString(),
+            '{{start_time}}' => $extra['start_time'] ?? '9:00',
+            '{{finish_time}}' => $extra['finish_time'] ?? '3:15',
+            '{{office_phone}}' => '(02) 5632 1218',
         ];
 
         return strtr($template->body, $replacements);

@@ -2,6 +2,12 @@
 @section('content')
 <p class="muted"><a href="{{ route('casuals.index') }}">Casuals</a></p>
 <h1>{{ $person->preferred_name }} <span class="light {{ $gate['light'] }}">{{ $gate['light'] }}</span></h1>
+<p>
+    <a class="button" href="{{ route('casuals.pack', $person) }}">Day-one induction</a>
+    @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
+        <a class="button" href="{{ route('casuals.forms', $person) }}">Forms</a>
+    @endif
+</p>
 <p class="muted">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) }}</p>
 @if($person->mobile)
     <p><a class="button" href="tel:{{ $person->mobile }}">Call {{ $person->mobile }}</a> <a class="link" href="mailto:{{ $person->email }}">{{ $person->email }}</a></p>
