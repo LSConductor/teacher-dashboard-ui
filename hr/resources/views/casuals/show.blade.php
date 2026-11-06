@@ -1,17 +1,27 @@
 @extends('layouts.app')
 @section('content')
-<p class="muted"><a href="{{ route('casuals.index') }}">Casuals</a></p>
-<h1>{{ $person->preferred_name }} <span class="light {{ $gate['light'] }}">{{ $gate['light'] }}</span></h1>
-<p>
-    <a class="button" href="{{ route('casuals.pack', $person) }}">Day-one induction</a>
-    @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
-        <a class="button" href="{{ route('casuals.forms', $person) }}">Forms</a>
+<p class="muted"><a class="link" href="{{ route('casuals.index') }}">Casual list</a></p>
+@php
+    $labels = ['green' => 'Clear to teach', 'amber' => 'Needs a note', 'red' => 'Do not book'];
+    $dayOne = $modules->where('phase', 'day_one');
+    $dayDone = $person->acknowledgements->filter(function ($ack) use ($dayOne) {
+        $module = $dayOne->firstWhere('id', $ack->module_id);
+        return $module && (int) $ack->module_version >= (int) $module->version;
+    })->unique('module_id')->count();
+@endphp
+<h1>{{ $person->preferred_name }}</h1>
+<p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
+<p class="lede">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) }}</p>
+<div class="actions" style="margin-bottom:18px;">
+    @if($person->mobile)
+        <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->mobile }}</a>
     @endif
-</p>
-<p class="muted">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) }}</p>
-@if($person->mobile)
-    <p><a class="button" href="tel:{{ $person->mobile }}">Call {{ $person->mobile }}</a> <a class="link" href="mailto:{{ $person->email }}">{{ $person->email }}</a></p>
-@endif
+    <a class="button ghost" href="mailto:{{ $person->email }}">Email</a>
+    <a class="button" href="{{ route('casuals.pack', $person) }}" style="background: {{ $dayDone >= $dayOne->count() && $dayOne->count() > 0 ? '#14663d' : '#8a4b00' }}">Day-one {{ $dayDone }} of {{ $dayOne->count() }}</a>
+    @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
+        <a class="button ghost" href="{{ route('casuals.forms', $person) }}">Forms</a>
+    @endif
+</div>
 @if($person->mentor)
     <p class="muted">Mentor: {{ $person->mentor->name }} @if($person->mentor->mobile)· {{ $person->mentor->mobile }}@endif</p>
 @endif

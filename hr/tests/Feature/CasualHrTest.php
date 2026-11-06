@@ -33,9 +33,10 @@ class CasualHrTest extends TestCase
         $response->assertSee('Sam Green');
         $response->assertSee('Riley Amber');
         $response->assertSee('Pat Red');
-        $response->assertSee('>green<', false);
-        $response->assertSee('>amber<', false);
-        $response->assertSee('>red<', false);
+        $response->assertSee('Clear to teach');
+        $response->assertSee('Needs a note');
+        $response->assertSee('Do not book');
+        $response->assertSee('Day-one');
     }
 
     public function test_director_cannot_see_wwcc_number(): void

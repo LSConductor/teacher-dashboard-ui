@@ -36,8 +36,29 @@ class CasualController extends Controller
             });
         }
 
-        $people = $query->orderBy('preferred_name')->get()->map(function (Person $person) use ($gate) {
+        $dayOne = InductionModule::query()
+            ->where('school_id', $user->school_id)
+            ->where('phase', 'day_one')
+            ->get(['id', 'version']);
+        $directors = User::query()
+            ->where('school_id', $user->school_id)
+            ->where('role', 'director')
+            ->get()
+            ->keyBy('neighbourhood');
+
+        $people = $query->orderBy('preferred_name')->get()->map(function (Person $person) use ($gate, $dayOne, $directors) {
             $person->gate = $gate->assess($person);
+            $person->day_one_total = $dayOne->count();
+            $person->day_one_done = $person->acknowledgements->filter(function ($ack) use ($dayOne) {
+                $module = $dayOne->firstWhere('id', $ack->module_id);
+
+                return $module && (int) $ack->module_version >= (int) $module->version;
+            })->unique('module_id')->count();
+            $person->director_name = $directors->get($person->neighbourhood)?->name;
+            $person->today_booking = $person->bookings->first(
+                fn ($booking) => $booking->booked_on->isSameDay(now())
+            );
+            $person->last_day = $person->bookings->sortByDesc('booked_on')->first()?->booked_on;
 
             return $person;
         });
