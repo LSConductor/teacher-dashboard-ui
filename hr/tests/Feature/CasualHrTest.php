@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Contract;
+use App\Models\ContractTemplate;
+use App\Models\InductionModule;
 use App\Models\Person;
+use App\Models\School;
 use App\Models\User;
 use App\Models\WwccCheck;
 use Database\Seeders\HrSeeder;
@@ -179,5 +183,26 @@ class CasualHrTest extends TestCase
             ->assertOk()
             ->assertDontSee($number)
             ->assertSee('Samantha Green');
+    }
+
+    public function test_seeder_can_run_again_after_the_school_exists(): void
+    {
+        Contract::query()->delete();
+        ContractTemplate::query()->delete();
+
+        $this->seed(HrSeeder::class);
+        $this->seed(HrSeeder::class);
+
+        $this->assertSame(1, School::where('slug', 'living-school')->count());
+        $this->assertSame(1, User::where('email', 'hr@living.school')->count());
+        $this->assertSame(1, User::where('email', 'conductor@living.school')->count());
+        $this->assertSame(11, InductionModule::count());
+        $this->assertSame(1, ContractTemplate::where('key', 'casual-pool')->where('version', 1)->count());
+        $this->assertSame(1, ContractTemplate::where('key', 'casual-pool')->where('version', 2)->count());
+
+        $this->post('/login', [
+            'email' => 'hr@living.school',
+            'password' => 'living-demo',
+        ])->assertRedirect(route('casuals.index'));
     }
 }

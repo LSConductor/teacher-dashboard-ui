@@ -15,48 +15,42 @@ class HrSeeder extends Seeder
 {
     public function run(): void
     {
-        $school = School::create([
-            'name' => 'Living School',
-            'slug' => 'living-school',
-            'timezone' => 'Australia/Sydney',
-        ]);
+        $school = School::firstOrCreate(
+            ['slug' => 'living-school'],
+            ['name' => 'Living School', 'timezone' => 'Australia/Sydney']
+        );
 
         $password = 'living-demo';
 
-        $conductor = User::create([
+        $conductor = $this->user('conductor@living.school', [
             'name' => 'John Stewart',
-            'email' => 'conductor@living.school',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'conductor',
         ]);
-        User::create([
+        $this->user('hr@living.school', [
             'name' => 'HR Officer',
-            'email' => 'hr@living.school',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'hr',
         ]);
-        $director = User::create([
+        $director = $this->user('director@living.school', [
             'name' => 'Ngulingah Director',
-            'email' => 'director@living.school',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'director',
             'neighbourhood' => 'Ngulingah',
             'mobile' => '0400 000 100',
         ]);
-        $mentor = User::create([
+        $mentor = $this->user('mentor@living.school', [
             'name' => 'Mentor Teacher',
-            'email' => 'mentor@living.school',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'mentor',
             'mobile' => '0400 000 200',
         ]);
-        User::create([
+        $this->user('office@living.school', [
             'name' => 'Office',
-            'email' => 'office@living.school',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'office',
@@ -80,43 +74,38 @@ class HrSeeder extends Seeder
         $sort = 1;
         $modules = collect();
         foreach ($dayOne as $title) {
-            $modules->push(InductionModule::create([
-                'school_id' => $school->id,
-                'title' => $title,
-                'body' => $title,
-                'phase' => 'day_one',
-                'version' => 1,
-                'sort' => $sort++,
-            ]));
+            $modules->push(InductionModule::firstOrCreate(
+                ['school_id' => $school->id, 'title' => $title],
+                ['body' => $title, 'phase' => 'day_one', 'version' => 1, 'sort' => $sort]
+            ));
+            $sort++;
         }
         foreach ($later as $title) {
-            $modules->push(InductionModule::create([
-                'school_id' => $school->id,
-                'title' => $title,
-                'body' => $title,
-                'phase' => 'later',
-                'version' => 1,
-                'sort' => $sort++,
-            ]));
+            $modules->push(InductionModule::firstOrCreate(
+                ['school_id' => $school->id, 'title' => $title],
+                ['body' => $title, 'phase' => 'later', 'version' => 1, 'sort' => $sort]
+            ));
+            $sort++;
         }
 
-        $template = ContractTemplate::create([
-            'school_id' => $school->id,
-            'key' => 'casual-pool',
-            'name' => 'Casual pool engagement',
-            'body' => "Living School engages {{legal_name}} ({{preferred_name}}) as a casual teacher in {{neighbourhood}}.\nEach day is offered and accepted. NESA number {{nesa_number}}. Director {{director_name}}, {{director_mobile}}.\nDated {{today}}.",
-            'status' => 'published',
-            'version' => 1,
-            'published_at' => now(),
-        ]);
-        ContractTemplate::create([
-            'school_id' => $school->id,
-            'key' => 'casual-pool',
-            'name' => 'Casual pool engagement',
-            'body' => $template->body,
-            'status' => 'draft',
-            'version' => 2,
-        ]);
+        $body = "Living School engages {{legal_name}} ({{preferred_name}}) as a casual teacher in {{neighbourhood}}.\nEach day is offered and accepted. NESA number {{nesa_number}}. Director {{director_name}}, {{director_mobile}}.\nDated {{today}}.";
+        $template = ContractTemplate::firstOrCreate(
+            ['school_id' => $school->id, 'key' => 'casual-pool', 'version' => 1],
+            [
+                'name' => 'Casual pool engagement',
+                'body' => $body,
+                'status' => 'published',
+                'published_at' => now(),
+            ]
+        );
+        ContractTemplate::firstOrCreate(
+            ['school_id' => $school->id, 'key' => 'casual-pool', 'version' => 2],
+            [
+                'name' => 'Casual pool engagement',
+                'body' => $template->body,
+                'status' => 'draft',
+            ]
+        );
 
         $green = $this->person($school->id, 'Sam Green', 'Samantha Green', 'sam.green@example.com', 'Ngulingah', $mentor->id);
         $amber = $this->person($school->id, 'Riley Amber', 'Riley Amber', 'riley.amber@example.com', 'Ngulingah', $mentor->id);
@@ -145,43 +134,37 @@ class HrSeeder extends Seeder
                 'expires_on' => now()->addYear()->toDateString(),
                 'verified_by' => $conductor->id,
             ]);
-            Contract::create([
-                'school_id' => $school->id,
-                'person_id' => $person->id,
-                'template_id' => $template->id,
-                'version' => 1,
-                'merged_body' => "Signed sample engagement for {$person->legal_name}.",
-                'status' => 'signed',
-                'sent_at' => now(),
-                'signed_at' => now(),
-            ]);
+            Contract::firstOrCreate(
+                ['person_id' => $person->id, 'template_id' => $template->id],
+                [
+                    'school_id' => $school->id,
+                    'version' => 1,
+                    'merged_body' => "Signed sample engagement for {$person->legal_name}.",
+                    'status' => 'signed',
+                    'sent_at' => now(),
+                    'signed_at' => now(),
+                ]
+            );
         }
 
         $dayOneIds = $modules->where('phase', 'day_one')->pluck('id');
         foreach ([$green, $amber] as $person) {
             foreach ($dayOneIds as $moduleId) {
-                InductionAcknowledgement::create([
-                    'school_id' => $school->id,
-                    'person_id' => $person->id,
-                    'module_id' => $moduleId,
-                    'module_version' => 1,
-                    'acknowledged_at' => now(),
-                ]);
+                InductionAcknowledgement::firstOrCreate(
+                    ['person_id' => $person->id, 'module_id' => $moduleId, 'module_version' => 1],
+                    ['school_id' => $school->id, 'acknowledged_at' => now()]
+                );
             }
         }
         foreach ($modules->where('phase', 'later') as $module) {
-            InductionAcknowledgement::create([
-                'school_id' => $school->id,
-                'person_id' => $green->id,
-                'module_id' => $module->id,
-                'module_version' => 1,
-                'acknowledged_at' => now(),
-            ]);
+            InductionAcknowledgement::firstOrCreate(
+                ['person_id' => $green->id, 'module_id' => $module->id, 'module_version' => 1],
+                ['school_id' => $school->id, 'acknowledged_at' => now()]
+            );
         }
 
-        User::create([
+        $this->user('sam.green@example.com', [
             'name' => 'Sam Green',
-            'email' => 'sam.green@example.com',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'casual',
@@ -194,20 +177,32 @@ class HrSeeder extends Seeder
 
     private function person(int $schoolId, string $preferred, string $legal, string $email, string $neighbourhood, ?int $mentorId): Person
     {
-        $person = Person::create([
-            'school_id' => $schoolId,
-            'preferred_name' => $preferred,
-            'legal_name' => $legal,
-            'email' => $email,
-            'mobile' => '0400 000 010',
-            'neighbourhood' => $neighbourhood,
-            'stages' => ['S2', 'S3'],
-            'status' => 'casual_pool',
-            'mentor_user_id' => $mentorId,
-        ]);
-        $person->accreditation()->create(['school_id' => $schoolId, 'alignment' => 'pending', 'status' => 'active']);
-        $person->wwcc()->create(['school_id' => $schoolId, 'outcome' => 'pending']);
+        $person = Person::firstOrCreate(
+            ['school_id' => $schoolId, 'email' => $email],
+            [
+                'preferred_name' => $preferred,
+                'legal_name' => $legal,
+                'mobile' => '0400 000 010',
+                'neighbourhood' => $neighbourhood,
+                'stages' => ['S2', 'S3'],
+                'status' => 'casual_pool',
+                'mentor_user_id' => $mentorId,
+            ]
+        );
+        $person->accreditation()->firstOrCreate(
+            [],
+            ['school_id' => $schoolId, 'alignment' => 'pending', 'status' => 'active']
+        );
+        $person->wwcc()->firstOrCreate(
+            [],
+            ['school_id' => $schoolId, 'outcome' => 'pending']
+        );
 
         return $person;
+    }
+
+    private function user(string $email, array $attributes): User
+    {
+        return User::firstOrCreate(['email' => $email], $attributes);
     }
 }
