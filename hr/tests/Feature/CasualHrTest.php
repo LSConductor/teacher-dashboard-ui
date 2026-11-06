@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\WwccCheck;
 use Database\Seeders\HrSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CasualHrTest extends TestCase
@@ -113,6 +115,58 @@ class CasualHrTest extends TestCase
         $this->actingAs($samUser)
             ->get(route('casuals.show', $pat))
             ->assertForbidden();
+    }
+
+    public function test_index_names_fit_mysql_and_a_partial_run_can_resume(): void
+    {
+        $tables = [
+            'schools', 'users', 'people', 'accreditations', 'wwcc_checks',
+            'induction_modules', 'induction_acknowledgements', 'contract_templates',
+            'contracts', 'bookings', 'unavailabilities', 'day_notes', 'pd_entries',
+            'invites', 'audit_logs',
+        ];
+
+        foreach ($tables as $table) {
+            foreach (Schema::getIndexes($table) as $index) {
+                $this->assertLessThanOrEqual(64, strlen((string) $index['name']), $table.' '.$index['name']);
+            }
+            foreach (Schema::getForeignKeys($table) as $foreign) {
+                $this->assertLessThanOrEqual(64, strlen((string) $foreign['name']), $table.' '.$foreign['name']);
+            }
+        }
+
+        $this->assertTrue(Schema::hasIndex(
+            'induction_acknowledgements',
+            'ack_person_module_version_unique'
+        ));
+
+        foreach ([
+            'audit_logs', 'invites', 'pd_entries', 'day_notes', 'unavailabilities',
+            'bookings', 'contracts', 'contract_templates', 'induction_acknowledgements',
+        ] as $table) {
+            Schema::dropIfExists($table);
+        }
+
+        Schema::create('induction_acknowledgements', function ($table) {
+            $table->id();
+            $table->foreignId('school_id')->constrained();
+            $table->foreignId('person_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('module_id')->constrained('induction_modules')->cascadeOnDelete();
+            $table->unsignedInteger('module_version');
+            $table->timestamp('acknowledged_at');
+            $table->timestamps();
+        });
+
+        DB::table('migrations')->where('migration', 'like', '%create_hr_tables')->delete();
+
+        $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+
+        $this->assertTrue(Schema::hasTable('audit_logs'));
+        $this->assertTrue(Schema::hasTable('schools'));
+        $this->assertTrue(Schema::hasIndex(
+            'induction_acknowledgements',
+            'ack_person_module_version_unique'
+        ));
     }
 
     public function test_nesa_export_omits_wwcc(): void

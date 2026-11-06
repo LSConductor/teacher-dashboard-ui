@@ -8,6 +8,64 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Cloudways MySQL may already have the tables created before the
+        // over-long unique index failed. Each step is safe to run again.
+        if (! Schema::hasTable('schools')) {
+            $this->schools();
+        }
+
+        $this->extendUsers();
+
+        if (! Schema::hasTable('people')) {
+            $this->people();
+        }
+        if (! Schema::hasTable('accreditations')) {
+            $this->accreditations();
+        }
+        if (! Schema::hasTable('wwcc_checks')) {
+            $this->wwccChecks();
+        }
+        if (! Schema::hasTable('induction_modules')) {
+            $this->inductionModules();
+        }
+        if (! Schema::hasTable('induction_acknowledgements')) {
+            $this->inductionAcknowledgements();
+        } elseif (! Schema::hasIndex('induction_acknowledgements', 'ack_person_module_version_unique')) {
+            Schema::table('induction_acknowledgements', function (Blueprint $table) {
+                $table->unique(
+                    ['person_id', 'module_id', 'module_version'],
+                    'ack_person_module_version_unique'
+                );
+            });
+        }
+        if (! Schema::hasTable('contract_templates')) {
+            $this->contractTemplates();
+        }
+        if (! Schema::hasTable('contracts')) {
+            $this->contracts();
+        }
+        if (! Schema::hasTable('bookings')) {
+            $this->bookings();
+        }
+        if (! Schema::hasTable('unavailabilities')) {
+            $this->unavailabilities();
+        }
+        if (! Schema::hasTable('day_notes')) {
+            $this->dayNotes();
+        }
+        if (! Schema::hasTable('pd_entries')) {
+            $this->pdEntries();
+        }
+        if (! Schema::hasTable('invites')) {
+            $this->invites();
+        }
+        if (! Schema::hasTable('audit_logs')) {
+            $this->auditLogs();
+        }
+    }
+
+    private function schools(): void
+    {
         Schema::create('schools', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -15,15 +73,41 @@ return new class extends Migration
             $table->string('timezone')->default('Australia/Sydney');
             $table->timestamps();
         });
+    }
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('school_id')->nullable()->after('id')->constrained();
-            $table->string('role')->default('casual')->after('email');
-            $table->string('neighbourhood')->nullable()->after('role');
-            $table->string('mobile')->nullable()->after('neighbourhood');
-            $table->unsignedBigInteger('person_id')->nullable()->index()->after('neighbourhood');
-        });
+    private function extendUsers(): void
+    {
+        $existing = Schema::getColumnListing('users');
 
+        if (! in_array('school_id', $existing, true)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreignId('school_id')->nullable()->after('id')->constrained();
+            });
+        }
+        if (! in_array('role', $existing, true)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('role')->default('casual')->after('email');
+            });
+        }
+        if (! in_array('neighbourhood', $existing, true)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('neighbourhood')->nullable()->after('role');
+            });
+        }
+        if (! in_array('mobile', $existing, true)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('mobile')->nullable()->after('neighbourhood');
+            });
+        }
+        if (! in_array('person_id', $existing, true)) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unsignedBigInteger('person_id')->nullable()->index()->after('neighbourhood');
+            });
+        }
+    }
+
+    private function people(): void
+    {
         Schema::create('people', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -47,7 +131,10 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['school_id', 'email']);
         });
+    }
 
+    private function accreditations(): void
+    {
         Schema::create('accreditations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -65,7 +152,10 @@ return new class extends Migration
             $table->boolean('casual_evidence_on_file')->default(false);
             $table->timestamps();
         });
+    }
 
+    private function wwccChecks(): void
+    {
         Schema::create('wwcc_checks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -79,7 +169,10 @@ return new class extends Migration
             $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+    }
 
+    private function inductionModules(): void
+    {
         Schema::create('induction_modules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -90,7 +183,10 @@ return new class extends Migration
             $table->unsignedInteger('sort')->default(0);
             $table->timestamps();
         });
+    }
 
+    private function inductionAcknowledgements(): void
+    {
         Schema::create('induction_acknowledgements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -99,9 +195,16 @@ return new class extends Migration
             $table->unsignedInteger('module_version');
             $table->timestamp('acknowledged_at');
             $table->timestamps();
-            $table->unique(['person_id', 'module_id', 'module_version']);
+            // Default name is 68 characters. MySQL stops at 64.
+            $table->unique(
+                ['person_id', 'module_id', 'module_version'],
+                'ack_person_module_version_unique'
+            );
         });
+    }
 
+    private function contractTemplates(): void
+    {
         Schema::create('contract_templates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -114,7 +217,10 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['school_id', 'key', 'version']);
         });
+    }
 
+    private function contracts(): void
+    {
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -127,7 +233,10 @@ return new class extends Migration
             $table->timestamp('signed_at')->nullable();
             $table->timestamps();
         });
+    }
 
+    private function bookings(): void
+    {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -143,7 +252,10 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+    }
 
+    private function unavailabilities(): void
+    {
         Schema::create('unavailabilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -154,7 +266,10 @@ return new class extends Migration
             $table->string('status')->default('accepted');
             $table->timestamps();
         });
+    }
 
+    private function dayNotes(): void
+    {
         Schema::create('day_notes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -165,7 +280,10 @@ return new class extends Migration
             $table->string('descriptors')->nullable();
             $table->timestamps();
         });
+    }
 
+    private function pdEntries(): void
+    {
         Schema::create('pd_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -178,7 +296,10 @@ return new class extends Migration
             $table->string('activity_type')->nullable();
             $table->timestamps();
         });
+    }
 
+    private function invites(): void
+    {
         Schema::create('invites', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
@@ -188,7 +309,10 @@ return new class extends Migration
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
         });
+    }
 
+    private function auditLogs(): void
+    {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained();
