@@ -11,6 +11,9 @@
     <div>
         <h1>Casual list</h1>
         <p class="lede">Office (02) 5632 1218. School day 9:00–3:15. Green can be booked. Amber needs a Conductor note on that day. Red is not booked, and nobody overrides a WWCC or accreditation problem.</p>
+        @if($sensitive)
+            <p class="meta"><a class="link" href="{{ route('help') }}">How to use this desk</a></p>
+        @endif
     </div>
     @if($sensitive)
         <a class="button ghost" href="{{ route('apply') }}">Application form</a>

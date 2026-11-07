@@ -2,6 +2,7 @@
 @section('content')
 <h1>Setup</h1>
 <p class="lede">A role that manages the school opens this page. A neighbourhood lead sees their casuals and does not open setup. A published contract and an acknowledged quest keep the version already used.</p>
+<p class="meta"><a class="link" href="{{ route('help') }}">How to use this desk</a></p>
 <article class="card">
     <h2>Incident desk</h2>
     <p class="muted">The link a casual opens from a booked day. The student's story stays on that desk, not in this file.</p>

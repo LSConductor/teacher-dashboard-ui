@@ -1886,6 +1886,57 @@ class CasualHrTest extends TestCase
         $this->assertAuthenticatedAs($hr);
     }
 
+    public function test_help_starts_with_the_job_in_front_of_the_person(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $office = User::where('email', 'office@living.school')->first();
+        $mentor = User::where('email', 'mentor@living.school')->first();
+        $sam = User::where('email', 'sam.green@example.com')->first();
+
+        $this->get(route('help'))->assertRedirect(route('login'));
+
+        $this->actingAs($hr)->get(route('casuals.index'))
+            ->assertSee('How to use this desk')
+            ->assertSee(route('help'), false);
+
+        $this->actingAs($hr)->get(route('help'))
+            ->assertOk()
+            ->assertSee('How this desk works')
+            ->assertSee('A teacher wants to join')
+            ->assertSee('Someone is teaching today')
+            ->assertSee('A parent or grandparent wants to help')
+            ->assertSee('Create invite link')
+            ->assertSee('28-day reply')
+            ->assertSee(route('apply'), false)
+            ->assertSee(route('partners.join'), false);
+
+        $this->actingAs($director)->get(route('help'))
+            ->assertOk()
+            ->assertSee('Your part of the desk')
+            ->assertSee('your neighbourhood')
+            ->assertDontSee('Create invite link')
+            ->assertDontSee('volunteer check');
+
+        $this->actingAs($office)->get(route('help'))
+            ->assertOk()
+            ->assertSee('office code')
+            ->assertSee('Record arrival')
+            ->assertDontSee('Create invite link');
+
+        $this->actingAs($mentor)->get(route('help'))
+            ->assertOk()
+            ->assertSee('name you as mentor')
+            ->assertDontSee('Create invite link');
+
+        $this->actingAs($sam)->get(route('help'))
+            ->assertOk()
+            ->assertSee('Sign on')
+            ->assertSee('portal.living.school')
+            ->assertDontSee('Create invite link')
+            ->assertDontSee('volunteer check');
+    }
+
     private function tinyJpeg(): string
     {
         $image = imagecreatetruecolor(2, 2);

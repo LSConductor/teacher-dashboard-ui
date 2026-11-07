@@ -170,6 +170,15 @@
         .entry { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
         .entry-title { font-family: var(--serif); font-size: 22px; line-height: 1.2; margin: 0 0 4px; }
         .answer { margin: 12px 0 0; padding: 14px 16px; background: #f6f1e8; border-radius: 12px; }
+        .guide { max-width: 680px; }
+        .guide h1 { font-size: 40px; line-height: 1.05; margin-bottom: 8px; }
+        .guide > .lede { max-width: 58ch; }
+        .guide-job { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 22px 28px 8px; margin: 0 0 16px; }
+        .guide-job h2 { font-size: 26px; margin: 4px 0 8px; }
+        .guide-job p, .guide-job li { font-size: 17px; line-height: 1.5; }
+        .guide-job ol { margin: 8px 0 14px; padding-left: 1.25rem; }
+        .guide-job li { margin: 0 0 8px; }
+        .guide-later { margin: 28px 0 8px; font-size: 22px; }
         .dayboard { max-width: 760px; }
         .dayhero { border-radius: 20px; padding: 28px 32px 22px; margin: 0 0 22px; }
         .dayhero .kicker { margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
@@ -218,6 +227,8 @@
             h1, .dayhero h1 { font-size: 32px; }
             .dayhero, .sheet-body, .sheet-head, .record-head, .record-body { padding-left: 18px; padding-right: 18px; }
             .record h2 { font-size: 28px; }
+            .guide h1 { font-size: 32px; }
+            .guide-job { padding-left: 18px; padding-right: 18px; }
         }
     </style>
 </head>
@@ -242,6 +253,7 @@
                 <a href="{{ route('start') }}">Today</a>
                 <a href="{{ route('today') }}">Sign on</a>
                 <a href="{{ route('people') }}">People</a>
+                <a class="minor" href="{{ route('help') }}">Help</a>
             @else
                 <a href="{{ route('today') }}">Today</a>
                 @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
@@ -259,6 +271,7 @@
                     <a class="minor" href="{{ route('templates.complete') }}">Send a contract</a>
                     <a class="minor" href="{{ route('audit.index') }}">Audit</a>
                 @endif
+                <a class="minor" href="{{ route('help') }}">Help</a>
             @endif
             <span class="who">{{ auth()->user()->name }} · {{ \App\Hr\Roles::labelFor(auth()->user()) }}</span>
             <form action="{{ route('logout') }}" method="post">@csrf<button class="quiet" type="submit">Sign out</button></form>

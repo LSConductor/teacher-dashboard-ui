@@ -12,6 +12,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CasualLetterController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\PartnerDeskController;
@@ -63,6 +64,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     Route::post('/see/stop', [ViewAsController::class, 'stop'])->name('view-as.stop');
+    Route::get('/help', [HelpController::class, 'show'])->name('help');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
     Route::get('/today', [DayController::class, 'index'])->name('today');
     Route::post('/today/{person}/on', [DayController::class, 'arrive'])->name('today.on');
