@@ -657,9 +657,12 @@ class CasualHrTest extends TestCase
             ->assertSee('Conductor')
             ->assertSee('Work mobile 0400 111 222')
             ->assertSee('call 000')
-            ->assertSee(route('people.photo', $conductor), false);
+            ->assertSee('/people/'.$conductor->id.'/photo', false)
+            ->assertDontSee('http://localhost/people/'.$conductor->id.'/photo');
 
-        $this->actingAs($sam)->get(route('people.photo', $conductor))->assertOk();
+        $this->actingAs($sam)->get(route('people.photo', $conductor))
+            ->assertOk()
+            ->assertHeader('content-type', 'image/png');
 
         $yirran = User::create([
             'name' => 'Yirran Only',

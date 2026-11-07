@@ -36,7 +36,7 @@
     <article class="person {{ $member->role === 'director' ? 'green' : '' }}">
         <div>
             @if($member->photo_path)
-                <img class="portrait" src="{{ route('people.photo', $member) }}" alt="Photo of {{ $member->name }}">
+                <img class="portrait" src="{{ route('people.photo', $member, false) }}" alt="Photo of {{ $member->name }}">
             @endif
             <span class="status {{ $member->role === 'director' ? 'green' : ($member->role === 'office' ? 'amber' : '') }}">{{ \App\Hr\PeopleCards::title($member) }}</span>
         </div>

@@ -47,6 +47,17 @@ class PeopleController extends Controller
         abort_unless(PeopleCards::viewerCanSee($request->user(), $member), 404);
         abort_unless(filled($member->photo_path) && Storage::disk('local')->exists($member->photo_path), 404);
 
-        return Storage::disk('local')->response($member->photo_path);
+        $extension = strtolower(pathinfo($member->photo_path, PATHINFO_EXTENSION));
+        $mime = match ($extension) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            default => 'application/octet-stream',
+        };
+
+        return response()->file(Storage::disk('local')->path($member->photo_path), [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'private, max-age=300',
+        ]);
     }
 }

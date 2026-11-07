@@ -24,14 +24,14 @@
     <p class="muted">School business only, while a casual is signed in. Do not enter a home number.</p>
     <label for="photo">Photo</label>
     @if($member->photo_path)
-        <img class="portrait" src="{{ route('people.photo', $member) }}" alt="Photo of {{ $member->name }}">
+        <img class="portrait" src="{{ route('people.photo', $member, false) }}" alt="Photo of {{ $member->name }}">
         <label for="remove_photo">
             <input id="remove_photo" name="remove_photo" type="checkbox" value="1" style="width:auto;">
             Remove photo
         </label>
     @endif
     <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp">
-    <p class="muted">Optional head and shoulders photo, so a casual can recognise this person on site. Shown only to people signed in at this school.</p>
+    <p class="muted">Optional head and shoulders photo from your computer. It does not need to be a web address. Shown only to people signed in at this school.</p>
     <label for="on_people_page">
         <input id="on_people_page" name="on_people_page" type="checkbox" value="1" @checked(session()->hasOldInput() ? old('on_people_page') : $member->on_people_page) style="width:auto;">
         Show on the people page
