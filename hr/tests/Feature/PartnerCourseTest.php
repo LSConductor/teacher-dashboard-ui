@@ -23,6 +23,28 @@ class PartnerCourseTest extends TestCase
         $this->seed(HrSeeder::class);
     }
 
+    public function test_the_six_pages_appear_when_the_course_tables_are_empty(): void
+    {
+        PartnerPage::query()->delete();
+        \App\Models\PartnerCheck::query()->delete();
+
+        $hr = User::where('email', 'hr@living.school')->first();
+        $this->actingAs($hr)
+            ->get(route('setup.partners'))
+            ->assertOk()
+            ->assertSee('Welcome and thanks')
+            ->assertSee('What this is, and what it is not')
+            ->assertSee('Expectations')
+            ->assertSee('The role on the day')
+            ->assertSee('With a child')
+            ->assertSee('Confidence');
+
+        $this->actingAs($hr)
+            ->get(route('setup.partners.check'))
+            ->assertOk()
+            ->assertSee('When may you be alone with a child?');
+    }
+
     public function test_a_parent_finishes_and_a_director_sees_them_only_when_cleared(): void
     {
         $this->get(route('partners.join'))

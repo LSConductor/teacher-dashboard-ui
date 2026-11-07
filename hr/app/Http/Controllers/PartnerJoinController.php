@@ -195,11 +195,16 @@ class PartnerJoinController extends Controller
 
     private function school(): School
     {
-        return School::query()->where('slug', 'living-school')->firstOrFail();
+        $school = School::query()->where('slug', 'living-school')->firstOrFail();
+        PartnerPack::ensure($school);
+
+        return $school;
     }
 
     private function pages(Partner $partner)
     {
+        PartnerPack::ensure($partner->school);
+
         return PartnerPage::query()
             ->where('school_id', $partner->school_id)
             ->orderBy('sort')
@@ -217,6 +222,8 @@ class PartnerJoinController extends Controller
 
     private function quizRow(Partner $partner): PartnerCheck
     {
+        PartnerPack::ensure($partner->school);
+
         return PartnerCheck::query()->where('school_id', $partner->school_id)->firstOrFail();
     }
 

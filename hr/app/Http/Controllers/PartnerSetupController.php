@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\PartnerPack;
 use App\Models\Partner;
 use App\Models\PartnerCheck;
 use App\Models\PartnerPage;
+use App\Models\School;
 use App\Services\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -13,6 +15,7 @@ class PartnerSetupController extends Controller
 {
     public function index(Request $request)
     {
+        $this->prepare($request);
         $pages = PartnerPage::query()
             ->where('school_id', $request->user()->school_id)
             ->orderBy('sort')
@@ -55,6 +58,7 @@ class PartnerSetupController extends Controller
 
     public function check(Request $request)
     {
+        $this->prepare($request);
         $check = PartnerCheck::query()->where('school_id', $request->user()->school_id)->firstOrFail();
 
         return view('setup.partner-check', ['check' => $check]);
@@ -62,6 +66,7 @@ class PartnerSetupController extends Controller
 
     public function updateCheck(Request $request)
     {
+        $this->prepare($request);
         $check = PartnerCheck::query()->where('school_id', $request->user()->school_id)->firstOrFail();
         $rows = $request->validate([
             'prompt' => ['required', 'array'],
@@ -95,6 +100,12 @@ class PartnerSetupController extends Controller
         Audit::record('partner.quiz', $check, ['version' => $check->version]);
 
         return redirect()->route('setup.partners.check')->with('status', 'Check saved.');
+    }
+
+    private function prepare(Request $request): void
+    {
+        $school = School::query()->findOrFail($request->user()->school_id);
+        PartnerPack::ensure($school);
     }
 
     private function pageWasRead(PartnerPage $page): bool

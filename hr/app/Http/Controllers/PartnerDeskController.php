@@ -9,6 +9,7 @@ use App\Hr\Roles;
 use App\Models\Partner;
 use App\Models\PartnerCheck;
 use App\Models\PartnerPage;
+use App\Models\School;
 use App\Models\WwccCheck;
 use App\Services\Audit;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class PartnerDeskController extends Controller
         $user = $request->user();
         $kind = Roles::kind($user);
         abort_unless(in_array($kind, ['manage', 'neighbourhood'], true), 403);
+        $this->prepare($user->school_id);
 
         $pages = PartnerPage::query()->where('school_id', $user->school_id)->orderBy('sort')->get();
         $check = PartnerCheck::query()->where('school_id', $user->school_id)->firstOrFail();
@@ -72,6 +74,7 @@ class PartnerDeskController extends Controller
         if ($kind === 'neighbourhood' && ! Neighbourhood::coversAll($user->neighbourhood)) {
             abort_unless($partner->neighbourhood === $user->neighbourhood, 403);
         }
+        $this->prepare($partner->school_id);
         $pages = PartnerPage::query()->where('school_id', $partner->school_id)->orderBy('sort')->get();
         $check = PartnerCheck::query()->where('school_id', $partner->school_id)->firstOrFail();
         $status = PartnerCourse::status($partner, $pages, $check);
@@ -125,5 +128,11 @@ class PartnerDeskController extends Controller
         ]);
 
         return redirect()->route('partners.show', $partner)->with('status', 'Volunteer check saved.');
+    }
+
+    private function prepare(int $schoolId): void
+    {
+        $school = School::query()->findOrFail($schoolId);
+        PartnerPack::ensure($school);
     }
 }
