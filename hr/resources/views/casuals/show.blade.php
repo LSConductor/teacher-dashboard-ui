@@ -62,7 +62,16 @@
     @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
         <a class="button ghost" href="{{ route('casuals.forms', $person) }}">Forms</a>
     @endif
+    @if($canEdit)
+        <form method="post" action="{{ route('view-as.start', $person) }}">
+            @csrf
+            <button class="ghost" type="submit">See what {{ $person->preferred_name }} sees</button>
+        </form>
+    @endif
 </div>
+@if($canEdit)
+    <p class="meta">Opens their day, sign-on, and people page, so you can check a problem.</p>
+@endif
 @if($person->mentor)
     <p class="muted">Mentor: {{ $person->mentor->name }} @if($person->mentor->mobile)· {{ $person->mentor->mobile }}@endif</p>
 @endif

@@ -137,8 +137,22 @@
         .quiet-links a { color: var(--navy); font-weight: 650; }
         details.done-list summary { cursor: pointer; font-weight: 650; margin: 18px 0 12px; }
         nav a.minor { font-weight: 500; opacity: .8; }
+        .view-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--amber);
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            padding: 12px 28px;
+        }
+        .view-bar p { margin: 0; max-width: 70ch; }
+        .view-bar button { background: #fff; color: var(--amber); }
         @media (max-width: 720px) {
-            header { align-items: flex-start; flex-direction: column; }
+            header, .view-bar { align-items: flex-start; flex-direction: column; }
             .person, .grid { grid-template-columns: 1fr; }
             .wrap { padding: 18px 14px 36px; }
             h1 { font-size: 28px; }
@@ -146,6 +160,15 @@
     </style>
 </head>
 <body>
+@if(!empty($viewingAs))
+    <div class="view-bar">
+        <p>You are seeing {{ $viewingAs }}’s screens. Nothing you press is saved. Sign out on this screen returns you to your desk.</p>
+        <form method="post" action="{{ route('view-as.stop') }}">
+            @csrf
+            <button type="submit">Back to your desk</button>
+        </form>
+    </div>
+@endif
 <header>
     <div class="brand">
         <span>Living School</span>

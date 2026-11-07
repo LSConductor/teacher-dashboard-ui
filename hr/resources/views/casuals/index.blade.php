@@ -107,6 +107,12 @@
                 @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
                     <a class="button ghost" href="{{ route('casuals.forms', $person) }}">Forms</a>
                 @endif
+                @if($sensitive)
+                    <form method="post" action="{{ route('view-as.start', $person) }}">
+                        @csrf
+                        <button class="ghost" type="submit">See what {{ $person->preferred_name }} sees</button>
+                    </form>
+                @endif
             </div>
         </div>
     </article>

@@ -1798,6 +1798,83 @@ class CasualHrTest extends TestCase
         $this->actingAs($hr)->get(route('watch'))->assertDontSee('Standards reply is due');
     }
 
+    public function test_an_administrator_can_look_through_a_casuals_screens(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $samUser = User::where('email', 'sam.green@example.com')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+
+        $this->actingAs($director)->post(route('view-as.start', $sam))->assertForbidden();
+        $this->actingAs($samUser)->post(route('view-as.start', $sam))->assertForbidden();
+        $this->actingAs($director)->get(route('casuals.show', $sam))->assertDontSee('See what Sam Green sees');
+
+        $this->actingAs($hr)->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('See what Sam Green sees')
+            ->assertSee('Opens their day, sign-on, and people page');
+        $this->actingAs($hr)->get(route('casuals.index'))->assertOk()->assertSee('See what Sam Green sees');
+
+        $this->actingAs($hr)->from(route('casuals.show', $pat))
+            ->post(route('view-as.start', $pat))
+            ->assertRedirect(route('casuals.show', $pat))
+            ->assertSessionHas('status', 'Pat Red has no sign-in yet. Send an invite, then you can open their screens.');
+        $this->assertAuthenticatedAs($hr);
+
+        $this->actingAs($hr)->post(route('view-as.start', $sam))->assertRedirect(route('start'));
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $hr->id,
+            'action' => 'view.opened',
+            'subject_id' => $sam->id,
+        ]);
+
+        $this->app['auth']->guard()->forgetUser();
+
+        $this->get(route('start'))
+            ->assertOk()
+            ->assertSee('S3 sample')
+            ->assertSee('You are seeing Sam Green')
+            ->assertSee('Sign on for today')
+            ->assertSee('Today')
+            ->assertDontSee('Setup');
+        $this->get(route('today'))
+            ->assertOk()
+            ->assertSee('Ask the office to read')
+            ->assertDontSee('Show this at the office')
+            ->assertDontSee('Record arrival');
+        $this->get(route('people'))->assertOk()->assertSee('People');
+        $this->get(route('setup'))->assertForbidden();
+        $this->get(route('casuals.show', $pat))->assertForbidden();
+
+        $this->from(route('today'))
+            ->post(route('today.on', $sam), ['code' => 'ABCDEF'])
+            ->assertRedirect(route('today'))
+            ->assertSessionHasErrors('view');
+        $this->assertDatabaseMissing('day_rolls', ['person_id' => $sam->id]);
+
+        $this->post(route('logout'))->assertRedirect(route('casuals.show', $sam));
+        $this->app['auth']->guard()->forgetUser();
+        $this->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('You are back on your own desk.')
+            ->assertSee('Setup')
+            ->assertDontSee('You are seeing Sam Green');
+        $this->assertAuthenticatedAs($hr);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $hr->id,
+            'action' => 'view.closed',
+            'subject_id' => $sam->id,
+        ]);
+
+        $this->actingAs($hr)->post(route('view-as.start', $sam))->assertRedirect(route('start'));
+        $this->app['auth']->guard()->forgetUser();
+        $this->post(route('view-as.stop'))->assertRedirect(route('casuals.show', $sam));
+        $this->app['auth']->guard()->forgetUser();
+        $this->get(route('setup'))->assertOk();
+        $this->assertAuthenticatedAs($hr);
+    }
+
     private function tinyJpeg(): string
     {
         $image = imagecreatetruecolor(2, 2);

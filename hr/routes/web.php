@@ -24,6 +24,7 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SetupController;
 use App\Hr\Roles;
 use App\Http\Controllers\StartController;
+use App\Http\Controllers\ViewAsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -61,6 +62,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
+    Route::post('/see/stop', [ViewAsController::class, 'stop'])->name('view-as.stop');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
     Route::get('/today', [DayController::class, 'index'])->name('today');
     Route::post('/today/{person}/on', [DayController::class, 'arrive'])->name('today.on');
@@ -86,6 +88,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/casuals/{person}/forms/availability', [FormController::class, 'availability'])->name('casuals.forms.availability');
     Route::post('/casuals/{person}/forms/availability', [FormController::class, 'saveAvailability']);
     Route::get('/casuals/{person}/casual-status-letter', [CasualLetterController::class, 'show'])->middleware('manages')->name('casuals.letter');
+    Route::post('/casuals/{person}/see', [ViewAsController::class, 'start'])->middleware('manages')->name('view-as.start');
     Route::get('/casuals/{person}', [CasualController::class, 'show'])->name('casuals.show');
     Route::put('/casuals/{person}', [CasualController::class, 'update'])->name('casuals.update');
 

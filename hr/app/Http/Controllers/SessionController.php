@@ -30,6 +30,10 @@ class SessionController extends Controller
 
     public function destroy(Request $request)
     {
+        if (\App\Hr\ViewAs::active($request)) {
+            return app(ViewAsController::class)->stop($request);
+        }
+
         Auth::logout();
 
         try {
