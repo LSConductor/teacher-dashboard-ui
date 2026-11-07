@@ -1124,6 +1124,73 @@ class CasualHrTest extends TestCase
         ])->assertRedirect(route('casuals.index'));
     }
 
+    public function test_home_and_logout_work_without_the_google_column(): void
+    {
+        config([
+            'services.google.client_id' => 'school-client-id',
+            'services.google.client_secret' => 'school-client-secret',
+            'services.google.hosted_domain' => 'living.school',
+        ]);
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropUnique(['google_sub']);
+        });
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('google_sub');
+        });
+        $this->assertFalse(Schema::hasColumn('users', 'google_sub'));
+
+        $this->get('/')->assertOk()->assertSee('Casual Induction');
+        $this->get('/login')->assertOk()->assertSee('Continue with Google')->assertSee('Password');
+
+        $this->post('/login', [
+            'email' => 'hr@living.school',
+            'password' => 'living-demo',
+        ])->assertRedirect('/');
+
+        $this->post(route('logout'))->assertRedirect(route('login'));
+        $this->get('/login')->assertOk()->assertSee('Staff sign in');
+
+        $schoolId = User::where('email', 'hr@living.school')->first()->school_id;
+        User::create([
+            'name' => 'Sam School',
+            'email' => 'sam.school@living.school',
+            'password' => 'living-demo',
+            'school_id' => $schoolId,
+            'role' => 'casual',
+        ]);
+
+        Http::fake(function ($request) {
+            if (str_contains($request->url(), 'oauth2.googleapis.com/token')) {
+                return Http::response(['access_token' => 'token-from-google']);
+            }
+
+            return Http::response([
+                'sub' => 'google-sub-sam',
+                'email' => 'sam.school@living.school',
+                'email_verified' => true,
+            ]);
+        });
+
+        $this->withSession(['google_oauth_state' => 'state-token'])
+            ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
+            ->assertRedirect();
+        $this->assertAuthenticated();
+    }
+
+    public function test_a_missing_app_key_tells_john_the_server_command(): void
+    {
+        config(['app.key' => '', 'app.debug' => false]);
+        $this->app->forgetInstance('encrypter');
+
+        $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+        $response = $kernel->handle(\Illuminate\Http\Request::create('/login', 'GET'));
+
+        $this->assertSame(500, $response->getStatusCode());
+        $this->assertStringContainsString('APP_KEY is missing', $response->getContent());
+        $this->assertStringContainsString('php8.4 artisan key:generate --force', $response->getContent());
+    }
+
     private function tinyJpeg(): string
     {
         $image = imagecreatetruecolor(2, 2);

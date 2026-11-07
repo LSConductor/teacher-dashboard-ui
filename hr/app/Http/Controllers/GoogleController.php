@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Services\GoogleSignIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,18 +55,14 @@ class GoogleController extends Controller
             ]);
         }
 
-        $user = User::query()->where('google_sub', $profile['sub'] ?? '')->first()
-            ?? User::query()->whereRaw('lower(email) = ?', [$email])->first();
+        $user = $google->findUser((string) ($profile['sub'] ?? ''), $email);
         if (! $user) {
             return redirect()->route('login')->withErrors([
                 'email' => 'That school Google account is not on the casual list. Ask HR to use the same email on the person. The demo password still signs in the sample accounts.',
             ]);
         }
 
-        if (filled($profile['sub'] ?? null)) {
-            $user->google_sub = $profile['sub'];
-            $user->save();
-        }
+        $google->remember($user, $profile['sub'] ?? null);
 
         Auth::login($user);
         $request->session()->regenerate();

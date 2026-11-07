@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 
 class GoogleSignIn
 {
@@ -46,5 +48,32 @@ class GoogleSignIn
             ->get('https://www.googleapis.com/oauth2/v3/userinfo')
             ->throw()
             ->json();
+    }
+
+    public function findUser(string $sub, string $email): ?User
+    {
+        if ($sub !== '' && $this->hasColumn()) {
+            $found = User::query()->where('google_sub', $sub)->first();
+            if ($found) {
+                return $found;
+            }
+        }
+
+        return User::query()->whereRaw('lower(email) = ?', [$email])->first();
+    }
+
+    public function remember(User $user, ?string $sub): void
+    {
+        if (! filled($sub) || ! $this->hasColumn()) {
+            return;
+        }
+
+        $user->google_sub = $sub;
+        $user->save();
+    }
+
+    public function hasColumn(): bool
+    {
+        return Schema::hasColumn('users', 'google_sub');
     }
 }

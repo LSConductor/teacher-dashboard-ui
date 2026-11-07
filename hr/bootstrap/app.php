@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Encryption\MissingAppKeyException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,4 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        $exceptions->render(function (MissingAppKeyException $exception, Request $request) {
+            $message = 'APP_KEY is missing. From the hr directory run: php8.4 artisan key:generate --force';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 500)
+                : response($message, 500);
+        });
     })->create();

@@ -31,8 +31,13 @@ class SessionController extends Controller
     public function destroy(Request $request)
     {
         Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+
+        try {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } catch (\Throwable) {
+            // The sign-in is already cleared. A session write must not turn logout into a 500.
+        }
 
         return redirect()->route('login');
     }
