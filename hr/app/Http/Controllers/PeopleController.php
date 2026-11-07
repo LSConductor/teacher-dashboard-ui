@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Hr\PeopleCards;
+use App\Hr\StaffPhoto;
 use App\Models\Person;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -45,6 +46,8 @@ class PeopleController extends Controller
     public function photo(Request $request, User $member)
     {
         abort_unless(PeopleCards::viewerCanSee($request->user(), $member), 404);
+        StaffPhoto::ensureSized($member);
+        $member->refresh();
         abort_unless(filled($member->photo_path) && Storage::disk('local')->exists($member->photo_path), 404);
 
         $extension = strtolower(pathinfo($member->photo_path, PATHINFO_EXTENSION));

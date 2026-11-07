@@ -31,7 +31,7 @@
         </label>
     @endif
     <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp">
-    <p class="muted">Optional head and shoulders photo from your computer. It does not need to be a web address. Shown only to people signed in at this school.</p>
+    <p class="muted">Optional head and shoulders photo from your computer. A large photo is cropped to a square and reduced automatically. It does not need to be a web address.</p>
     <label for="on_people_page">
         <input id="on_people_page" name="on_people_page" type="checkbox" value="1" @checked(session()->hasOldInput() ? old('on_people_page') : $member->on_people_page) style="width:auto;">
         Show on the people page

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Hr\StaffPhoto;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
 use App\Models\InductionModule;
@@ -651,6 +652,9 @@ class CasualHrTest extends TestCase
 
         $conductor->refresh();
         Storage::disk('local')->assertExists($conductor->photo_path);
+        $sized = getimagesize(Storage::disk('local')->path($conductor->photo_path));
+        $this->assertSame(StaffPhoto::SIZE, $sized[0]);
+        $this->assertSame(StaffPhoto::SIZE, $sized[1]);
 
         $this->actingAs($sam)->get(route('people'))
             ->assertOk()
@@ -662,7 +666,7 @@ class CasualHrTest extends TestCase
 
         $this->actingAs($sam)->get(route('people.photo', $conductor))
             ->assertOk()
-            ->assertHeader('content-type', 'image/png')
+            ->assertHeader('content-type', 'image/jpeg')
             ->assertHeader('cache-control', 'private');
 
         $yirran = User::create([
@@ -682,6 +686,35 @@ class CasualHrTest extends TestCase
 
         Auth::logout();
         $this->get(route('people.photo', $conductor))->assertRedirect(route('login'));
+    }
+
+    public function test_a_wide_photo_is_cropped_to_a_square(): void
+    {
+        Storage::fake('local');
+        $wide = imagecreatetruecolor(900, 300);
+        imagefilledrectangle($wide, 0, 0, 899, 299, imagecolorallocate($wide, 10, 20, 30));
+        ob_start();
+        imagejpeg($wide, null, 90);
+        $bytes = ob_get_clean();
+        imagedestroy($wide);
+
+        $path = StaffPhoto::store(UploadedFile::fake()->createWithContent('wide.jpg', $bytes));
+        $info = getimagesize(Storage::disk('local')->path($path));
+        $this->assertSame(StaffPhoto::SIZE, $info[0]);
+        $this->assertSame(StaffPhoto::SIZE, $info[1]);
+        $this->assertSame('image/jpeg', $info['mime']);
+        $this->assertLessThan(120000, Storage::disk('local')->size($path));
+
+        $conductor = User::where('email', 'conductor@living.school')->first();
+        Storage::disk('local')->put('people/raw.jpg', $bytes);
+        $conductor->photo_path = 'people/raw.jpg';
+        $conductor->save();
+        StaffPhoto::ensureSized($conductor->fresh());
+        $conductor->refresh();
+        $this->assertNotSame('people/raw.jpg', $conductor->photo_path);
+        $again = getimagesize(Storage::disk('local')->path($conductor->photo_path));
+        $this->assertSame(StaffPhoto::SIZE, $again[0]);
+        Storage::disk('local')->assertMissing('people/raw.jpg');
     }
 
     private function tinyPng(): string

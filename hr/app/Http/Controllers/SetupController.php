@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\StaffPhoto;
 use App\Models\InductionModule;
 use App\Models\Person;
 use App\Models\User;
@@ -40,7 +41,7 @@ class SetupController extends Controller
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
             'people_note' => ['nullable', 'string', 'max:280'],
-            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:15360'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
         $member = User::create([
@@ -82,7 +83,7 @@ class SetupController extends Controller
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
             'people_note' => ['nullable', 'string', 'max:280'],
-            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:15360'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -271,7 +272,7 @@ class SetupController extends Controller
         if (filled($member->photo_path)) {
             Storage::disk('local')->delete($member->photo_path);
         }
-        $member->photo_path = $request->file('photo')->store('people', 'local');
+        $member->photo_path = StaffPhoto::store($request->file('photo'));
     }
 
     private function videoLink(?string $value): ?string
