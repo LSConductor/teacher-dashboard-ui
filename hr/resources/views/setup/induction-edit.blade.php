@@ -9,6 +9,9 @@
     <input id="title" name="title" value="{{ old('title', $module->title) }}" required>
     <label for="body">Page</label>
     <textarea id="body" name="body" rows="14" required>{{ old('body', $module->body) }}</textarea>
+    <label for="video_url">Video link</label>
+    <input id="video_url" name="video_url" type="url" value="{{ old('video_url', $module->video_url) }}" placeholder="https://">
+    <p class="muted">Paste a link the school owns. Leave it blank until the video exists. The page text stays the record either way.</p>
     <p><button type="submit">Save quest</button></p>
 </form>
 @endsection

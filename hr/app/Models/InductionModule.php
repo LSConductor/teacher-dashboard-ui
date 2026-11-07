@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InductionModule extends Model
 {
-    protected $fillable = ['school_id', 'title', 'body', 'phase', 'version', 'sort'];
+    protected $fillable = ['school_id', 'title', 'body', 'phase', 'version', 'sort', 'quiz', 'video_url'];
+
+    protected function casts(): array
+    {
+        return ['quiz' => 'array'];
+    }
 
     public function acknowledgements(): HasMany
     {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CasualController;
@@ -25,6 +26,8 @@ Route::get('/start', [StartController::class, 'show'])->name('start');
 Route::get('/casual-induction', function () {
     return redirect()->route('start', request()->query());
 });
+Route::get('/apply', [ApplicationController::class, 'create'])->name('apply');
+Route::post('/apply', [ApplicationController::class, 'store'])->name('apply.store');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [SessionController::class, 'create'])->name('login');

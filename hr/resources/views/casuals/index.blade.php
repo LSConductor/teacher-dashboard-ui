@@ -13,6 +13,7 @@
         <p class="lede">Office (02) 5632 1218. School day 9:00–3:15. Green can be booked. Amber needs a Conductor note on that day. Red is not booked, and nobody overrides a WWCC or accreditation problem.</p>
     </div>
     @if($sensitive)
+        <a class="button ghost" href="{{ route('apply') }}">Application form</a>
         <a class="button" href="{{ route('casuals.create') }}">Add a casual</a>
     @endif
 </div>
@@ -53,6 +54,9 @@
         <div>
             <h2><a href="{{ route('casuals.show', $person) }}">{{ $person->preferred_name }}</a></h2>
             <p class="meta">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) ?: 'Stages not set' }}</p>
+            @if($person->status === 'applicant')
+                <p class="meta">Application received. Not on the bookable list yet.</p>
+            @endif
             <p class="meta">
                 Mentor {{ $person->mentor->name ?? 'not named' }}
                 @if($person->director_name) · Director {{ $person->director_name }} @endif

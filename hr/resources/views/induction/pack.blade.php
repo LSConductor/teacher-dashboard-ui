@@ -21,6 +21,9 @@
         @if($done)
             <p class="muted">Acknowledged {{ $done->acknowledged_at->timezone('Australia/Sydney')->format('j M Y g:i a') }}</p>
             <a class="button ghost" href="{{ route('casuals.induction', [$person, $module]) }}">Read again</a>
+            @if($module->video_url)
+                <a class="button ghost" href="{{ $module->video_url }}" target="_blank" rel="noopener">Watch the video</a>
+            @endif
         @else
             <p class="muted">Not acknowledged. This page is part of the pack.</p>
             <a class="button" href="{{ route('casuals.induction', [$person, $module]) }}">Read and acknowledge</a>

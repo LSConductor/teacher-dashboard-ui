@@ -66,4 +66,146 @@ Proficient teachers keep their maintenance in eTAMS. Conditional and Provisional
 TXT,
         ];
     }
+
+    /**
+     * Short checks. The answer is the choice index. The page above is the source.
+     *
+     * @return list<array{prompt: string, choices: list<string>, answer: int}>
+     */
+    public static function quiz(string $title): array
+    {
+        return self::quizzes()[$title] ?? [];
+    }
+
+    /**
+     * @return array<string, list<array{prompt: string, choices: list<string>, answer: int}>>
+     */
+    public static function quizzes(): array
+    {
+        return [
+            'Child protection and mandatory reporting' => [
+                [
+                    'prompt' => 'A child asks you to keep a disclosure secret. What do you do?',
+                    'choices' => [
+                        'Tell the director the same day, and do not promise secrecy',
+                        'Promise to keep it secret so the child will keep talking',
+                        'Interview the child until you have the full story',
+                    ],
+                    'answer' => 0,
+                ],
+                [
+                    'prompt' => 'A child is in immediate danger. What is first?',
+                    'choices' => ['Call 000', 'Write a day note', 'Email the parent'],
+                    'answer' => 0,
+                ],
+            ],
+            'Reportable conduct' => [
+                [
+                    'prompt' => 'Someone alleges a worker has harmed a child. What do you do?',
+                    'choices' => [
+                        'Tell the Conductor the same day',
+                        'Decide yourself whether it is serious enough',
+                        'Interview the child for evidence',
+                    ],
+                    'answer' => 0,
+                ],
+                [
+                    'prompt' => 'Is a hard teaching day, by itself, reportable conduct?',
+                    'choices' => ['Yes', 'No'],
+                    'answer' => 1,
+                ],
+            ],
+            'Professional boundaries' => [
+                [
+                    'prompt' => 'A student asks for your personal phone number. What is the boundary?',
+                    'choices' => [
+                        'No personal phone contact with a student',
+                        'Only if the parent agrees by text',
+                        'Only for that day',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'Code of conduct' => [
+                [
+                    'prompt' => 'You cannot teach safely today. What do you do?',
+                    'choices' => [
+                        'Call the office before the day starts and do not attend',
+                        'Come in and see how the morning goes',
+                        'Ask a student to watch the class',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'Emergency, evacuation, and flood' => [
+                [
+                    'prompt' => 'The evacuation alarm sounds. What do you take?',
+                    'choices' => [
+                        'The roll the class teacher left, and you stay with the class',
+                        'Only your own bag',
+                        'You send students to the office in pairs',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'How pay works and who to call' => [
+                [
+                    'prompt' => 'Where does a tax file number belong?',
+                    'choices' => [
+                        'With payroll, not in this app and not in an email',
+                        'On the day-one acknowledgement',
+                        'In a text to the director',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'How to raise a student incident' => [
+                [
+                    'prompt' => 'A student is hurt. Where does that record go?',
+                    'choices' => [
+                        'Tell the director the same day and use the school incident desk',
+                        'Write it into a day note in this HR file',
+                        'Keep it until the class teacher returns',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'Attendance and the class admin you will use' => [
+                [
+                    'prompt' => 'Which roll do you use?',
+                    'choices' => [
+                        'The roll the class teacher left',
+                        'A new roll in this HR app',
+                        'A list you write from memory at the end of the day',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'Adjustments and disability obligations' => [
+                [
+                    'prompt' => 'The day is busy. Can you drop an adjustment from the plan?',
+                    'choices' => ['No. Follow the plan, and ask the director if something is missing', 'Yes, if the class is settled'],
+                    'answer' => 0,
+                ],
+            ],
+            'Meeting your mentor' => [
+                [
+                    'prompt' => 'Who is the Accreditation Supervisor for a Conditional or Provisional teacher?',
+                    'choices' => [
+                        'The named mentor, when that mentor is Proficient or above',
+                        'Any casual on the list',
+                        'The office',
+                    ],
+                    'answer' => 0,
+                ],
+            ],
+            'NESA path for Conditional and Provisional teachers' => [
+                [
+                    'prompt' => 'Which record does NESA audit?',
+                    'choices' => ['eTAMS', 'This HR app', 'The day note'],
+                    'answer' => 0,
+                ],
+            ],
+        ];
+    }
 }

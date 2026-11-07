@@ -235,7 +235,60 @@ class CasualHrTest extends TestCase
             ->get(route('casuals.induction', [$pat, $module]))
             ->assertOk()
             ->assertSee('mandatory reporter')
+            ->assertSee('A child asks you to keep a disclosure secret')
             ->assertSee('I, Pat Red, acknowledge this page');
+    }
+
+    public function test_a_casual_must_pass_the_quest_check(): void
+    {
+        $samUser = User::where('email', 'sam.green@example.com')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $module = InductionModule::where('title', 'Child protection and mandatory reporting')->first();
+        $answers = collect($module->quiz)->map(fn ($question) => $question['answer'])->all();
+
+        $this->actingAs($samUser)
+            ->from(route('casuals.induction', [$sam, $module]))
+            ->post(route('casuals.acknowledge', [$sam, $module]), ['answers' => [1, 1]])
+            ->assertSessionHasErrors('answers');
+
+        $this->actingAs($samUser)
+            ->post(route('casuals.acknowledge', [$sam, $module]), ['answers' => $answers])
+            ->assertRedirect();
+    }
+
+    public function test_public_application_creates_an_applicant(): void
+    {
+        $this->get('/apply')
+            ->assertOk()
+            ->assertSee('Apply to teach')
+            ->assertDontSee('name="wwcc_number"', false)
+            ->assertDontSee('name="date_of_birth"', false);
+
+        $this->post('/apply', [
+            'preferred_name' => 'Alex River',
+            'legal_name' => 'Alexandra River',
+            'email' => 'alex.river@example.com',
+            'mobile' => '0400 111 222',
+            'neighbourhood' => 'Ngulingah',
+            'stages' => ['S3'],
+            'right_to_work' => 'Australian citizen. This is a fictional application.',
+            'heard_about' => 'A teacher at the school',
+        ])->assertRedirect(route('apply'));
+
+        $this->assertSame('applicant', Person::where('email', 'alex.river@example.com')->first()->status);
+        $this->post('/apply', [
+            'preferred_name' => 'Alex River',
+            'legal_name' => 'Alexandra River',
+            'email' => 'alex.river@example.com',
+            'mobile' => '0400 111 222',
+            'neighbourhood' => 'Ngulingah',
+            'stages' => ['S3'],
+            'right_to_work' => 'Australian citizen. This is a fictional application.',
+        ])->assertSessionHasErrors('email');
+        $this->assertSame(1, Person::where('email', 'alex.river@example.com')->count());
+
+        $hr = User::where('email', 'hr@living.school')->first();
+        $this->actingAs($hr)->get(route('casuals.index'))->assertSee('Alex River')->assertSee('Application received');
     }
 
     public function test_director_cannot_open_the_wwcc_form(): void

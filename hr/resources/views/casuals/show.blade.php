@@ -118,12 +118,10 @@
     @foreach($modules as $module)
         @php $done = $person->acknowledgements->first(fn ($row) => $row->module_id === $module->id && $row->module_version >= $module->version); @endphp
         <p><strong>{{ $module->phase === 'day_one' ? 'Day one' : 'Later' }}.</strong> {{ $module->title }}
-            @if($done) <span class="muted">Acknowledged {{ $done->acknowledged_at->timezone('Australia/Sydney')->format('j M Y g:i a') }}</span>
-            @elseif(auth()->user()->role === 'casual' || $canEdit)
-                <form method="post" action="{{ route('casuals.acknowledge', [$person, $module]) }}" style="display:inline">@csrf<button type="submit">Acknowledge</button></form>
-            @else
-                <span class="muted">Open</span>
+            @if($done)
+                <span class="muted">Acknowledged {{ $done->acknowledged_at->timezone('Australia/Sydney')->format('j M Y g:i a') }}</span>
             @endif
+            <a class="link" href="{{ route('casuals.induction', [$person, $module]) }}">Open the quest</a>
         </p>
     @endforeach
 </div>

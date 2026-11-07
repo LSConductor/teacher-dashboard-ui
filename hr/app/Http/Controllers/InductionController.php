@@ -52,6 +52,18 @@ class InductionController extends Controller
         abort_unless($allowed, 403);
         abort_unless($module->school_id === $person->school_id, 404);
 
+        $quiz = $module->quiz ?? [];
+        if ($user->role === 'casual' && $quiz !== []) {
+            $answers = $request->input('answers', []);
+            foreach ($quiz as $index => $question) {
+                if ((int) ($answers[$index] ?? -1) !== (int) $question['answer']) {
+                    return back()
+                        ->withErrors(['answers' => 'One answer does not match the page. Read it again and try the check.'])
+                        ->withInput();
+                }
+            }
+        }
+
         $person->acknowledgements()->updateOrCreate(
             ['module_id' => $module->id, 'module_version' => $module->version],
             ['school_id' => $person->school_id, 'acknowledged_at' => now()]

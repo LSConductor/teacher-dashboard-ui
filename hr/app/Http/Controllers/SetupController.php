@@ -157,7 +157,9 @@ class SetupController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'body' => ['required', 'string'],
+            'video_url' => ['nullable', 'url', 'max:255'],
         ]);
+        $data['video_url'] = ($data['video_url'] ?? null) ?: null;
         $changed = $data['title'] !== $module->title || $data['body'] !== $module->body;
         $acknowledged = $module->acknowledgements()->where('module_version', $module->version)->exists();
         if ($changed && $acknowledged) {

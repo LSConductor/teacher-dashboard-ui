@@ -208,11 +208,21 @@ class HrSeeder extends Seeder
     {
         $module = InductionModule::firstOrCreate(
             ['school_id' => $schoolId, 'title' => $title],
-            ['body' => InductionPack::body($title), 'phase' => $phase, 'version' => 1, 'sort' => $sort]
+            [
+                'body' => InductionPack::body($title),
+                'phase' => $phase,
+                'version' => 1,
+                'sort' => $sort,
+                'quiz' => InductionPack::quiz($title),
+            ]
         );
-        if ($module->body === $title) {
-            $module->update(['body' => InductionPack::body($title)]);
+        if ($module->body === $title || strlen((string) $module->body) < 80) {
+            $module->body = InductionPack::body($title);
         }
+        if (empty($module->quiz)) {
+            $module->quiz = InductionPack::quiz($title);
+        }
+        $module->save();
 
         return $module;
     }

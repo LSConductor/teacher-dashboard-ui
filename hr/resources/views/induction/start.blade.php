@@ -4,7 +4,10 @@
 <section id="start" class="card" style="max-width:560px; margin:28px auto;">
     <p class="muted" style="letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#14324a;">Casual Induction</p>
     <p>Log in to the staff portal to open this desk. After you sign in you return here — invite codes stay on the link.</p>
-    <p><a class="button" href="{{ route('login') }}">Log in to portal</a></p>
+    <p>
+        <a class="button" href="{{ route('login') }}">Log in to portal</a>
+        <a class="button ghost" href="{{ route('apply') }}">Apply to teach</a>
+    </p>
     @if($inviteState === 'valid')
         <h2>{{ $invite->person->preferred_name }}</h2>
         <p class="lede">This link is your invite. Set a password once. It opens only your induction, your forms, and your contract.</p>
