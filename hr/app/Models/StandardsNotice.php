@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StandardsNotice extends Model
 {
@@ -17,5 +18,10 @@ class StandardsNotice extends Model
             'due_on' => 'date',
             'reply_on' => 'date',
         ];
+    }
+
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
     }
 }

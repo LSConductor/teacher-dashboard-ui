@@ -52,7 +52,7 @@
             font-size: 17px;
             line-height: 1.5;
         }
-        header {
+        body > header {
             background: var(--navy);
             color: #fff;
             padding: 16px 28px;
@@ -159,6 +159,17 @@
         .sheet-body p { margin: 0 0 14px; }
         .sheet-foot { padding: 4px 32px 22px; color: var(--muted); font-size: 13px; }
         .day-code { font-family: var(--sans); font-size: 42px; letter-spacing: .22em; font-weight: 600; font-variant-numeric: tabular-nums; margin: 8px 0 0; }
+        .record { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); margin: 0 0 22px; max-width: 680px; }
+        .record-head { padding: 26px 32px 0; }
+        .record-kicker { margin: 0; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--navy); font-weight: 600; }
+        .record h2 { font-size: 34px; line-height: 1.08; margin: 6px 0 0; }
+        .record-body { padding: 14px 32px 28px; }
+        .record-body > p { font-size: 18px; line-height: 1.5; max-width: 58ch; }
+        .record form { max-width: 26rem; }
+        .record input:focus, .record select:focus, .record textarea:focus { outline: 2px solid var(--navy); border-color: var(--navy); }
+        .entry { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
+        .entry-title { font-family: var(--serif); font-size: 22px; line-height: 1.2; margin: 0 0 4px; }
+        .answer { margin: 12px 0 0; padding: 14px 16px; background: #f6f1e8; border-radius: 12px; }
         .dayboard { max-width: 760px; }
         .dayhero { border-radius: 20px; padding: 28px 32px 22px; margin: 0 0 22px; }
         .dayhero .kicker { margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
@@ -201,11 +212,12 @@
         .view-bar p { margin: 0; max-width: 70ch; }
         .view-bar button { background: #fff; color: var(--amber); }
         @media (max-width: 720px) {
-            header, .view-bar { align-items: flex-start; flex-direction: column; }
+            body > header, .view-bar { align-items: flex-start; flex-direction: column; }
             .person, .grid { grid-template-columns: 1fr; }
             .wrap { padding: 18px 14px 36px; }
             h1, .dayhero h1 { font-size: 32px; }
-            .dayhero, .sheet-body, .sheet-head { padding-left: 18px; padding-right: 18px; }
+            .dayhero, .sheet-body, .sheet-head, .record-head, .record-body { padding-left: 18px; padding-right: 18px; }
+            .record h2 { font-size: 28px; }
         }
     </style>
 </head>

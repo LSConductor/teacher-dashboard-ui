@@ -54,7 +54,7 @@ class MorningWatch
                         'person' => $person,
                         'level' => $days !== null && $days <= 7 ? 'red' : 'amber',
                         'label' => $days !== null && $days < 0 ? 'Reply overdue' : ($days !== null && $days <= 7 ? 'This week' : 'Reply due'),
-                        'text' => 'Standards reply is due '.$notice->due_on->timezone('Australia/Sydney')->format('j M Y').'. Told '.$notice->told_on->timezone('Australia/Sydney')->format('j M Y').'.',
+                        'text' => '28-day reply is due '.$notice->due_on->timezone('Australia/Sydney')->format('j M Y').'. Told '.$notice->told_on->timezone('Australia/Sydney')->format('j M Y').'.',
                     ]);
                 }
             }

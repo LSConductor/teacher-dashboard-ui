@@ -139,7 +139,7 @@ class CasualController extends Controller
         $person->load([
             'accreditation', 'wwcc', 'contracts.template', 'acknowledgements',
             'bookings', 'unavailabilities', 'dayNotes.author', 'pdEntries', 'mentor',
-            'conductFlags', 'standardsNotices', 'dayRolls',
+            'conductFlags.recorder', 'standardsNotices.recorder', 'dayRolls',
             'supervisor', 'goal', 'observation', 'annualReview',
         ]);
         $modules = InductionModule::query()

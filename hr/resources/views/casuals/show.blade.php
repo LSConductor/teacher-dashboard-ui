@@ -45,7 +45,7 @@
             }
         }
     }
-    $tabs = ['person' => 'Person', 'clearances' => 'Clearances', 'day' => 'The day', 'learning' => 'Learning', 'paper' => 'Paper'];
+    $tabs = ['person' => 'Person', 'clearances' => 'Clearances', 'day' => 'The day', 'learning' => 'Learning', 'paper' => 'Records'];
 @endphp
 <h1>{{ $person->preferred_name }}</h1>
 <p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
@@ -391,59 +391,122 @@
 
 <section class="panel panel-paper">
 @if($sensitive)
-<div class="card">
-    <h2>Standards reply</h2>
-    <p class="muted">When practice may not meet the Standards, the teacher is told and has 28 days to answer. The 28 days are counted here.</p>
-    @foreach($person->standardsNotices as $notice)
-        <p>Told {{ $notice->told_on->timezone('Australia/Sydney')->format('j M Y') }}. Reply due {{ $notice->due_on->timezone('Australia/Sydney')->format('j M Y') }}.
-            @if($notice->reply_on)
-                Answered {{ $notice->reply_on->timezone('Australia/Sydney')->format('j M Y') }}.
+@php
+    $ownFile = (int) auth()->user()->person_id === (int) $person->id;
+    $matterKinds = [
+        'allegation' => 'Allegation',
+        'child_protection' => 'Child protection',
+        'complaint' => 'Serious complaint',
+    ];
+    $sydneyDay = now()->timezone('Australia/Sydney')->startOfDay();
+@endphp
+<article class="record">
+    <header class="record-head">
+        <p class="record-kicker">Teaching standards</p>
+        <h2>28-day reply</h2>
+    </header>
+    <div class="record-body">
+        @if($ownFile)
+            <p>When the school tells you that your practice may not meet the Standards, you have 28 days to answer. The answer is written here.</p>
+        @else
+            <p>Use this after you have told {{ $person->preferred_name }} that their practice may not meet the Standards. The 28 days begin on the day you told them. Watch keeps it in view until the answer is saved.</p>
+        @endif
+        @forelse($person->standardsNotices->sortByDesc('told_on') as $notice)
+            @php
+                $due = $notice->due_on->copy()->timezone('Australia/Sydney')->startOfDay();
+                $daysLeft = (int) $sydneyDay->diffInDays($due, false);
+            @endphp
+            <div class="entry">
+                <p class="entry-title">Reply due {{ $due->format('j F Y') }}</p>
+                <p class="meta">Told {{ $notice->told_on->timezone('Australia/Sydney')->format('j F Y') }}.
+                    @if($notice->reply_on)
+                        Answered {{ $notice->reply_on->timezone('Australia/Sydney')->format('j F Y') }}.
+                    @elseif($daysLeft > 1)
+                        {{ $daysLeft }} days left.
+                    @elseif($daysLeft === 1)
+                        1 day left.
+                    @elseif($daysLeft === 0)
+                        Due today.
+                    @else
+                        Overdue.
+                    @endif
+                </p>
+                @if($notice->reply)
+                    <p class="answer">{{ $notice->reply }}</p>
+                @elseif(! $notice->reply_on)
+                    <form method="post" action="{{ route('casuals.standards.reply', [$person, $notice]) }}">
+                        @csrf
+                        <label for="reply_{{ $notice->id }}">{{ $ownFile ? 'Your answer' : 'The answer, if it was given on paper' }}</label>
+                        <textarea id="reply_{{ $notice->id }}" name="reply" required></textarea>
+                        <p><button type="submit">Save the answer</button></p>
+                    </form>
+                @endif
+            </div>
+        @empty
+            @if($ownFile)
+                <p class="meta">Nothing is waiting for your answer.</p>
             @endif
-        </p>
-        @if($notice->reply)
-            <p>{{ $notice->reply }}</p>
-        @elseif(! $notice->reply_on)
-            <form method="post" action="{{ route('casuals.standards.reply', [$person, $notice]) }}">
+        @endforelse
+        @if($canEdit)
+            <form method="post" action="{{ route('casuals.standards', $person) }}">
                 @csrf
-                <label for="reply_{{ $notice->id }}">Reply</label>
-                <textarea id="reply_{{ $notice->id }}" name="reply" required></textarea>
-                <p><button type="submit">Save the reply</button></p>
+                <label for="told_on">Day you told them</label>
+                <input id="told_on" type="date" name="told_on" required>
+                <p class="meta" id="due-preview">The answer is due 28 days after that day.</p>
+                <p><button type="submit">Count the 28 days</button></p>
             </form>
         @endif
-    @endforeach
-    @if($canEdit)
-        <form method="post" action="{{ route('casuals.standards', $person) }}">
-            @csrf
-            <label for="told_on">Date the teacher was told</label>
-            <input id="told_on" type="date" name="told_on" required>
-            <p><button type="submit">Start the 28 days</button></p>
-        </form>
-    @endif
-</div>
+    </div>
+</article>
 @if($canEdit)
-<div class="card">
-    <h2>Staff conduct</h2>
-    <p class="muted">Write the type, the date, and where the full file lives. Do not write the student's story or the detail here.</p>
-    @foreach($person->conductFlags as $flag)
-        <p>{{ ['allegation' => 'Allegation', 'child_protection' => 'Child protection', 'complaint' => 'Serious complaint'][$flag->kind] ?? $flag->kind }}
-            · {{ $flag->noted_on->timezone('Australia/Sydney')->format('j M Y') }}
-            · {{ $flag->location }}</p>
-    @endforeach
-    <form method="post" action="{{ route('casuals.conduct', $person) }}">
-        @csrf
-        <label for="kind">Type</label>
-        <select id="kind" name="kind">
-            <option value="allegation">Allegation</option>
-            <option value="child_protection">Child protection</option>
-            <option value="complaint">Serious complaint</option>
-        </select>
-        <label for="noted_on">Date</label>
-        <input id="noted_on" type="date" name="noted_on" required>
-        <label for="location">Where the full file lives</label>
-        <input id="location" name="location" required maxlength="200">
-        <p><button type="submit">Save the flag</button></p>
-    </form>
-</div>
+<article class="record">
+    <header class="record-head">
+        <p class="record-kicker">A sensitive matter</p>
+        <h2>Where the full file is kept</h2>
+    </header>
+    <div class="record-body">
+        <p>An allegation, a child-protection matter, or a serious complaint is not written out here. Write the kind, the day, and the place the full file is kept. A director does not see this record. The story stays in that file.</p>
+        @foreach($person->conductFlags->sortByDesc('noted_on') as $flag)
+            <div class="entry">
+                <p class="entry-title">{{ $matterKinds[$flag->kind] ?? $flag->kind }}</p>
+                <p>{{ $flag->noted_on->timezone('Australia/Sydney')->format('j F Y') }}</p>
+                <p>{{ $flag->location }}</p>
+                @if($flag->recorder)
+                    <p class="meta">Written by {{ $flag->recorder->name }}</p>
+                @endif
+            </div>
+        @endforeach
+        <form method="post" action="{{ route('casuals.conduct', $person) }}">
+            @csrf
+            <label for="kind">Kind of matter</label>
+            <select id="kind" name="kind">
+                @foreach($matterKinds as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </select>
+            <label for="noted_on">Day it was raised</label>
+            <input id="noted_on" type="date" name="noted_on" required>
+            <label for="location">Place the full file is kept</label>
+            <input id="location" name="location" required maxlength="200" placeholder="Classter staff file 14">
+            <p><button type="submit">Save the place it is kept</button></p>
+        </form>
+    </div>
+</article>
+<script>
+    const toldOn = document.getElementById('told_on');
+    const duePreview = document.getElementById('due-preview');
+    if (toldOn && duePreview) {
+        toldOn.addEventListener('change', () => {
+            if (!toldOn.value) {
+                duePreview.textContent = 'The answer is due 28 days after that day.';
+                return;
+            }
+            const due = new Date(toldOn.value + 'T00:00:00');
+            due.setDate(due.getDate() + 28);
+            duePreview.textContent = 'The answer is due on ' + due.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) + '.';
+        });
+    }
+</script>
 @endif
 <div class="card">
     <h2 id="contracts">Contracts</h2>

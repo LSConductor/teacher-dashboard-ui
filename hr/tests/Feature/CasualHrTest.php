@@ -1605,7 +1605,7 @@ class CasualHrTest extends TestCase
             ->assertSee('Clearances')
             ->assertSee('The day')
             ->assertSee('Learning')
-            ->assertSee('Paper')
+            ->assertSee('Records')
             ->assertSee('Amber')
             ->assertSee('Later induction is still open')
             ->assertSee('Call Riley Amber');
@@ -1759,12 +1759,12 @@ class CasualHrTest extends TestCase
             ->assertOk()
             ->assertSee('Sam Green')
             ->assertSee('due this week')
-            ->assertSee('Standards reply is due')
+            ->assertSee('28-day reply is due')
             ->assertDontSee($number);
         $this->actingAs($director)->get(route('watch'))
             ->assertOk()
             ->assertSee('Sam Green')
-            ->assertDontSee('Standards reply')
+            ->assertDontSee('28-day reply')
             ->assertDontSee($number)
             ->assertDontSee('Classter staff file 14');
         $this->actingAs($samUser)->get(route('watch'))->assertForbidden();
@@ -1788,19 +1788,25 @@ class CasualHrTest extends TestCase
             ->assertSee('https://portal.living.school/create-student-incident/', false)
             ->assertSee('Do not write a student')
             ->assertDontSee('Classter staff file 14')
-            ->assertDontSee('Standards reply');
+            ->assertDontSee('28-day reply')
+            ->assertDontSee('Where the full file is kept');
         $this->actingAs($samUser)->get(route('casuals.show', $sam))
             ->assertOk()
             ->assertDontSee('Classter staff file 14')
+            ->assertDontSee('Count the 28 days')
+            ->assertSee('Your answer')
             ->assertSee('Reply due');
         $this->actingAs($hr)->get(route('casuals.show', $sam))
             ->assertSee('Classter staff file 14')
-            ->assertSee('Child protection');
+            ->assertSee('Child protection')
+            ->assertSee('Where the full file is kept')
+            ->assertSee('Count the 28 days')
+            ->assertSee('Written by HR Officer');
 
         $this->actingAs($samUser)->post(route('casuals.standards.reply', [$sam, $notice]), [
             'reply' => 'I have read the note and this is my answer.',
         ])->assertRedirect();
-        $this->actingAs($hr)->get(route('watch'))->assertDontSee('Standards reply is due');
+        $this->actingAs($hr)->get(route('watch'))->assertDontSee('28-day reply is due');
     }
 
     public function test_an_administrator_can_look_through_a_casuals_screens(): void

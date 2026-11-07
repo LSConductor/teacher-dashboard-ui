@@ -154,7 +154,7 @@ class RecordController extends Controller
         ]);
         Audit::record('conduct.flagged', $flag, ['kind' => $flag->kind]);
 
-        return back()->with('status', 'The file location is on the record. The detail stays where you named.');
+        return back()->with('status', 'The place the file is kept is on the record. The story stays in that file.');
     }
 
     public function standards(Request $request, Person $person)
@@ -169,8 +169,9 @@ class RecordController extends Controller
             'recorded_by' => $request->user()->id,
         ]);
         Audit::record('standards.told', $notice);
+        $due = $told->copy()->addDays(28);
 
-        return back()->with('status', 'The 28 days start from '.$told->format('j M Y').'.');
+        return back()->with('status', 'Told '.$told->format('j F Y').'. The answer is due '.$due->format('j F Y').'.');
     }
 
     public function standardsReply(Request $request, Person $person, StandardsNotice $notice)
