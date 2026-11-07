@@ -1715,6 +1715,74 @@
       "sheet_notes": [
         "CV via Brendan re: casual SOTOS teaching"
       ]
+    },
+    {
+      "email": "ellie.r@living.school",
+      "legal_name": "Ellie Ryan",
+      "preferred_name": "Ellie Ryan",
+      "mobile": "",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle"
+      ],
+      "stages": [
+        "S3",
+        "S4"
+      ],
+      "available_days": [
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "Year 8 HSIE and Onland",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2022-01-19",
+      "nesa_number": null,
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2030-01-29",
+      "date_of_birth": null,
+      "sheet_notes": [
+        "Fixed-term part-time teacher, 0.6, Wednesday 28 October 2026 to Friday 11 December 2026. Works Wednesdays to Fridays at Middle School. Stage 3/4, primarily Year 8 HSIE and Onland. Classification on the letter: Step 2.4. School service date on the letter: 27 January 2026."
+      ]
+    },
+    {
+      "email": "sam@living.school",
+      "legal_name": "Samuel Buckley",
+      "preferred_name": "Sam Buckley",
+      "mobile": "0407 906 389",
+      "neighbourhood": "K-12",
+      "neighbourhoods": [
+        "K-12"
+      ],
+      "stages": [
+        "K-12"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "Music",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "256030",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": null,
+      "date_of_birth": "1980-08-18",
+      "sheet_notes": [
+        "Personal email on the CV: samuelbuckley.31svb@gmail.com. Phone and NESA number taken from the CV."
+      ]
     }
   ],
   "needs_email": [
@@ -1726,12 +1794,6 @@
     },
     {
       "legal_name": "David Frazer",
-      "mobile": "",
-      "list": "Casual teachers",
-      "why": "No email on the sheet"
-    },
-    {
-      "legal_name": "Ellie Ryan",
       "mobile": "",
       "list": "Casual teachers",
       "why": "No email on the sheet"
@@ -1750,12 +1812,6 @@
     },
     {
       "legal_name": "Rebecka Harwood",
-      "mobile": "",
-      "list": "Casual teachers",
-      "why": "No email on the sheet"
-    },
-    {
-      "legal_name": "Samuel Buckley",
       "mobile": "",
       "list": "Casual teachers",
       "why": "No email on the sheet"

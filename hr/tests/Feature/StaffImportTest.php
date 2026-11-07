@@ -34,7 +34,7 @@ class StaffImportTest extends TestCase
 
         $first = $import->load($school, $payload);
         $this->assertSame(count($payload['people']), $first['created']);
-        $this->assertSame(10, count($first['needs_email']));
+        $this->assertSame(8, count($first['needs_email']));
 
         $sample = collect($payload['people'])->first(fn ($row) => filled($row['nesa_number'] ?? null));
         $named = Person::query()->where('email', $sample['email'])->first();
@@ -109,5 +109,37 @@ class StaffImportTest extends TestCase
         $this->actingAs($hr)->post(route('casuals.restore', $sam))
             ->assertRedirect(route('casuals.show', $sam));
         $this->assertNull($sam->fresh()->archived_at);
+    }
+
+    public function test_ellie_and_sam_come_on_from_the_papers_without_pay(): void
+    {
+        $payload = json_decode((string) file_get_contents(database_path('data/casual-staff-2026-07-30.json')), true);
+        $school = School::query()->where('slug', 'living-school')->first();
+        (new StaffImport)->load($school, $payload);
+        $gate = app(ClearToTeach::class);
+
+        $ellie = Person::query()->where('email', 'ellie.r@living.school')->first();
+        $this->assertNotNull($ellie);
+        $this->assertSame('Middle', $ellie->neighbourhood);
+        $this->assertSame(['Wednesday', 'Thursday', 'Friday'], $ellie->available_days);
+        $this->assertSame('2030-01-29', $ellie->wwcc->expires_on->toDateString());
+        $this->assertSame('cleared', $ellie->wwcc->outcome);
+        $this->assertNull($ellie->wwcc->wwcc_number);
+        $this->assertSame('green', $gate->assess($ellie)['light']);
+        $note = $ellie->dayNotes()->first()->body;
+        $this->assertStringContainsString('11 December 2026', $note);
+        $this->assertStringContainsString('28 October 2026', $note);
+        $this->assertStringNotContainsString('$', $note);
+
+        $sam = Person::query()->where('email', 'sam@living.school')->first();
+        $this->assertSame('Sam Buckley', $sam->preferred_name);
+        $this->assertSame('Samuel Buckley', $sam->legal_name);
+        $this->assertSame('256030', $sam->accreditation->nesa_number);
+        $this->assertSame('0407 906 389', $sam->mobile);
+        $this->assertSame('1980-08-18', $sam->wwcc->date_of_birth->toDateString());
+        $this->assertSame('pending', $sam->wwcc->outcome);
+        $this->assertNull($sam->wwcc->verified_at);
+        $this->assertSame('red', $gate->assess($sam)['light']);
+        $this->assertStringNotContainsString('$', $sam->dayNotes()->first()->body);
     }
 }

@@ -59,6 +59,7 @@ class StaffImport
             'neighbourhood' => $this->blank($row['neighbourhood'] ?? null),
             'neighbourhoods' => $row['neighbourhoods'] ?? [],
             'stages' => $row['stages'] ?? [],
+            'available_days' => $this->days($row),
             'status' => ($row['status'] ?? '') === 'applicant' ? 'applicant' : 'casual_pool',
         ]);
         $this->accreditation($school, $person, $row);
@@ -89,6 +90,11 @@ class StaffImport
         }
         if ($stages !== ($person->stages ?? [])) {
             $person->stages = $stages;
+            $changed = true;
+        }
+        $days = $this->days($row);
+        if ($days && empty($person->available_days)) {
+            $person->available_days = $days;
             $changed = true;
         }
         if ($person->status === 'applicant' && ($row['status'] ?? '') === 'casual_pool') {
@@ -140,7 +146,8 @@ class StaffImport
     private function wwcc(School $school, ?User $author, Person $person, array $row): bool
     {
         $expires = $this->blank($row['wwcc_expires_on'] ?? null);
-        if (! $expires) {
+        $dob = $this->blank($row['date_of_birth'] ?? null);
+        if (! $expires && ! $dob) {
             return false;
         }
         $record = $person->wwcc()->firstOrNew(['person_id' => $person->id]);
@@ -149,6 +156,22 @@ class StaffImport
         }
         $record->school_id = $school->id;
         $record->name_on_check = $record->name_on_check ?: $person->legal_name;
+        $changed = ! $record->exists;
+        if ($dob && blank($record->date_of_birth)) {
+            $record->date_of_birth = $dob;
+            $changed = true;
+        }
+        if (! $expires) {
+            if (blank($record->outcome)) {
+                $record->outcome = 'pending';
+                $changed = true;
+            }
+            if ($changed) {
+                $record->save();
+            }
+
+            return $changed;
+        }
         if (blank($record->expires_on)) {
             $record->expires_on = $expires;
         }
@@ -158,6 +181,15 @@ class StaffImport
         $record->save();
 
         return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private function days(array $row): array
+    {
+        return array_values(array_filter($row['available_days'] ?? [], fn ($day) => is_string($day) && $day !== ''));
     }
 
     /**
