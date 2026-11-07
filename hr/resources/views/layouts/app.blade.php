@@ -100,6 +100,25 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .muted { color: var(--muted); }
         a.link { color: var(--navy); }
+        .file-tab { position: absolute; opacity: 0; width: 1px; height: 1px; }
+        .file-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+        .file-tabs label { margin: 0; cursor: pointer; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; background: #fff; font-weight: 650; }
+        .file-card .panel { display: none; }
+        .file-open .panel { display: block; }
+        .file-card #ft-person:checked ~ .panel-person,
+        .file-card #ft-clearances:checked ~ .panel-clearances,
+        .file-card #ft-day:checked ~ .panel-day,
+        .file-card #ft-learning:checked ~ .panel-learning,
+        .file-card #ft-paper:checked ~ .panel-paper { display: block; }
+        .file-card #ft-person:checked ~ .file-tabs label[for="ft-person"],
+        .file-card #ft-clearances:checked ~ .file-tabs label[for="ft-clearances"],
+        .file-card #ft-day:checked ~ .file-tabs label[for="ft-day"],
+        .file-card #ft-learning:checked ~ .file-tabs label[for="ft-learning"],
+        .file-card #ft-paper:checked ~ .file-tabs label[for="ft-paper"] { background: var(--navy); color: #fff; }
+        .alarm-pill { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 750; padding: 2px 6px; border-radius: 999px; }
+        .alarm-pill.amber { background: var(--amber-bg); color: var(--amber); }
+        .alarm-pill.red { background: var(--red-bg); color: var(--red); }
+        .alarm-row { margin: 0 0 8px; }
         @media (max-width: 720px) {
             header { align-items: flex-start; flex-direction: column; }
             .person, .grid { grid-template-columns: 1fr; }

@@ -8,6 +8,44 @@
         $module = $dayOne->firstWhere('id', $ack->module_id);
         return $module && (int) $ack->module_version >= (int) $module->version;
     })->unique('module_id')->count();
+    $tabFor = function (string $text): string {
+        foreach (['WWCC', 'Accreditation', 'eTAMS', 'Supervisor', 'APP'] as $word) {
+            if (str_contains($text, $word)) {
+                return 'clearances';
+            }
+        }
+        if (str_contains($text, 'Day-one') || str_contains($text, 'induction')) {
+            return 'day';
+        }
+        if (str_contains($text, 'engagement') || str_contains($text, 'signed')) {
+            return 'paper';
+        }
+
+        return 'person';
+    };
+    $tabLevel = ['person' => null, 'clearances' => null, 'day' => null, 'learning' => null, 'paper' => null];
+    foreach ($gate['reasons'] as $reason) {
+        $tab = $tabFor($reason['text']);
+        if ($tabLevel[$tab] !== 'red') {
+            $tabLevel[$tab] = $reason['level'];
+        }
+    }
+    $openTab = 'person';
+    foreach (['clearances', 'day', 'paper', 'learning', 'person'] as $name) {
+        if ($tabLevel[$name] === 'red') {
+            $openTab = $name;
+            break;
+        }
+    }
+    if ($openTab === 'person') {
+        foreach (['clearances', 'day', 'paper'] as $name) {
+            if ($tabLevel[$name] === 'amber') {
+                $openTab = $name;
+                break;
+            }
+        }
+    }
+    $tabs = ['person' => 'Person', 'clearances' => 'Clearances', 'day' => 'The day', 'learning' => 'Learning', 'paper' => 'Paper'];
 @endphp
 <h1>{{ $person->preferred_name }}</h1>
 <p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
@@ -28,21 +66,25 @@
 @if($person->mentor)
     <p class="muted">Mentor: {{ $person->mentor->name }} @if($person->mentor->mobile)· {{ $person->mentor->mobile }}@endif</p>
 @endif
-<ul>
-    @forelse($gate['reasons'] as $reason)
-        <li>{{ $reason['text'] }}</li>
-    @empty
-        <li>Clear to teach.</li>
-    @endforelse
-</ul>
+@forelse($gate['reasons'] as $reason)
+    <p class="alarm-row"><span class="alarm-pill {{ $reason['level'] }}">{{ $reason['level'] === 'red' ? 'Red' : 'Amber' }}</span> {{ $reason['text'] }}</p>
+@empty
+    <p>Clear to teach.</p>
+@endforelse
 
-<div class="card">
-    <h2>Expiry watch</h2>
-    <p>WWCC @if($person->wwcc?->expires_on){{ $person->wwcc->expires_on->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $wwccWatch }}</p>
-    <p>Accreditation maintenance @if($person->accreditation?->maintenance_end){{ $person->accreditation->maintenance_end->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $maintenanceWatch }}</p>
-    <p class="muted">A date inside 30 days is a warning. A missing or lapsed date keeps the light red, and a Director cannot book that casual.</p>
-</div>
+<div class="{{ $canEdit ? 'file-card' : 'file-open' }}">
+@if($canEdit)
+    @foreach($tabs as $key => $label)
+        <input class="file-tab" type="radio" name="file-tab" id="ft-{{ $key }}" @checked($openTab === $key)>
+    @endforeach
+    <div class="file-tabs">
+        @foreach($tabs as $key => $label)
+            <label for="ft-{{ $key }}">{{ $label }}@if($tabLevel[$key]) <span class="alarm-pill {{ $tabLevel[$key] }}">{{ $tabLevel[$key] === 'red' ? 'Red' : 'Amber' }}</span>@endif</label>
+        @endforeach
+    </div>
+@endif
 
+<section class="panel panel-person">
 @if($canEdit)
 <div class="card">
     <h2>Details</h2>
@@ -57,7 +99,45 @@
     </form>
 </div>
 @endif
+<div class="card">
+    <h2>Mentor</h2>
+    <p>Mentor: {{ $person->mentor->name ?? 'not named' }}</p>
+    <p>Accreditation Supervisor: {{ $person->supervisor->name ?? 'not named' }}</p>
+    @if($canEdit)
+        <form method="post" action="{{ route('casuals.mentor', $person) }}" class="grid">
+            @csrf
+            <div>
+                <label for="named_mentor">Name a mentor</label>
+                <select id="named_mentor" name="mentor_user_id">
+                    <option value="">None yet</option>
+                    @foreach($mentors as $mentor)
+                        <option value="{{ $mentor->id }}" @selected($person->mentor_user_id == $mentor->id)>{{ $mentor->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="named_supervisor">Accreditation Supervisor</label>
+                <select id="named_supervisor" name="supervisor_user_id">
+                    <option value="">None yet</option>
+                    @foreach($mentors as $mentor)
+                        <option value="{{ $mentor->id }}" @selected($person->supervisor_user_id == $mentor->id)>{{ $mentor->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <p><button type="submit">Save names</button></p>
+        </form>
+        <p class="muted">A Conditional or Provisional casual stays red until an Accreditation Supervisor is named. Choose a mentor who is Proficient or above.</p>
+    @endif
+</div>
+</section>
 
+<section class="panel panel-clearances">
+<div class="card">
+    <h2>Expiry watch</h2>
+    <p>WWCC @if($person->wwcc?->expires_on){{ $person->wwcc->expires_on->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $wwccWatch }}</p>
+    <p>Accreditation maintenance @if($person->accreditation?->maintenance_end){{ $person->accreditation->maintenance_end->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $maintenanceWatch }}</p>
+    <p class="muted">A date inside 30 days is a warning. A missing or lapsed date keeps the light red, and a Director cannot book that casual.</p>
+</div>
 @if($sensitive)
 <div class="grid">
     <form class="card" method="post" action="{{ route('casuals.wwcc', $person) }}">
@@ -122,7 +202,9 @@
     @endif
 </div>
 @endif
+</section>
 
+<section class="panel panel-day">
 <div class="card">
     <h2>Induction</h2>
     @foreach($modules as $module)
@@ -135,7 +217,153 @@
         </p>
     @endforeach
 </div>
+@if(in_array(auth()->user()->role, ['hr','conductor','office','director']))
+<div class="card">
+    <h2>Book a day</h2>
+    @if($gate['light'] === 'red')
+        <p>This casual is red and cannot be booked. There is no override.</p>
+    @else
+    <p class="muted">The plan link points at the primary portal. This app does not edit programs. Booking also files the one-day confirmation.</p>
+    <form method="post" action="{{ route('casuals.bookings', $person) }}" class="grid">
+        @csrf
+        <div><label for="booked_on">Date</label><input id="booked_on" type="date" name="booked_on" required></div>
+        <div><label for="class_label">Class</label><input id="class_label" name="class_label" required></div>
+        <div><label for="teacher_name">Teacher they are with</label><input id="teacher_name" name="teacher_name" placeholder="The class teacher"></div>
+        <div><label for="start_time">Start</label><input id="start_time" name="start_time" value="9:00"></div>
+        <div><label for="finish_time">Finish</label><input id="finish_time" name="finish_time" value="3:15"></div>
+        <div><label for="plan_url">Plan link</label><input id="plan_url" name="plan_url" type="url" placeholder="https://portal.living.school/..."></div>
+        <div><label for="external_program_id">Primary program id</label><input id="external_program_id" name="external_program_id"></div>
+        @if(auth()->user()->role === 'conductor')
+            <div><label for="conductor_note">Conductor note for amber</label><textarea id="conductor_note" name="conductor_note"></textarea></div>
+        @endif
+        <p><button type="submit">Book</button></p>
+    </form>
+    @endif
+    @foreach($person->bookings->sortByDesc('booked_on') as $booking)
+        <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }}@if($booking->teacher_name) · {{ $booking->teacher_name }}@endif · {{ $booking->light_at_booking }}
+            @if($booking->plan_url)<a href="{{ $booking->plan_url }}">Open plan</a>@endif
+        </p>
+    @endforeach
+</div>
+@endif
 
+    <h3>Note from the day</h3>
+    @forelse($person->dayNotes as $note)
+        <p>{{ $note->body }} @if($note->descriptors)<span class="muted">{{ $note->descriptors }}</span>@endif <span class="muted">{{ $note->author->name }}</span></p>
+    @empty
+        <p class="muted">No note from the day yet.</p>
+    @endforelse
+    @if($canWritePerformance)
+        <form class="card" method="post" action="{{ route('casuals.notes', $person) }}">
+            @csrf
+            <label for="body">Three lines is enough</label>
+            <textarea id="body" name="body" required></textarea>
+            <label for="descriptors">Standard descriptors</label>
+            <input id="descriptors" name="descriptors" placeholder="4.1, 5.2">
+            <p><button type="submit">Add note</button></p>
+        </form>
+    @endif
+<form class="card" method="post" action="{{ route('casuals.unavailability', $person) }}">
+    @csrf
+    <h2>Do not book</h2>
+    <label for="starts_on">From</label><input id="starts_on" type="date" name="starts_on" required>
+    <label for="ends_on">To</label><input id="ends_on" type="date" name="ends_on" required>
+    <label for="reason">Reason</label><input id="reason" name="reason">
+    <p><button type="submit">Save dates</button></p>
+    @foreach($person->unavailabilities as $off)
+        <p class="muted">{{ $off->starts_on->toDateString() }} to {{ $off->ends_on->toDateString() }} {{ $off->reason }}</p>
+    @endforeach
+</form>
+</section>
+
+<section class="panel panel-learning">
+<div class="card" id="performance">
+    <h2>Learning</h2>
+    <h3>Goal</h3>
+    @if($person->goal)
+        <p>{{ $person->goal->body }} @if($person->goal->descriptors)<span class="muted">{{ $person->goal->descriptors }}</span>@endif</p>
+    @else
+        <p class="muted">No goal yet.</p>
+    @endif
+    @if($canWritePerformance)
+        <form method="post" action="{{ route('casuals.goal', $person) }}">
+            @csrf
+            <label for="goal_body">One goal</label>
+            <textarea id="goal_body" name="body" required>{{ $person->goal?->body ?? '' }}</textarea>
+            <label for="goal_descriptors">Standard descriptors</label>
+            <input id="goal_descriptors" name="descriptors" value="{{ $person->goal?->descriptors ?? '' }}" placeholder="4.1">
+            <p><button type="submit">Save goal</button></p>
+        </form>
+    @endif
+
+    <h3>Observation</h3>
+    @if($person->observation)
+        <p>{{ $person->observation->body }}</p>
+        <p>Next: {{ $person->observation->next_step }} @if($person->observation->descriptors)<span class="muted">{{ $person->observation->descriptors }}</span>@endif</p>
+    @else
+        <p class="muted">No observation yet.</p>
+    @endif
+    @if($canWritePerformance)
+        <form method="post" action="{{ route('casuals.observation', $person) }}">
+            @csrf
+            <label for="seen">What was seen</label>
+            <textarea id="seen" name="body" required>{{ $person->observation?->body ?? '' }}</textarea>
+            <label for="next_step">What to try next</label>
+            <textarea id="next_step" name="next_step" required>{{ $person->observation?->next_step ?? '' }}</textarea>
+            <label for="observation_descriptors">Standard descriptors</label>
+            <input id="observation_descriptors" name="descriptors" value="{{ $person->observation?->descriptors ?? '' }}" placeholder="4.1, 5.2">
+            <p><button type="submit">Save observation</button></p>
+        </form>
+    @endif
+
+    <h3>Annual page</h3>
+    @if($person->annualReview)
+        <p class="muted">Written {{ $person->annualReview->recorded_on?->timezone('Australia/Sydney')->format('j M Y') }}.</p>
+    @else
+        <p class="muted">Not written yet.</p>
+    @endif
+    <p><a class="link" href="{{ route('casuals.annual', $person) }}">Open the short annual page</a></p>
+</div>
+<div class="card">
+    <h2>Professional learning</h2>
+    <p class="muted">Hours against the teacher standards. A school copy for the teacher to paste into eTAMS. eTAMS remains the accreditation record. The casual-status letter uses the days already stored, not these hours.</p>
+    @php
+        $pdHours = (float) $person->pdEntries->sum('hours');
+        $pdHoursLabel = rtrim(rtrim(number_format($pdHours, 2), '0'), '.');
+    @endphp
+    <p>{{ $pdHoursLabel }} {{ $pdHoursLabel === '1' ? 'hour' : 'hours' }} recorded against the teacher standards.</p>
+    @foreach($person->pdEntries as $entry)
+        <p>{{ $entry->occurred_on->timezone('Australia/Sydney')->format('j M Y') }} · {{ $entry->name }} · {{ $entry->hours }}h @if($entry->standards)· Standards {{ $entry->standards }}@endif</p>
+    @endforeach
+    @if($canRecordLearning)
+    <form method="post" action="{{ route('casuals.pd', $person) }}">
+        @csrf
+        <div class="grid">
+            <div><label for="occurred_on">Date</label><input id="occurred_on" type="date" name="occurred_on" required></div>
+            <div><label for="hours">Hours</label><input id="hours" name="hours" type="number" step="0.25" min="0.25" required></div>
+            <div><label for="name">Activity</label><input id="name" name="name" required></div>
+            <div><label for="provider">Provider</label><input id="provider" name="provider"></div>
+            <div><label for="activity_type">Type</label><input id="activity_type" name="activity_type"></div>
+        </div>
+        <p>Standards</p>
+        @foreach([
+            '1' => 'Know students and how they learn',
+            '2' => 'Know the content and how to teach it',
+            '3' => 'Plan for and implement effective teaching and learning',
+            '4' => 'Create and maintain supportive and safe learning environments',
+            '5' => 'Assess, provide feedback and report on student learning',
+            '6' => 'Engage in professional learning',
+            '7' => 'Engage professionally with colleagues, parents and carers',
+        ] as $number => $label)
+            <label style="display:block;"><input style="width:auto" type="checkbox" name="standards[]" value="{{ $number }}"> {{ $number }}. {{ $label }}</label>
+        @endforeach
+        <p><button type="submit">Add hours</button></p>
+    </form>
+    @endif
+</div>
+</section>
+
+<section class="panel panel-paper">
 @if($sensitive)
 <div class="card">
     <h2 id="contracts">Contracts</h2>
@@ -189,177 +417,6 @@
     @endif
 </div>
 @endif
-
-@if(in_array(auth()->user()->role, ['hr','conductor','office','director']))
-<div class="card">
-    <h2>Book a day</h2>
-    @if($gate['light'] === 'red')
-        <p>This casual is red and cannot be booked. There is no override.</p>
-    @else
-    <p class="muted">The plan link points at the primary portal. This app does not edit programs. Booking also files the one-day confirmation.</p>
-    <form method="post" action="{{ route('casuals.bookings', $person) }}" class="grid">
-        @csrf
-        <div><label for="booked_on">Date</label><input id="booked_on" type="date" name="booked_on" required></div>
-        <div><label for="class_label">Class</label><input id="class_label" name="class_label" required></div>
-        <div><label for="teacher_name">Teacher they are with</label><input id="teacher_name" name="teacher_name" placeholder="The class teacher"></div>
-        <div><label for="start_time">Start</label><input id="start_time" name="start_time" value="9:00"></div>
-        <div><label for="finish_time">Finish</label><input id="finish_time" name="finish_time" value="3:15"></div>
-        <div><label for="plan_url">Plan link</label><input id="plan_url" name="plan_url" type="url" placeholder="https://portal.living.school/..."></div>
-        <div><label for="external_program_id">Primary program id</label><input id="external_program_id" name="external_program_id"></div>
-        @if(auth()->user()->role === 'conductor')
-            <div><label for="conductor_note">Conductor note for amber</label><textarea id="conductor_note" name="conductor_note"></textarea></div>
-        @endif
-        <p><button type="submit">Book</button></p>
-    </form>
-    @endif
-    @foreach($person->bookings->sortByDesc('booked_on') as $booking)
-        <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }}@if($booking->teacher_name) · {{ $booking->teacher_name }}@endif · {{ $booking->light_at_booking }}
-            @if($booking->plan_url)<a href="{{ $booking->plan_url }}">Open plan</a>@endif
-        </p>
-    @endforeach
-</div>
-@endif
-
-<div class="card" id="performance">
-    <h2>Performance</h2>
-    <p>Mentor: {{ $person->mentor->name ?? 'not named' }}</p>
-    <p>Accreditation Supervisor: {{ $person->supervisor->name ?? 'not named' }}</p>
-    @if($canEdit)
-        <form method="post" action="{{ route('casuals.mentor', $person) }}" class="grid">
-            @csrf
-            <div>
-                <label for="named_mentor">Name a mentor</label>
-                <select id="named_mentor" name="mentor_user_id">
-                    <option value="">None yet</option>
-                    @foreach($mentors as $mentor)
-                        <option value="{{ $mentor->id }}" @selected($person->mentor_user_id == $mentor->id)>{{ $mentor->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label for="named_supervisor">Accreditation Supervisor</label>
-                <select id="named_supervisor" name="supervisor_user_id">
-                    <option value="">None yet</option>
-                    @foreach($mentors as $mentor)
-                        <option value="{{ $mentor->id }}" @selected($person->supervisor_user_id == $mentor->id)>{{ $mentor->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <p><button type="submit">Save names</button></p>
-        </form>
-        <p class="muted">A Conditional or Provisional casual stays red until an Accreditation Supervisor is named. Choose a mentor who is Proficient or above.</p>
-    @endif
-
-    <h3>Goal</h3>
-    @if($person->goal)
-        <p>{{ $person->goal->body }} @if($person->goal->descriptors)<span class="muted">{{ $person->goal->descriptors }}</span>@endif</p>
-    @else
-        <p class="muted">No goal yet.</p>
-    @endif
-    @if($canWritePerformance)
-        <form method="post" action="{{ route('casuals.goal', $person) }}">
-            @csrf
-            <label for="goal_body">One goal</label>
-            <textarea id="goal_body" name="body" required>{{ $person->goal?->body ?? '' }}</textarea>
-            <label for="goal_descriptors">Standard descriptors</label>
-            <input id="goal_descriptors" name="descriptors" value="{{ $person->goal?->descriptors ?? '' }}" placeholder="4.1">
-            <p><button type="submit">Save goal</button></p>
-        </form>
-    @endif
-
-    <h3>Note from the day</h3>
-    @forelse($person->dayNotes as $note)
-        <p>{{ $note->body }} @if($note->descriptors)<span class="muted">{{ $note->descriptors }}</span>@endif <span class="muted">{{ $note->author->name }}</span></p>
-    @empty
-        <p class="muted">No note from the day yet.</p>
-    @endforelse
-    @if($canWritePerformance)
-        <form method="post" action="{{ route('casuals.notes', $person) }}">
-            @csrf
-            <label for="body">Three lines is enough</label>
-            <textarea id="body" name="body" required></textarea>
-            <label for="descriptors">Standard descriptors</label>
-            <input id="descriptors" name="descriptors" placeholder="4.1, 5.2">
-            <p><button type="submit">Add note</button></p>
-        </form>
-    @endif
-
-    <h3>Observation</h3>
-    @if($person->observation)
-        <p>{{ $person->observation->body }}</p>
-        <p>Next: {{ $person->observation->next_step }} @if($person->observation->descriptors)<span class="muted">{{ $person->observation->descriptors }}</span>@endif</p>
-    @else
-        <p class="muted">No observation yet.</p>
-    @endif
-    @if($canWritePerformance)
-        <form method="post" action="{{ route('casuals.observation', $person) }}">
-            @csrf
-            <label for="seen">What was seen</label>
-            <textarea id="seen" name="body" required>{{ $person->observation?->body ?? '' }}</textarea>
-            <label for="next_step">What to try next</label>
-            <textarea id="next_step" name="next_step" required>{{ $person->observation?->next_step ?? '' }}</textarea>
-            <label for="observation_descriptors">Standard descriptors</label>
-            <input id="observation_descriptors" name="descriptors" value="{{ $person->observation?->descriptors ?? '' }}" placeholder="4.1, 5.2">
-            <p><button type="submit">Save observation</button></p>
-        </form>
-    @endif
-
-    <h3>Annual page</h3>
-    @if($person->annualReview)
-        <p class="muted">Written {{ $person->annualReview->recorded_on?->timezone('Australia/Sydney')->format('j M Y') }}.</p>
-    @else
-        <p class="muted">Not written yet.</p>
-    @endif
-    <p><a class="link" href="{{ route('casuals.annual', $person) }}">Open the short annual page</a></p>
-</div>
-
-<form class="card" method="post" action="{{ route('casuals.unavailability', $person) }}">
-    @csrf
-    <h2>Do not book</h2>
-    <label for="starts_on">From</label><input id="starts_on" type="date" name="starts_on" required>
-    <label for="ends_on">To</label><input id="ends_on" type="date" name="ends_on" required>
-    <label for="reason">Reason</label><input id="reason" name="reason">
-    <p><button type="submit">Save dates</button></p>
-    @foreach($person->unavailabilities as $off)
-        <p class="muted">{{ $off->starts_on->toDateString() }} to {{ $off->ends_on->toDateString() }} {{ $off->reason }}</p>
-    @endforeach
-</form>
-
-<div class="card">
-    <h2>Professional learning</h2>
-    <p class="muted">Hours against the teacher standards. A school copy for the teacher to paste into eTAMS. eTAMS remains the accreditation record. The casual-status letter uses the days already stored, not these hours.</p>
-    @php
-        $pdHours = (float) $person->pdEntries->sum('hours');
-        $pdHoursLabel = rtrim(rtrim(number_format($pdHours, 2), '0'), '.');
-    @endphp
-    <p>{{ $pdHoursLabel }} {{ $pdHoursLabel === '1' ? 'hour' : 'hours' }} recorded against the teacher standards.</p>
-    @foreach($person->pdEntries as $entry)
-        <p>{{ $entry->occurred_on->timezone('Australia/Sydney')->format('j M Y') }} · {{ $entry->name }} · {{ $entry->hours }}h @if($entry->standards)· Standards {{ $entry->standards }}@endif</p>
-    @endforeach
-    @if($canRecordLearning)
-    <form method="post" action="{{ route('casuals.pd', $person) }}">
-        @csrf
-        <div class="grid">
-            <div><label for="occurred_on">Date</label><input id="occurred_on" type="date" name="occurred_on" required></div>
-            <div><label for="hours">Hours</label><input id="hours" name="hours" type="number" step="0.25" min="0.25" required></div>
-            <div><label for="name">Activity</label><input id="name" name="name" required></div>
-            <div><label for="provider">Provider</label><input id="provider" name="provider"></div>
-            <div><label for="activity_type">Type</label><input id="activity_type" name="activity_type"></div>
-        </div>
-        <p>Standards</p>
-        @foreach([
-            '1' => 'Know students and how they learn',
-            '2' => 'Know the content and how to teach it',
-            '3' => 'Plan for and implement effective teaching and learning',
-            '4' => 'Create and maintain supportive and safe learning environments',
-            '5' => 'Assess, provide feedback and report on student learning',
-            '6' => 'Engage in professional learning',
-            '7' => 'Engage professionally with colleagues, parents and carers',
-        ] as $number => $label)
-            <label style="display:block;"><input style="width:auto" type="checkbox" name="standards[]" value="{{ $number }}"> {{ $number }}. {{ $label }}</label>
-        @endforeach
-        <p><button type="submit">Add hours</button></p>
-    </form>
-    @endif
+</section>
 </div>
 @endsection

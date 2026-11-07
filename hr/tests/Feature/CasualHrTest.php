@@ -1562,6 +1562,33 @@ class CasualHrTest extends TestCase
         $this->actingAs($office)->get(route('audit.index'))->assertForbidden();
     }
 
+    public function test_hr_turns_one_card_and_a_director_does_not(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $riley = Person::where('email', 'riley.amber@example.com')->first();
+
+        $this->actingAs($hr)
+            ->get(route('casuals.show', $riley))
+            ->assertOk()
+            ->assertSee('name="file-tab"', false)
+            ->assertSee('Person')
+            ->assertSee('Clearances')
+            ->assertSee('The day')
+            ->assertSee('Learning')
+            ->assertSee('Paper')
+            ->assertSee('Amber')
+            ->assertSee('Later induction is still open')
+            ->assertSee('Call Riley Amber');
+
+        $this->actingAs($director)
+            ->get(route('casuals.show', $riley))
+            ->assertOk()
+            ->assertSee('Book a day')
+            ->assertSee('Later induction is still open')
+            ->assertDontSee('name="file-tab"', false);
+    }
+
     private function tinyJpeg(): string
     {
         $image = imagecreatetruecolor(2, 2);
