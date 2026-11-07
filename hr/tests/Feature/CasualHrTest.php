@@ -143,6 +143,7 @@ class CasualHrTest extends TestCase
             'contracts', 'bookings', 'unavailabilities', 'day_notes', 'pd_entries',
             'invites', 'audit_logs', 'performance_records',
             'partner_pages', 'partner_checks', 'partners',
+            'day_codes', 'day_rolls', 'conduct_flags', 'standards_notices',
         ];
 
         foreach ($tables as $table) {
@@ -1610,6 +1611,191 @@ class CasualHrTest extends TestCase
             ->assertSee('Book a day')
             ->assertSee('Later induction is still open')
             ->assertDontSee('name="file-tab"', false);
+    }
+
+    public function test_the_office_code_records_the_day(): void
+    {
+        $office = User::where('email', 'office@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $samUser = User::where('email', 'sam.green@example.com')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+
+        $this->actingAs($director)->get(route('today'))
+            ->assertOk()
+            ->assertSee('S3 sample')
+            ->assertDontSee('Office code');
+        $this->assertDatabaseCount('day_codes', 0);
+
+        $this->actingAs($samUser)->from(route('today'))
+            ->post(route('today.on', $sam), ['code' => 'ABCDEF'])
+            ->assertSessionHasErrors('code');
+        $this->assertDatabaseCount('day_rolls', 0);
+
+        $this->actingAs($office)->get(route('today'))->assertOk()->assertSee('Office code');
+        $code = \App\Models\DayCode::query()->value('code');
+        $this->assertNotSame('', $code);
+
+        $this->actingAs($director)->get(route('today'))->assertDontSee($code);
+        $this->actingAs($samUser)->post(route('today.on', $pat), ['code' => $code])->assertForbidden();
+
+        $this->actingAs($samUser)->post(route('today.on', $sam), ['code' => strtolower($code)])->assertRedirect();
+        $roll = \App\Models\DayRoll::query()->where('person_id', $sam->id)->first();
+        $this->assertNotNull($roll->signed_on_at);
+        $this->assertSame($samUser->id, (int) $roll->signed_on_by);
+
+        $this->actingAs($samUser)->from(route('today'))
+            ->post(route('today.on', $sam), ['at_desk' => '1'])
+            ->assertForbidden();
+        $this->actingAs($samUser)->from(route('today'))
+            ->post(route('today.off', $sam), ['code' => $code])
+            ->assertRedirect();
+        $this->assertNotNull($roll->fresh()->signed_off_at);
+
+        \App\Models\DayRoll::query()->delete();
+        $this->actingAs($office)->post(route('today.on', $sam), ['at_desk' => '1'])->assertRedirect();
+        $this->assertSame($office->id, (int) \App\Models\DayRoll::query()->where('person_id', $sam->id)->value('signed_on_by'));
+        $this->actingAs($director)->post(route('today.close', $sam), ['close_note' => 'Left at the end of the day'])->assertForbidden();
+        $this->actingAs($office)->post(route('today.close', $sam), ['close_note' => 'Left at the end of the day'])->assertRedirect();
+        $closed = \App\Models\DayRoll::query()->where('person_id', $sam->id)->first();
+        $this->assertNull($closed->signed_off_at);
+        $this->assertSame($office->id, (int) $closed->closed_by);
+        $this->assertSame('Left at the end of the day', $closed->close_note);
+
+        $this->actingAs($office)->from(route('today'))
+            ->post(route('today.on', $pat), ['at_desk' => '1'])
+            ->assertSessionHasErrors('roll');
+        $this->assertFalse(str_contains(
+            (string) DB::table('audit_logs')->where('action', 'day.rejected')->value('metadata'),
+            'ABCDEF'
+        ));
+    }
+
+    public function test_hr_can_edit_a_quest_check(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $module = InductionModule::where('title', 'How pay works and who to call')->first();
+
+        $this->actingAs($hr)->get(route('setup.induction.edit', $module))
+            ->assertOk()
+            ->assertSee('Where does a tax file number belong?')
+            ->assertSee('The check');
+
+        $payload = ['prompt' => [], 'choice' => [], 'answer' => []];
+        foreach ($module->quiz as $index => $question) {
+            $payload['prompt'][$index] = $index === 0 ? 'Where does a tax file number belong now?' : $question['prompt'];
+            foreach ($question['choices'] as $choice => $label) {
+                $payload['choice'][$index][$choice] = $label;
+            }
+            $payload['answer'][$index] = $question['answer'];
+        }
+
+        $this->actingAs($director)->put(route('setup.induction.check', $module), $payload)->assertForbidden();
+        $this->actingAs($hr)->put(route('setup.induction.check', $module), $payload)->assertRedirect();
+        $module->refresh();
+        $this->assertSame(2, $module->version);
+        $this->assertSame('Where does a tax file number belong now?', $module->quiz[0]['prompt']);
+
+        $again = ['prompt' => [], 'choice' => [], 'answer' => []];
+        foreach ($module->quiz as $index => $question) {
+            $again['prompt'][$index] = $question['prompt'];
+            foreach ($question['choices'] as $choice => $label) {
+                $again['choice'][$index][$choice] = $label;
+            }
+            $again['answer'][$index] = $question['answer'];
+        }
+        $this->actingAs($hr)->put(route('setup.induction.check', $module), $again)->assertRedirect();
+        $this->assertSame(2, $module->fresh()->version);
+    }
+
+    public function test_the_morning_watch_and_the_day_stay_in_their_places(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $samUser = User::where('email', 'sam.green@example.com')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $number = $sam->wwcc->wwcc_number;
+        $booking = $sam->bookings()->first();
+
+        $this->actingAs($hr)->from(route('setup'))
+            ->put(route('setup.desk'), ['incident_desk_url' => 'http://portal.living.school/incidents'])
+            ->assertSessionHasErrors('incident_desk_url');
+        $this->actingAs($hr)->put(route('setup.desk'), [
+            'incident_desk_url' => 'https://portal.living.school/create-student-incident/',
+        ])->assertRedirect();
+
+        $this->actingAs($samUser)->post(route('casuals.bookings.note', [$sam, $booking]), [
+            'covering_note' => 'Finished the fractions page. Start decimals tomorrow.',
+        ])->assertRedirect();
+
+        $this->actingAs($hr)->post(route('casuals.conduct', $sam), [
+            'kind' => 'child_protection',
+            'noted_on' => now()->toDateString(),
+            'location' => 'Classter staff file 14',
+        ])->assertRedirect();
+        $this->actingAs($director)->post(route('casuals.conduct', $sam), [
+            'kind' => 'complaint',
+            'noted_on' => now()->toDateString(),
+            'location' => 'Somewhere else',
+        ])->assertForbidden();
+
+        $told = now()->subDays(24)->toDateString();
+        $this->actingAs($hr)->post(route('casuals.standards', $sam), ['told_on' => $told])->assertRedirect();
+        $notice = \App\Models\StandardsNotice::query()->where('person_id', $sam->id)->first();
+        $this->assertSame(
+            \Carbon\Carbon::parse($told, 'Australia/Sydney')->addDays(28)->toDateString(),
+            $notice->due_on->toDateString()
+        );
+
+        $sam->wwcc->update(['expires_on' => now()->addDays(5)->toDateString()]);
+
+        $this->actingAs($hr)->get(route('watch'))
+            ->assertOk()
+            ->assertSee('Sam Green')
+            ->assertSee('due this week')
+            ->assertSee('Standards reply is due')
+            ->assertDontSee($number);
+        $this->actingAs($director)->get(route('watch'))
+            ->assertOk()
+            ->assertSee('Sam Green')
+            ->assertDontSee('Standards reply')
+            ->assertDontSee($number)
+            ->assertDontSee('Classter staff file 14');
+        $this->actingAs($samUser)->get(route('watch'))->assertForbidden();
+
+        $this->actingAs($hr)->post(route('setup.staff.store'), [
+            'name' => 'Yirran Director',
+            'email' => 'yirran.watch@living.school',
+            'role' => 'director',
+            'neighbourhood' => 'Yirran',
+            'password' => 'living-demo',
+            'password_confirmation' => 'living-demo',
+        ]);
+        $this->actingAs(User::where('email', 'yirran.watch@living.school')->first())
+            ->get(route('watch'))
+            ->assertOk()
+            ->assertDontSee('Sam Green');
+
+        $this->actingAs($director)->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('Finished the fractions page')
+            ->assertSee('https://portal.living.school/create-student-incident/', false)
+            ->assertSee('Do not write a student')
+            ->assertDontSee('Classter staff file 14')
+            ->assertDontSee('Standards reply');
+        $this->actingAs($samUser)->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertDontSee('Classter staff file 14')
+            ->assertSee('Reply due');
+        $this->actingAs($hr)->get(route('casuals.show', $sam))
+            ->assertSee('Classter staff file 14')
+            ->assertSee('Child protection');
+
+        $this->actingAs($samUser)->post(route('casuals.standards.reply', [$sam, $notice]), [
+            'reply' => 'I have read the note and this is my answer.',
+        ])->assertRedirect();
+        $this->actingAs($hr)->get(route('watch'))->assertDontSee('Standards reply is due');
     }
 
     private function tinyJpeg(): string

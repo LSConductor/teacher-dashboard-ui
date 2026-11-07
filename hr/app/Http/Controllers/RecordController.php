@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Hr\Roles;
 use App\Models\Person;
+use App\Models\StandardsNotice;
 use App\Services\Audit;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RecordController extends Controller
 {
@@ -136,6 +138,54 @@ class RecordController extends Controller
         Audit::record('annual.saved', $record);
 
         return redirect()->route('casuals.annual', $person);
+    }
+
+    public function conduct(Request $request, Person $person)
+    {
+        $this->authorize('updateFile', $person);
+        $data = $request->validate([
+            'kind' => ['required', Rule::in(['allegation', 'child_protection', 'complaint'])],
+            'noted_on' => ['required', 'date'],
+            'location' => ['required', 'string', 'max:200'],
+        ]);
+        $flag = $person->conductFlags()->create($data + [
+            'school_id' => $person->school_id,
+            'recorded_by' => $request->user()->id,
+        ]);
+        Audit::record('conduct.flagged', $flag, ['kind' => $flag->kind]);
+
+        return back()->with('status', 'The file location is on the record. The detail stays where you named.');
+    }
+
+    public function standards(Request $request, Person $person)
+    {
+        $this->authorize('updateFile', $person);
+        $data = $request->validate(['told_on' => ['required', 'date']]);
+        $told = \Carbon\Carbon::parse($data['told_on'], 'Australia/Sydney')->startOfDay();
+        $notice = $person->standardsNotices()->create([
+            'school_id' => $person->school_id,
+            'told_on' => $told->toDateString(),
+            'due_on' => $told->copy()->addDays(28)->toDateString(),
+            'recorded_by' => $request->user()->id,
+        ]);
+        Audit::record('standards.told', $notice);
+
+        return back()->with('status', 'The 28 days start from '.$told->format('j M Y').'.');
+    }
+
+    public function standardsReply(Request $request, Person $person, StandardsNotice $notice)
+    {
+        $this->authorize('viewSensitive', $person);
+        abort_unless((int) $notice->person_id === (int) $person->id, 404);
+        abort_if($notice->reply_on, 422, 'A reply is already on the file.');
+        $data = $request->validate(['reply' => ['required', 'string', 'max:4000']]);
+        $notice->update([
+            'reply' => $data['reply'],
+            'reply_on' => now()->timezone('Australia/Sydney')->toDateString(),
+        ]);
+        Audit::record('standards.replied', $notice);
+
+        return back()->with('status', 'The reply is on the file.');
     }
 
     private function writePerformance(Request $request, Person $person): void

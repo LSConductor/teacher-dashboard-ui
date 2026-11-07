@@ -2,6 +2,16 @@
 @section('content')
 <h1>Setup</h1>
 <p class="lede">A role that manages the school opens this page. A neighbourhood lead sees their casuals and does not open setup. A published contract and an acknowledged quest keep the version already used.</p>
+<article class="card">
+    <h2>Incident desk</h2>
+    <p class="muted">The link a casual opens from a booked day. The student's story stays on that desk, not in this file.</p>
+    <form method="post" action="{{ route('setup.desk') }}">
+        @csrf @method('put')
+        <label for="incident_desk_url">Desk link</label>
+        <input id="incident_desk_url" name="incident_desk_url" type="url" value="{{ old('incident_desk_url', $incidentDesk) }}" placeholder="https://portal.living.school/...">
+        <p><button type="submit">Save the link</button></p>
+    </form>
+</article>
 <article class="person green">
     <div><span class="status green">Partners</span></div>
     <div>
@@ -14,7 +24,7 @@
     <div><span class="status green">Quests</span></div>
     <div>
         <h2>Induction quests</h2>
-        <p class="meta">Edit the wording, add a page, and move a quest between day one and later. Retiring a quest takes it off the light.</p>
+        <p class="meta">Edit the wording, the video, and the check. Move a quest between day one and later. Retiring a quest takes it off the light.</p>
         <div class="actions"><a class="button" href="{{ route('setup.induction') }}">Open quests</a></div>
     </div>
 </article>

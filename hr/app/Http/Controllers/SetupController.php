@@ -6,6 +6,7 @@ use App\Hr\Roles;
 use App\Hr\StaffPhoto;
 use App\Models\InductionModule;
 use App\Models\Person;
+use App\Models\School;
 use App\Models\User;
 use App\Services\Audit;
 use Illuminate\Database\QueryException;
@@ -16,9 +17,30 @@ use Illuminate\Validation\ValidationException;
 
 class SetupController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('setup.index');
+        return view('setup.index', [
+            'incidentDesk' => School::query()->whereKey($request->user()->school_id)->value('incident_desk_url'),
+        ]);
+    }
+
+    public function desk(Request $request)
+    {
+        $data = $request->validate([
+            'incident_desk_url' => ['nullable', 'string', 'max:500'],
+        ]);
+        $url = trim((string) ($data['incident_desk_url'] ?? ''));
+        if ($url === '') {
+            $url = null;
+        } elseif (! str_starts_with($url, 'https://') || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw ValidationException::withMessages([
+                'incident_desk_url' => 'Paste the full incident desk link, starting with https://.',
+            ]);
+        }
+        School::query()->whereKey($request->user()->school_id)->update(['incident_desk_url' => $url]);
+        Audit::record('school.desk', $request->user(), ['set' => $url !== null]);
+
+        return back()->with('status', $url ? 'The incident desk link is saved.' : 'The incident desk link is cleared.');
     }
 
     public function staff(Request $request)
@@ -239,6 +261,50 @@ class SetupController extends Controller
             : 'Quest saved.';
 
         return redirect()->route('setup.induction')->with('status', $status);
+    }
+
+    public function updateCheck(Request $request, InductionModule $module)
+    {
+        abort_unless((int) $module->school_id === (int) $request->user()->school_id, 404);
+        $quiz = [];
+        foreach ($request->input('prompt', []) as $index => $prompt) {
+            $prompt = trim((string) $prompt);
+            if ($prompt === '') {
+                continue;
+            }
+            $kept = [];
+            foreach ($request->input('choice.'.$index, []) as $choice) {
+                $choice = trim((string) $choice);
+                if ($choice !== '') {
+                    $kept[] = $choice;
+                }
+            }
+            if (count($kept) < 2) {
+                throw ValidationException::withMessages([
+                    'prompt' => 'Each question needs two answers.',
+                ]);
+            }
+            $marked = $request->input('choice.'.$index.'.'.$request->input('answer.'.$index));
+            $answer = array_search($marked, $kept, true);
+            if ($answer === false) {
+                throw ValidationException::withMessages([
+                    'answer' => 'Mark the answer that matches the page.',
+                ]);
+            }
+            $quiz[] = ['prompt' => $prompt, 'choices' => $kept, 'answer' => $answer];
+        }
+        $changed = json_encode($quiz) !== json_encode($module->quiz ?? []);
+        $data = ['quiz' => $quiz];
+        if ($changed && $module->acknowledgements()->where('module_version', $module->version)->exists()) {
+            $data['version'] = $module->version + 1;
+        }
+        $module->update($data);
+        Audit::record('induction.check', $module, ['version' => $module->version]);
+        $status = isset($data['version'])
+            ? 'Saved as version '.$module->version.'. Earlier acknowledgements do not cover the new check.'
+            : 'Check saved.';
+
+        return back()->with('status', $status);
     }
 
     public function moveInduction(Request $request, InductionModule $module)

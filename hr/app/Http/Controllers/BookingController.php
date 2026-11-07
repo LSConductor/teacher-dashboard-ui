@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Hr\ContractDesk;
 use App\Hr\Roles;
+use App\Models\Booking;
 use App\Models\Person;
 use App\Services\Audit;
 use App\Services\ClearToTeach;
@@ -59,5 +60,18 @@ class BookingController extends Controller
         ]));
 
         return back()->with('status', 'Booked. The one-day confirmation is with the contracts.');
+    }
+
+    public function note(Request $request, Person $person, Booking $booking)
+    {
+        $this->authorize('view', $person);
+        abort_unless((int) $booking->person_id === (int) $person->id, 404);
+        $data = $request->validate([
+            'covering_note' => ['required', 'string', 'max:2000'],
+        ]);
+        $booking->update(['covering_note' => $data['covering_note']]);
+        Audit::record('booking.note', $booking);
+
+        return back()->with('status', 'The note for the class teacher is on this booking.');
     }
 }

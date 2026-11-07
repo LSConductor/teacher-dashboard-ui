@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Hr\Neighbourhood;
+use App\Hr\Roll;
 use App\Hr\Roles;
+use App\Models\DayRoll;
 use App\Models\InductionModule;
 use App\Models\Person;
+use App\Models\School;
 use App\Models\User;
 use App\Services\Audit;
 use App\Services\ClearToTeach;
@@ -47,6 +50,11 @@ class CasualController extends Controller
             });
         }
 
+        $rolls = DayRoll::query()
+            ->where('school_id', $user->school_id)
+            ->whereDate('on_date', Roll::today())
+            ->get()
+            ->keyBy('person_id');
         $dayOne = InductionModule::query()
             ->where('school_id', $user->school_id)
             ->where('phase', 'day_one')
@@ -57,7 +65,7 @@ class CasualController extends Controller
             ->get()
             ->keyBy('neighbourhood');
 
-        $people = $query->orderBy('preferred_name')->get()->map(function (Person $person) use ($gate, $dayOne, $directors) {
+        $people = $query->orderBy('preferred_name')->get()->map(function (Person $person) use ($gate, $dayOne, $directors, $rolls) {
             $person->gate = $gate->assess($person);
             $person->day_one_total = $dayOne->count();
             $person->day_one_done = $person->acknowledgements->filter(function ($ack) use ($dayOne) {
@@ -69,6 +77,7 @@ class CasualController extends Controller
             $person->today_booking = $person->bookings->first(
                 fn ($booking) => $booking->booked_on->isSameDay(now())
             );
+            $person->roll_label = $person->today_booking ? Roll::label($rolls->get($person->id)) : null;
             $person->last_day = $person->bookings->sortByDesc('booked_on')->first()?->booked_on;
             $person->wwcc_watch = $gate->datePhrase($person->wwcc?->expires_on);
             $person->maintenance_watch = $gate->datePhrase($person->accreditation?->maintenance_end);
@@ -130,6 +139,7 @@ class CasualController extends Controller
         $person->load([
             'accreditation', 'wwcc', 'contracts.template', 'acknowledgements',
             'bookings', 'unavailabilities', 'dayNotes.author', 'pdEntries', 'mentor',
+            'conductFlags', 'standardsNotices', 'dayRolls',
             'supervisor', 'goal', 'observation', 'annualReview',
         ]);
         $modules = InductionModule::query()
@@ -152,6 +162,7 @@ class CasualController extends Controller
             'canWritePerformance' => in_array(Roles::kind(request()->user()), ['neighbourhood', 'support', 'manage'], true),
             'canRecordLearning' => in_array(Roles::kind(request()->user()), ['manage', 'support'], true)
                 || (int) request()->user()->person_id === (int) $person->id,
+            'incidentDesk' => School::query()->whereKey($person->school_id)->value('incident_desk_url'),
             'wwccWatch' => $gate->datePhrase($person->wwcc?->expires_on),
             'maintenanceWatch' => $gate->datePhrase($person->accreditation?->maintenance_end),
         ]);

@@ -79,7 +79,7 @@
             <p class="meta">
                 Mentor {{ $person->mentor->name ?? 'not named' }}
                 @if($person->director_name) · Director {{ $person->director_name }} @endif
-                @if($person->today_booking) · Today {{ $person->today_booking->class_label }} @else · No class today @endif
+                @if($person->today_booking) · Today {{ $person->today_booking->class_label }} · {{ $person->roll_label }} @else · No class today @endif
             </p>
             @if($sensitive)
                 <p class="meta">

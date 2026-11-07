@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\Roll;
+use App\Models\DayRoll;
 use App\Models\InductionModule;
+use App\Models\School;
 use App\Models\Invite;
 use App\Models\Person;
 use App\Models\User;
@@ -86,6 +89,8 @@ class StartController extends Controller
             'gate' => $gate->assess($person),
             'director' => $director,
             'today' => $person->bookings->first(fn ($booking) => $booking->booked_on->isSameDay(now())),
+            'rollLabel' => Roll::label(DayRoll::query()->where('person_id', $person->id)->whereDate('on_date', Roll::today())->first()),
+            'incidentDesk' => School::query()->whereKey($person->school_id)->value('incident_desk_url'),
             'dayDone' => $done('day_one'),
             'dayTotal' => $dayTotal,
             'laterDone' => $done('later'),

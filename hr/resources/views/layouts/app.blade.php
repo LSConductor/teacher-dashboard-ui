@@ -128,6 +128,7 @@
         .sheet-body .sheet-meta { font-family: "Segoe UI", system-ui, sans-serif; font-size: 14px; color: var(--muted); margin: 0 0 18px; }
         .sheet-body p { margin: 0 0 14px; }
         .sheet-foot { padding: 4px 32px 22px; color: var(--muted); font-size: 13px; }
+        .day-code { font-size: 42px; letter-spacing: .28em; font-weight: 750; margin: 8px 0 0; }
         @media (max-width: 720px) {
             header { align-items: flex-start; flex-direction: column; }
             .person, .grid { grid-template-columns: 1fr; }
@@ -149,6 +150,10 @@
             @endif
             <a href="{{ route('people') }}">People</a>
             <a href="{{ route('casuals.index') }}">List</a>
+            <a href="{{ route('today') }}">Today</a>
+            @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
+                <a href="{{ route('watch') }}">Watch</a>
+            @endif
             <a href="{{ route('access') }}">Access</a>
             @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'neighbourhood'], true))
                 <a href="{{ route('partners.index') }}">Partners</a>

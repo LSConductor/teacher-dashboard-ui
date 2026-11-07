@@ -68,6 +68,21 @@ class Person extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function dayRolls(): HasMany
+    {
+        return $this->hasMany(DayRoll::class);
+    }
+
+    public function conductFlags(): HasMany
+    {
+        return $this->hasMany(ConductFlag::class);
+    }
+
+    public function standardsNotices(): HasMany
+    {
+        return $this->hasMany(StandardsNotice::class);
+    }
+
     public function unavailabilities(): HasMany
     {
         return $this->hasMany(Unavailability::class);

@@ -240,9 +240,26 @@
     </form>
     @endif
     @foreach($person->bookings->sortByDesc('booked_on') as $booking)
-        <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }}@if($booking->teacher_name) · {{ $booking->teacher_name }}@endif · {{ $booking->light_at_booking }}
-            @if($booking->plan_url)<a href="{{ $booking->plan_url }}">Open plan</a>@endif
-        </p>
+        @php $roll = $person->dayRolls->first(fn ($row) => $row->on_date->isSameDay($booking->booked_on)); @endphp
+        <div class="card">
+            <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }}@if($booking->teacher_name) · {{ $booking->teacher_name }}@endif · {{ $booking->light_at_booking }}
+                @if($roll) · {{ \App\Hr\Roll::label($roll) }}@endif
+                @if($booking->plan_url) <a href="{{ $booking->plan_url }}" target="_blank" rel="noopener">Open plan</a>@endif
+            </p>
+            @if($incidentDesk)
+                <p><a class="link" href="{{ $incidentDesk }}" target="_blank" rel="noopener">Open the incident desk</a> <span class="muted">for {{ $booking->class_label }} on {{ $booking->booked_on->timezone('Australia/Sydney')->format('j M Y') }}. Do not write a student's story into this file.</span></p>
+            @endif
+            @if($booking->covering_note)
+                <p>{{ $booking->covering_note }}</p>
+            @endif
+            <form method="post" action="{{ route('casuals.bookings.note', [$person, $booking]) }}">
+                @csrf
+                <label for="covering_{{ $booking->id }}">Note for the class teacher</label>
+                <textarea id="covering_{{ $booking->id }}" name="covering_note" required>{{ $booking->covering_note }}</textarea>
+                <p class="muted">What the class did, and what to pick up tomorrow. Do not write a student's story here.</p>
+                <p><button class="ghost" type="submit">Save the note</button></p>
+            </form>
+        </div>
     @endforeach
 </div>
 @endif
@@ -365,6 +382,60 @@
 
 <section class="panel panel-paper">
 @if($sensitive)
+<div class="card">
+    <h2>Standards reply</h2>
+    <p class="muted">When practice may not meet the Standards, the teacher is told and has 28 days to answer. The 28 days are counted here.</p>
+    @foreach($person->standardsNotices as $notice)
+        <p>Told {{ $notice->told_on->timezone('Australia/Sydney')->format('j M Y') }}. Reply due {{ $notice->due_on->timezone('Australia/Sydney')->format('j M Y') }}.
+            @if($notice->reply_on)
+                Answered {{ $notice->reply_on->timezone('Australia/Sydney')->format('j M Y') }}.
+            @endif
+        </p>
+        @if($notice->reply)
+            <p>{{ $notice->reply }}</p>
+        @elseif(! $notice->reply_on)
+            <form method="post" action="{{ route('casuals.standards.reply', [$person, $notice]) }}">
+                @csrf
+                <label for="reply_{{ $notice->id }}">Reply</label>
+                <textarea id="reply_{{ $notice->id }}" name="reply" required></textarea>
+                <p><button type="submit">Save the reply</button></p>
+            </form>
+        @endif
+    @endforeach
+    @if($canEdit)
+        <form method="post" action="{{ route('casuals.standards', $person) }}">
+            @csrf
+            <label for="told_on">Date the teacher was told</label>
+            <input id="told_on" type="date" name="told_on" required>
+            <p><button type="submit">Start the 28 days</button></p>
+        </form>
+    @endif
+</div>
+@if($canEdit)
+<div class="card">
+    <h2>Staff conduct</h2>
+    <p class="muted">Write the type, the date, and where the full file lives. Do not write the student's story or the detail here.</p>
+    @foreach($person->conductFlags as $flag)
+        <p>{{ ['allegation' => 'Allegation', 'child_protection' => 'Child protection', 'complaint' => 'Serious complaint'][$flag->kind] ?? $flag->kind }}
+            · {{ $flag->noted_on->timezone('Australia/Sydney')->format('j M Y') }}
+            · {{ $flag->location }}</p>
+    @endforeach
+    <form method="post" action="{{ route('casuals.conduct', $person) }}">
+        @csrf
+        <label for="kind">Type</label>
+        <select id="kind" name="kind">
+            <option value="allegation">Allegation</option>
+            <option value="child_protection">Child protection</option>
+            <option value="complaint">Serious complaint</option>
+        </select>
+        <label for="noted_on">Date</label>
+        <input id="noted_on" type="date" name="noted_on" required>
+        <label for="location">Where the full file lives</label>
+        <input id="location" name="location" required maxlength="200">
+        <p><button type="submit">Save the flag</button></p>
+    </form>
+</div>
+@endif
 <div class="card">
     <h2 id="contracts">Contracts</h2>
     @foreach($person->contracts as $contract)

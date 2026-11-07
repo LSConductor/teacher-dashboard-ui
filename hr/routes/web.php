@@ -5,6 +5,8 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CasualController;
+use App\Http\Controllers\DayController;
+use App\Http\Controllers\WatchController;
 use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CasualLetterController;
@@ -60,6 +62,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
+    Route::get('/today', [DayController::class, 'index'])->name('today');
+    Route::post('/today/{person}/on', [DayController::class, 'arrive'])->name('today.on');
+    Route::post('/today/{person}/off', [DayController::class, 'leave'])->name('today.off');
+    Route::post('/today/{person}/close', [DayController::class, 'close'])->name('today.close');
+    Route::get('/watch', [WatchController::class, 'index'])->name('watch');
     Route::get('/access', [AccessController::class, 'show'])->name('access');
     Route::get('/partners', [PartnerDeskController::class, 'index'])->name('partners.index');
     Route::get('/partners/{partner}', [PartnerDeskController::class, 'show'])->name('partners.show');
@@ -89,6 +96,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/casuals/{person}/contracts', [ContractController::class, 'issue'])->name('casuals.contracts.issue');
     Route::post('/contracts/{contract}/sign', [ContractController::class, 'sign'])->name('contracts.sign');
     Route::post('/casuals/{person}/bookings', [BookingController::class, 'store'])->name('casuals.bookings');
+    Route::post('/casuals/{person}/bookings/{booking}/note', [BookingController::class, 'note'])->name('casuals.bookings.note');
+    Route::post('/casuals/{person}/conduct', [RecordController::class, 'conduct'])->name('casuals.conduct');
+    Route::post('/casuals/{person}/standards', [RecordController::class, 'standards'])->name('casuals.standards');
+    Route::post('/casuals/{person}/standards/{notice}/reply', [RecordController::class, 'standardsReply'])->name('casuals.standards.reply');
     Route::post('/casuals/{person}/unavailability', [RecordController::class, 'unavailability'])->name('casuals.unavailability');
     Route::post('/casuals/{person}/notes', [RecordController::class, 'dayNote'])->name('casuals.notes');
     Route::post('/casuals/{person}/goal', [RecordController::class, 'goal'])->name('casuals.goal');
@@ -114,6 +125,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/setup/induction', [SetupController::class, 'storeInduction'])->name('setup.induction.store');
         Route::get('/setup/induction/{module}', [SetupController::class, 'editInduction'])->name('setup.induction.edit');
         Route::put('/setup/induction/{module}', [SetupController::class, 'updateInduction'])->name('setup.induction.update');
+        Route::put('/setup/induction/{module}/check', [SetupController::class, 'updateCheck'])->name('setup.induction.check');
+        Route::put('/setup/desk', [SetupController::class, 'desk'])->name('setup.desk');
         Route::post('/setup/induction/{module}/move', [SetupController::class, 'moveInduction'])->name('setup.induction.move');
         Route::get('/setup/partners', [PartnerSetupController::class, 'index'])->name('setup.partners');
         Route::get('/setup/partners/check', [PartnerSetupController::class, 'check'])->name('setup.partners.check');
