@@ -12,10 +12,11 @@
     <p class="muted">This is also the sign-in address.</p>
     <label for="role">Role</label>
     <select id="role" name="role">
-        @foreach(['hr' => 'HR', 'conductor' => 'Conductor', 'director' => 'Director', 'mentor' => 'Mentor', 'office' => 'Office', 'casual' => 'Casual'] as $value => $label)
-            <option value="{{ $value }}" @selected(old('role', $member->role) === $value)>{{ $label }}</option>
+        @foreach($roles as $role)
+            <option value="{{ $role->slug }}" @selected(old('role', $member->role) === $role->slug)>{{ $role->name }}</option>
         @endforeach
     </select>
+    <p class="muted"><a class="link" href="{{ route('setup.roles') }}">Add or edit roles</a></p>
     <label for="neighbourhood">Neighbourhood</label>
     <input id="neighbourhood" name="neighbourhood" value="{{ old('neighbourhood', $member->neighbourhood) }}" placeholder="Whole School">
     <p class="muted">Write Whole School when every casual should see this card. A neighbourhood name limits it to that neighbourhood.</p>

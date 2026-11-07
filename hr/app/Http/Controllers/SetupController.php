@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\Roles;
 use App\Hr\StaffPhoto;
 use App\Models\InductionModule;
 use App\Models\Person;
@@ -27,7 +28,10 @@ class SetupController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('setup.staff', ['staff' => $staff]);
+        return view('setup.staff', [
+            'staff' => $staff,
+            'roles' => Roles::choices((int) $request->user()->school_id),
+        ]);
     }
 
     public function storeStaff(Request $request)
@@ -35,8 +39,8 @@ class SetupController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:160', 'unique:users,email'],
-            'role' => ['required', Rule::in(['hr', 'conductor', 'director', 'mentor', 'office'])],
-            'neighbourhood' => ['nullable', 'string', 'max:80', 'required_if:role,director'],
+            'role' => ['required', Rule::in(Roles::choices((int) $request->user()->school_id)->pluck('slug')->all())],
+            'neighbourhood' => ['nullable', 'string', 'max:80'],
             'mobile' => ['nullable', 'string', 'max:40'],
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
@@ -44,6 +48,7 @@ class SetupController extends Controller
             'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:15360'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+        $this->requireNeighbourhood((int) $request->user()->school_id, $data['role'], $data['neighbourhood'] ?? null);
         $member = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -72,7 +77,10 @@ class SetupController extends Controller
     {
         abort_unless((int) $member->school_id === (int) $request->user()->school_id, 404);
 
-        return view('setup.staff-edit', ['member' => $member]);
+        return view('setup.staff-edit', [
+            'member' => $member,
+            'roles' => Roles::choices((int) $request->user()->school_id, Roles::isCasual($member)),
+        ]);
     }
 
     public function updateStaff(Request $request, User $member)
@@ -81,8 +89,8 @@ class SetupController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:160', Rule::unique('users', 'email')->ignore($member->id)],
-            'role' => ['required', Rule::in(['hr', 'conductor', 'director', 'mentor', 'office', 'casual'])],
-            'neighbourhood' => ['nullable', 'string', 'max:80', 'required_if:role,director'],
+            'role' => ['required', Rule::in(Roles::choices((int) $request->user()->school_id, Roles::isCasual($member))->pluck('slug')->all())],
+            'neighbourhood' => ['nullable', 'string', 'max:80'],
             'mobile' => ['nullable', 'string', 'max:40'],
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
@@ -90,6 +98,7 @@ class SetupController extends Controller
             'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:15360'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
+        $this->requireNeighbourhood((int) $member->school_id, $data['role'], $data['neighbourhood'] ?? null);
 
         if ((int) $member->id === (int) $request->user()->id && $data['role'] !== $member->role) {
             return back()->withErrors(['role' => 'You cannot change your own role.'])->withInput();
@@ -97,15 +106,15 @@ class SetupController extends Controller
         if ($data['role'] === 'casual' && ! $member->person_id) {
             return back()->withErrors(['role' => 'A casual account is opened with an invite, not from this form.'])->withInput();
         }
-        $stillAdmin = in_array($data['role'], ['hr', 'conductor'], true);
-        $wasAdmin = in_array($member->role, ['hr', 'conductor'], true);
+        $stillAdmin = Roles::kindOf((int) $member->school_id, $data['role']) === 'manage';
+        $wasAdmin = Roles::kindOf((int) $member->school_id, $member->role) === 'manage';
         $otherAdmin = User::query()
             ->where('school_id', $member->school_id)
             ->where('id', '!=', $member->id)
-            ->whereIn('role', ['hr', 'conductor'])
+            ->whereIn('role', Roles::slugsOfKind((int) $member->school_id, 'manage'))
             ->exists();
         if ($wasAdmin && ! $stillAdmin && ! $otherAdmin) {
-            return back()->withErrors(['role' => 'The school needs one HR or Conductor account.'])->withInput();
+            return back()->withErrors(['role' => 'The school needs one person who can manage setup.'])->withInput();
         }
 
         $member->fill([
@@ -137,6 +146,15 @@ class SetupController extends Controller
         Audit::record('staff.updated', $member, ['role' => $member->role]);
 
         return redirect()->route('setup.staff')->with('status', $member->name.' is updated.');
+    }
+
+    private function requireNeighbourhood(int $schoolId, string $role, ?string $neighbourhood): void
+    {
+        if (Roles::kindOf($schoolId, $role) === 'neighbourhood' && blank($neighbourhood)) {
+            throw ValidationException::withMessages([
+                'neighbourhood' => 'This role needs a neighbourhood. Write Whole School when they cover every casual.',
+            ]);
+        }
     }
 
     public function induction(Request $request)

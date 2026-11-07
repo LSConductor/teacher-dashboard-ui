@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 @php
-    $roleLabel = fn ($role) => $role === 'hr' ? 'HR' : ucfirst($role);
+    $roleLabel = fn ($member) => \App\Hr\Roles::labelFor($member);
 @endphp
 @if($managing)
     <p class="muted"><a class="link" href="{{ route('setup.staff') }}">Edit staff cards</a></p>
@@ -52,7 +52,7 @@
         <div>
             <h2>{{ $member->name }}</h2>
             <p class="meta">
-                {{ $roleLabel($member->role) }}
+                {{ $roleLabel($member) }}
                 @if($member->neighbourhood) · {{ $member->neighbourhood }}@endif
                 @if($member->days_on_site) · {{ $member->days_on_site }}@endif
             </p>
@@ -124,7 +124,7 @@
     <p class="lede">These accounts can sign in. A casual does not see them until you edit the card and tick the box.</p>
     @foreach($hidden as $member)
         <article class="person">
-            <div><span class="status">{{ $roleLabel($member->role) }}</span></div>
+            <div><span class="status">{{ $roleLabel($member) }}</span></div>
             <div>
                 <h2>{{ $member->name }}</h2>
                 <p class="meta">{{ $member->email }}</p>

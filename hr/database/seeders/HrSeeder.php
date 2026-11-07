@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Hr\ContractPack;
 use App\Hr\InductionPack;
+use App\Hr\Roles;
 use App\Models\Booking;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
@@ -22,6 +23,7 @@ class HrSeeder extends Seeder
             ['slug' => 'living-school'],
             ['name' => 'Living School', 'timezone' => 'Australia/Sydney']
         );
+        Roles::ensure($school->id);
 
         $password = 'living-demo';
 

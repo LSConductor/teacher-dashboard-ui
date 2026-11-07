@@ -182,6 +182,6 @@ class StartController extends Controller
 
     private function ownsInvite(User $user, Invite $invite): bool
     {
-        return $user->role === 'casual' && (int) $user->person_id === (int) $invite->person_id;
+        return \App\Hr\Roles::isCasual($user) && (int) $user->person_id === (int) $invite->person_id;
     }
 }

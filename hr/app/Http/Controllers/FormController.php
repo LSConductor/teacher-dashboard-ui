@@ -81,7 +81,7 @@ class FormController extends Controller
     private function open(Person $person): void
     {
         $this->authorize('view', $person);
-        $role = request()->user()->role;
-        abort_unless(in_array($role, ['hr', 'conductor', 'casual'], true), 403);
+        $user = request()->user();
+        abort_unless(\App\Hr\Roles::manages($user) || \App\Hr\Roles::isCasual($user), 403);
     }
 }

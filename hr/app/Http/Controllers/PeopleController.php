@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Hr\PeopleCards;
+use App\Hr\Roles;
 use App\Hr\StaffPhoto;
 use App\Models\Person;
 use App\Models\User;
@@ -15,9 +16,10 @@ class PeopleController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $managing = in_array($user->role, ['hr', 'conductor'], true);
+        $kind = Roles::kind($user);
+        $managing = $kind === 'manage';
         $person = null;
-        if ($user->role === 'casual' && $user->person_id) {
+        if ($kind === 'casual' && $user->person_id) {
             $person = Person::query()
                 ->where('school_id', $user->school_id)
                 ->with('bookings')
@@ -27,7 +29,7 @@ class PeopleController extends Controller
         if ($person) {
             $cards = PeopleCards::forPerson($person);
             $hidden = collect();
-        } elseif ($user->role === 'director') {
+        } elseif ($kind === 'neighbourhood') {
             $cards = PeopleCards::forNeighbourhood((int) $user->school_id, $user->neighbourhood);
             $hidden = collect();
         } else {

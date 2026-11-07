@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Hr\Roles;
 use App\Hr\StaffPhoto;
 use App\Models\Contract;
+use App\Models\StaffRole;
 use App\Models\ContractTemplate;
 use App\Models\InductionModule;
 use App\Models\Invite;
@@ -29,6 +31,7 @@ class CasualHrTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Roles::forgetAll();
         $this->seed(HrSeeder::class);
     }
 
@@ -746,6 +749,72 @@ class CasualHrTest extends TestCase
         $again = getimagesize(Storage::disk('local')->path($conductor->photo_path));
         $this->assertSame(StaffPhoto::SIZE, $again[0]);
         Storage::disk('local')->assertMissing('people/raw.jpg');
+    }
+
+    public function test_an_admin_can_add_and_rename_a_role(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+
+        $this->actingAs($director)->get(route('setup.roles'))->assertForbidden();
+
+        $this->actingAs($hr)->post(route('setup.roles.store'), [
+            'name' => 'Learning support',
+            'kind' => 'support',
+        ])->assertRedirect(route('setup.roles'));
+
+        $this->actingAs($hr)->get(route('setup.staff'))
+            ->assertOk()
+            ->assertSee('Learning support')
+            ->assertSee('Add or edit roles');
+
+        $this->actingAs($hr)->post(route('setup.staff.store'), [
+            'name' => 'Avery Lane',
+            'email' => 'avery.lane@living.school',
+            'role' => 'learning-support',
+            'password' => 'living-demo',
+            'password_confirmation' => 'living-demo',
+        ])->assertRedirect(route('setup.staff'));
+        $this->assertSame('learning-support', User::where('email', 'avery.lane@living.school')->first()->role);
+
+        $role = StaffRole::where('slug', 'learning-support')->first();
+        $this->actingAs($hr)->put(route('setup.roles.update', $role), [
+            'name' => 'Learning team',
+            'kind' => 'support',
+        ])->assertRedirect(route('setup.roles'));
+        $this->assertSame('learning-support', $role->fresh()->slug);
+        $this->assertSame('Learning team', $role->fresh()->name);
+
+        $this->actingAs($hr)->delete(route('setup.roles.destroy', $role))
+            ->assertSessionHasErrors('role');
+        $this->assertNotNull($role->fresh());
+
+        $hrRole = StaffRole::where('slug', 'hr')->where('school_id', $hr->school_id)->first();
+        $this->actingAs($hr)->put(route('setup.roles.update', $hrRole), [
+            'name' => 'People team',
+            'kind' => 'manage',
+        ])->assertRedirect(route('setup.roles'));
+        $this->actingAs($hr)->get(route('casuals.index'))
+            ->assertOk()
+            ->assertSee('People team');
+
+        $this->actingAs($hr)->post(route('setup.roles.store'), [
+            'name' => 'Business manager',
+            'kind' => 'manage',
+        ])->assertRedirect(route('setup.roles'));
+        $manager = User::create([
+            'name' => 'Casey Brooks',
+            'email' => 'casey.brooks@living.school',
+            'password' => 'living-demo',
+            'school_id' => $hr->school_id,
+            'role' => 'business-manager',
+        ]);
+        $this->actingAs($manager)->get(route('setup'))->assertOk()->assertSee('Open roles');
+        $this->actingAs($director)->get(route('setup'))->assertForbidden();
+
+        $casual = StaffRole::where('slug', 'casual')->where('school_id', $hr->school_id)->first();
+        $this->actingAs($hr)->delete(route('setup.roles.destroy', $casual))
+            ->assertSessionHasErrors('role');
     }
 
     private function tinyPng(): string

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Hr\Roles;
 use App\Models\Person;
 use App\Models\User;
 
@@ -13,11 +14,11 @@ class PersonPolicy
             return false;
         }
 
-        return match ($user->role) {
+        return match (Roles::kind($user)) {
             'casual' => (int) $user->person_id === (int) $person->id,
-            'director' => $user->neighbourhood === $person->neighbourhood,
-            'mentor' => (int) $user->id === (int) $person->mentor_user_id,
-            'hr', 'conductor', 'office' => true,
+            'neighbourhood' => $user->neighbourhood === $person->neighbourhood,
+            'support' => (int) $user->id === (int) $person->mentor_user_id,
+            'manage', 'front_desk' => true,
             default => false,
         };
     }
@@ -28,11 +29,11 @@ class PersonPolicy
             return false;
         }
 
-        return in_array($user->role, ['hr', 'conductor', 'casual'], true);
+        return in_array(Roles::kind($user), ['manage', 'casual'], true);
     }
 
     public function updateFile(User $user, Person $person): bool
     {
-        return $this->view($user, $person) && in_array($user->role, ['hr', 'conductor'], true);
+        return $this->view($user, $person) && Roles::manages($user);
     }
 }

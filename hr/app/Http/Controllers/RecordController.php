@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\Roles;
 use App\Models\Person;
 use App\Services\Audit;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class RecordController extends Controller
         $this->authorize('view', $person);
         $user = $request->user();
         abort_unless(
-            in_array($user->role, ['hr', 'conductor', 'director'], true) || (int) $user->person_id === (int) $person->id,
+            in_array(Roles::kind($user), ['manage', 'neighbourhood'], true) || (int) $user->person_id === (int) $person->id,
             403
         );
         $data = $request->validate([
@@ -33,7 +34,7 @@ class RecordController extends Controller
     public function dayNote(Request $request, Person $person)
     {
         $this->authorize('view', $person);
-        abort_unless(in_array($request->user()->role, ['director', 'mentor', 'hr', 'conductor'], true), 403);
+        abort_unless(in_array(Roles::kind($request->user()), ['neighbourhood', 'support', 'manage'], true), 403);
         $data = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
             'descriptors' => ['nullable', 'string', 'max:80'],
@@ -52,7 +53,7 @@ class RecordController extends Controller
         $this->authorize('view', $person);
         $user = $request->user();
         abort_unless(
-            in_array($user->role, ['hr', 'conductor', 'mentor'], true) || (int) $user->person_id === (int) $person->id,
+            in_array(Roles::kind($user), ['manage', 'support'], true) || (int) $user->person_id === (int) $person->id,
             403
         );
         $data = $request->validate([

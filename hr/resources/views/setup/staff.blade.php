@@ -2,10 +2,10 @@
 @section('content')
 <p class="muted"><a class="link" href="{{ route('setup') }}">Setup</a></p>
 <h1>Staff</h1>
-<p class="lede">These are the people who sign in. A casual still joins from an invite on their record. Moving a director changes which neighbourhood they cover.</p>
+<p class="lede">These are the people who sign in. A casual still joins from an invite on their record. <a class="link" href="{{ route('setup.roles') }}">Add or edit roles</a> when the list below is missing the one you need.</p>
 @foreach($staff as $member)
     <article class="person">
-        <div><span class="status">{{ $member->role === 'hr' ? 'HR' : ucfirst($member->role) }}</span></div>
+        <div><span class="status">{{ \App\Hr\Roles::labelFor($member) }}</span></div>
         <div>
             <h2>{{ $member->name }}</h2>
             <p class="meta">{{ $member->email }}@if($member->neighbourhood) · {{ $member->neighbourhood }}@endif @if($member->mobile) · {{ $member->mobile }}@endif @if($member->on_people_page) · On the people page @endif</p>
@@ -24,10 +24,11 @@
         <p class="muted">This is also the sign-in address.</p>
         <label for="role">Role</label>
         <select id="role" name="role" required>
-            @foreach(['hr' => 'HR', 'conductor' => 'Conductor', 'director' => 'Director', 'mentor' => 'Mentor', 'office' => 'Office'] as $value => $label)
-                <option value="{{ $value }}" @selected(old('role') === $value)>{{ $label }}</option>
+            @foreach($roles as $role)
+                <option value="{{ $role->slug }}" @selected(old('role') === $role->slug)>{{ $role->name }}</option>
             @endforeach
         </select>
+        <p class="muted">The role decides what they can open. Change that on Roles.</p>
         <label for="neighbourhood">Neighbourhood</label>
         <input id="neighbourhood" name="neighbourhood" value="{{ old('neighbourhood') }}" placeholder="Whole School">
         <p class="muted">Write Whole School when every casual should see this card.</p>

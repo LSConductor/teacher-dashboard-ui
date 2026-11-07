@@ -38,7 +38,7 @@ class InductionController extends Controller
             'person' => $person,
             'module' => $module,
             'done' => $done,
-            'canAcknowledge' => in_array(request()->user()->role, ['hr', 'conductor'], true)
+            'canAcknowledge' => \App\Hr\Roles::manages(request()->user())
                 || (int) request()->user()->person_id === (int) $person->id,
         ]);
     }
@@ -47,13 +47,13 @@ class InductionController extends Controller
     {
         $this->authorize('view', $person);
         $user = $request->user();
-        $allowed = in_array($user->role, ['hr', 'conductor'], true)
+        $allowed = \App\Hr\Roles::manages($user)
             || ((int) $user->person_id === (int) $person->id);
         abort_unless($allowed, 403);
         abort_unless($module->school_id === $person->school_id, 404);
 
         $quiz = $module->quiz ?? [];
-        if ($user->role === 'casual' && $quiz !== []) {
+        if (\App\Hr\Roles::isCasual($user) && $quiz !== []) {
             $answers = $request->input('answers', []);
             foreach ($quiz as $index => $question) {
                 if ((int) ($answers[$index] ?? -1) !== (int) $question['answer']) {

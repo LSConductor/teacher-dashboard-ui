@@ -116,18 +116,18 @@
     </div>
     @auth
         <nav>
-            @if(auth()->user()->role === 'casual')
+            @if(\App\Hr\Roles::isCasual(auth()->user()))
                 <a href="{{ route('start') }}">Start</a>
             @endif
             <a href="{{ route('people') }}">People</a>
             <a href="{{ route('casuals.index') }}">List</a>
-            @if(in_array(auth()->user()->role, ['hr','conductor']))
+            @if(\App\Hr\Roles::manages(auth()->user()))
                 <a href="{{ route('setup') }}">Setup</a>
                 <a href="{{ route('templates.index') }}">Contracts</a>
                 <a href="{{ route('templates.complete') }}">Send a contract</a>
                 <a href="{{ route('audit.index') }}">Audit</a>
             @endif
-            <span class="who">{{ auth()->user()->name }} · {{ auth()->user()->role === 'hr' ? 'HR' : ucfirst(auth()->user()->role) }}</span>
+            <span class="who">{{ auth()->user()->name }} · {{ \App\Hr\Roles::labelFor(auth()->user()) }}</span>
             <form action="{{ route('logout') }}" method="post">@csrf<button class="quiet" type="submit">Sign out</button></form>
         </nav>
     @endauth

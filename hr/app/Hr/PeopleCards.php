@@ -83,7 +83,7 @@ class PeopleCards
             return $member->people_title;
         }
 
-        return $member->role === 'hr' ? 'HR' : ucfirst($member->role);
+        return Roles::labelFor($member);
     }
 
     public static function note(User $member): string
@@ -111,10 +111,11 @@ class PeopleCards
 
     private static function visibleToPerson(User $member, Person $person): bool
     {
-        if ($member->role === 'director' && self::sameOrWholeSchool($member->neighbourhood, $person->neighbourhood)) {
+        $kind = Roles::kind($member);
+        if ($kind === 'neighbourhood' && self::sameOrWholeSchool($member->neighbourhood, $person->neighbourhood)) {
             return true;
         }
-        if ($member->role === 'office') {
+        if ($kind === 'front_desk') {
             return true;
         }
         if ($person->mentor_user_id && (int) $member->id === (int) $person->mentor_user_id) {
@@ -126,13 +127,14 @@ class PeopleCards
 
     private static function visibleInNeighbourhood(User $member, ?string $neighbourhood): bool
     {
-        if ($member->role === 'director' && self::sameOrWholeSchool($member->neighbourhood, $neighbourhood)) {
+        $kind = Roles::kind($member);
+        if ($kind === 'neighbourhood' && self::sameOrWholeSchool($member->neighbourhood, $neighbourhood)) {
             return true;
         }
-        if ($member->role === 'office') {
+        if ($kind === 'front_desk') {
             return true;
         }
-        if ($member->role === 'mentor' && self::sameOrWholeSchool($member->neighbourhood, $neighbourhood)) {
+        if ($kind === 'support' && self::sameOrWholeSchool($member->neighbourhood, $neighbourhood)) {
             return true;
         }
 
@@ -141,7 +143,7 @@ class PeopleCards
 
     private static function isKeyPerson(User $member): bool
     {
-        if (in_array($member->role, ['director', 'office', 'mentor'], true)) {
+        if (in_array(Roles::kind($member), ['neighbourhood', 'front_desk', 'support'], true)) {
             return true;
         }
 
@@ -159,18 +161,19 @@ class PeopleCards
 
     public static function viewerCanSee(User $viewer, User $member): bool
     {
-        if ((int) $viewer->school_id !== (int) $member->school_id || $member->role === 'casual') {
+        if ((int) $viewer->school_id !== (int) $member->school_id || Roles::isCasual($member)) {
             return false;
         }
-        if (in_array($viewer->role, ['hr', 'conductor'], true)) {
+        $viewerKind = Roles::kind($viewer);
+        if ($viewerKind === 'manage') {
             return true;
         }
-        if ($viewer->role === 'casual' && $viewer->person_id) {
+        if ($viewerKind === 'casual' && $viewer->person_id) {
             $person = Person::query()->where('school_id', $viewer->school_id)->find($viewer->person_id);
 
             return $person ? self::visibleToPerson($member, $person) : false;
         }
-        if ($viewer->role === 'director') {
+        if ($viewerKind === 'neighbourhood') {
             return self::visibleInNeighbourhood($member, $viewer->neighbourhood);
         }
 

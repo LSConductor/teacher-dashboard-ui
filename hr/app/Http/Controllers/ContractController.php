@@ -232,7 +232,7 @@ class ContractController extends Controller
         $person = Person::findOrFail($contract->person_id);
         $this->authorize('view', $person);
         $user = $request->user();
-        $allowed = in_array($user->role, ['hr', 'conductor'], true) || (int) $user->person_id === (int) $person->id;
+        $allowed = \App\Hr\Roles::manages($user) || (int) $user->person_id === (int) $person->id;
         abort_unless($allowed, 403);
         abort_unless($contract->status === 'sent', 422);
         $contract->update(['status' => 'signed', 'signed_at' => now()]);

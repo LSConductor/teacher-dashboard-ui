@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\Roles;
 use App\Models\InductionModule;
 use App\Models\Person;
 use App\Models\User;
@@ -18,15 +19,16 @@ class CasualController extends Controller
             ->where('school_id', $user->school_id)
             ->with(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements', 'mentor', 'bookings']);
 
-        if ($user->role === 'casual') {
+        $kind = Roles::kind($user);
+        if ($kind === 'casual') {
             $query->where('id', $user->person_id);
-        } elseif ($user->role === 'director') {
+        } elseif ($kind === 'neighbourhood') {
             $query->where('neighbourhood', $user->neighbourhood);
-        } elseif ($user->role === 'mentor') {
+        } elseif ($kind === 'support') {
             $query->where('mentor_user_id', $user->id);
         }
 
-        if ($request->filled('neighbourhood') && in_array($user->role, ['hr', 'conductor', 'office'], true)) {
+        if ($request->filled('neighbourhood') && in_array($kind, ['manage', 'front_desk'], true)) {
             $query->where('neighbourhood', $request->string('neighbourhood'));
         }
         if ($request->filled('q')) {
@@ -42,7 +44,7 @@ class CasualController extends Controller
             ->get(['id', 'version']);
         $directors = User::query()
             ->where('school_id', $user->school_id)
-            ->where('role', 'director')
+            ->whereIn('role', Roles::slugsOfKind((int) $user->school_id, 'neighbourhood'))
             ->get()
             ->keyBy('neighbourhood');
 
@@ -63,7 +65,7 @@ class CasualController extends Controller
             return $person;
         });
 
-        $sensitive = in_array($user->role, ['hr', 'conductor'], true);
+        $sensitive = $kind === 'manage';
 
         if ($request->filled('light')) {
             $people = $people->where('gate.light', $request->string('light'))->values();

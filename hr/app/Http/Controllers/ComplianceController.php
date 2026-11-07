@@ -13,10 +13,10 @@ class ComplianceController extends Controller
     public function wwcc(Request $request, Person $person)
     {
         $this->authorize('viewSensitive', $person);
-        if (! in_array($request->user()->role, ['hr', 'conductor', 'casual'], true)) {
+        if (! \App\Hr\Roles::manages($request->user()) && ! \App\Hr\Roles::isCasual($request->user())) {
             abort(403);
         }
-        if ($request->user()->role === 'casual' && (int) $request->user()->person_id !== (int) $person->id) {
+        if (\App\Hr\Roles::isCasual($request->user()) && (int) $request->user()->person_id !== (int) $person->id) {
             abort(403);
         }
 
@@ -34,7 +34,7 @@ class ComplianceController extends Controller
             ]);
         }
 
-        if ($data['outcome'] === 'cleared' && $request->user()->role === 'casual') {
+        if ($data['outcome'] === 'cleared' && \App\Hr\Roles::isCasual($request->user())) {
             $data['outcome'] = 'pending';
         }
 

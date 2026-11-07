@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\Roles;
 use App\Models\Person;
 use App\Services\Audit;
 use App\Services\ClearToTeach;
@@ -12,7 +13,7 @@ class BookingController extends Controller
     public function store(Request $request, Person $person, ClearToTeach $gate)
     {
         $this->authorize('view', $person);
-        abort_unless(in_array($request->user()->role, ['hr', 'conductor', 'office', 'director'], true), 403);
+        abort_unless(in_array(Roles::kind($request->user()), ['manage', 'front_desk', 'neighbourhood'], true), 403);
 
         $data = $request->validate([
             'booked_on' => ['required', 'date'],

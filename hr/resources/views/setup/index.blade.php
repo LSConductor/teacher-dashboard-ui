@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <h1>Setup</h1>
-<p class="lede">HR and the Conductor manage the library. A director sees the casual list and day-one, and does not open this page. A published contract and an acknowledged quest keep the version already used.</p>
+<p class="lede">A role that manages the school opens this page. A neighbourhood lead sees their casuals and does not open setup. A published contract and an acknowledged quest keep the version already used.</p>
 <article class="person green">
     <div><span class="status green">Quests</span></div>
     <div>
@@ -22,8 +22,16 @@
     <div><span class="status">Staff</span></div>
     <div>
         <h2>Staff accounts</h2>
-        <p class="meta">Add a director, mentor, or office account, and write the card a casual sees on the people page. You cannot change your own role.</p>
+        <p class="meta">Add a person, choose their role, and write the card a casual sees. You cannot change your own role.</p>
         <div class="actions"><a class="button" href="{{ route('setup.staff') }}">Open staff</a></div>
+    </div>
+</article>
+<article class="person">
+    <div><span class="status">Roles</span></div>
+    <div>
+        <h2>Roles</h2>
+        <p class="meta">Add a role, rename one, and choose whether it manages the school, leads a neighbourhood, supports on site, or works the front desk.</p>
+        <div class="actions"><a class="button" href="{{ route('setup.roles') }}">Open roles</a></div>
     </div>
 </article>
 @endsection

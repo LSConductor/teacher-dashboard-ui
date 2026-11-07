@@ -11,13 +11,15 @@ use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SetupController;
+use App\Hr\Roles;
 use App\Http\Controllers\StartController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    if (auth()->check() && auth()->user()->role !== 'casual') {
+    if (auth()->check() && ! Roles::isCasual(auth()->user())) {
         return redirect()->route('casuals.index');
     }
 
@@ -40,11 +42,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
-    Route::post('/people/order', [PeopleController::class, 'order'])->middleware('role:hr,conductor')->name('people.order');
+    Route::post('/people/order', [PeopleController::class, 'order'])->middleware('manages')->name('people.order');
     Route::get('/people/{member}/photo', [PeopleController::class, 'photo'])->name('people.photo');
     Route::get('/casuals', [CasualController::class, 'index'])->name('casuals.index');
-    Route::get('/casuals/new', [CasualController::class, 'create'])->name('casuals.create')->middleware('role:hr,conductor');
-    Route::post('/casuals', [CasualController::class, 'store'])->name('casuals.store')->middleware('role:hr,conductor');
+    Route::get('/casuals/new', [CasualController::class, 'create'])->name('casuals.create')->middleware('manages');
+    Route::post('/casuals', [CasualController::class, 'store'])->name('casuals.store')->middleware('manages');
     Route::get('/casuals/{person}/induction', [InductionController::class, 'pack'])->name('casuals.pack');
     Route::get('/casuals/{person}/induction/{module}', [InductionController::class, 'show'])->name('casuals.induction');
     Route::get('/casuals/{person}/forms', [FormController::class, 'index'])->name('casuals.forms');
@@ -69,8 +71,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/casuals/{person}/pd', [RecordController::class, 'pd'])->name('casuals.pd');
     Route::post('/casuals/{person}/invite', [InviteController::class, 'store'])->name('casuals.invite');
 
-    Route::middleware('role:hr,conductor')->group(function () {
+    Route::middleware('manages')->group(function () {
         Route::get('/setup', [SetupController::class, 'index'])->name('setup');
+        Route::get('/setup/roles', [RoleController::class, 'index'])->name('setup.roles');
+        Route::post('/setup/roles', [RoleController::class, 'store'])->name('setup.roles.store');
+        Route::get('/setup/roles/{role}', [RoleController::class, 'edit'])->name('setup.roles.edit');
+        Route::put('/setup/roles/{role}', [RoleController::class, 'update'])->name('setup.roles.update');
+        Route::delete('/setup/roles/{role}', [RoleController::class, 'destroy'])->name('setup.roles.destroy');
         Route::get('/setup/staff', [SetupController::class, 'staff'])->name('setup.staff');
         Route::post('/setup/staff', [SetupController::class, 'storeStaff'])->name('setup.staff.store');
         Route::get('/setup/staff/{member}', [SetupController::class, 'editStaff'])->name('setup.staff.edit');
