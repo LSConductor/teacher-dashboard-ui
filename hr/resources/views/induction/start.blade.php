@@ -56,6 +56,7 @@
 @endphp
 <section id="start" class="dayboard">
     <article class="dayhero">
+        @include('partials.place', ['placeName' => $person->neighbourhood])
         <p class="kicker">{{ now()->timezone('Australia/Sydney')->format('l j F') }}</p>
         @if($today)
             <h1>{{ $today->class_label }}</h1>

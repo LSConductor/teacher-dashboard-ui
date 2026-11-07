@@ -8,6 +8,7 @@
 @endif
 <h1>People</h1>
 @if($person)
+    @include('partials.place', ['placeName' => $person->neighbourhood])
     <p class="lede">These are the people to find when you arrive. The teacher is the class you are with. Call or email for school business while you are on site. If a child is in immediate danger, call 000, then your director. Do not pass these numbers or photos on.</p>
 @elseif($managing)
     <p class="lede">A casual opens this page on the day they attend. Drag a card to the level you want, then save. That order is what a casual sees. Use a work mobile and a work email. A photo is optional. Home addresses, personal email, and WWCC numbers stay off this page.</p>

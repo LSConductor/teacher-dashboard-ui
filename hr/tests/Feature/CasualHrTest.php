@@ -389,6 +389,9 @@ class CasualHrTest extends TestCase
             ->assertSee('Open the plan')
             ->assertSee('Call Ngulingah Director')
             ->assertSee('Later induction')
+            ->assertSee('class="place"', false)
+            ->assertSee('class="mark"', false)
+            ->assertSee('Ngulingah</strong>', false)
             ->assertDontSee($sam->wwcc->wwcc_number)
             ->assertDontSee('1990-04-12');
 
@@ -401,6 +404,8 @@ class CasualHrTest extends TestCase
             ->get('/start')
             ->assertOk()
             ->assertSee('Casual list')
+            ->assertSee('Casual teachers')
+            ->assertDontSee('class="place"', false)
             ->assertDontSee($sam->wwcc->wwcc_number);
     }
 
