@@ -16,7 +16,7 @@
         $markLater = $module->phase === 'later' && ! $laterAnchor;
         if ($markLater) { $laterAnchor = true; }
     @endphp
-    <div class="card" @if($markLater) id="later" @endif style="border-left: 8px solid {{ $done ? '#14663d' : ($module->phase === 'day_one' ? '#8d2430' : '#8a4b00') }};">
+    <div class="card {{ $done ? 'edge-green' : ($module->phase === 'day_one' ? 'edge-red' : 'edge-amber') }}" @if($markLater) id="later" @endif>
         <h2>{{ $module->phase === 'day_one' ? 'Day one' : 'Later' }}. {{ $module->title }}</h2>
         @if($done)
             <p class="muted">Acknowledged {{ $done->acknowledged_at->timezone('Australia/Sydney')->format('j M Y g:i a') }}</p>

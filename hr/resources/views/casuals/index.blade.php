@@ -130,7 +130,7 @@
                 @if($person->today_booking?->plan_url)
                     <a class="button ghost" href="{{ $person->today_booking->plan_url }}" target="_blank" rel="noopener">Open the plan</a>
                 @endif
-                <a class="button" href="{{ route('casuals.pack', $person) }}" style="background: {{ $person->day_one_done >= $person->day_one_total && $person->day_one_total > 0 ? '#14663d' : '#8a4b00' }}">
+                <a class="button {{ $person->day_one_done >= $person->day_one_total && $person->day_one_total > 0 ? 'done' : 'wait' }}" href="{{ route('casuals.pack', $person) }}">
                     Day-one {{ $person->day_one_done }} of {{ $person->day_one_total }}
                 </a>
                 @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
