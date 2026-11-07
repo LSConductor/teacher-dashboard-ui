@@ -277,9 +277,9 @@ class CasualHrTest extends TestCase
             ->assertDontSee('name="date_of_birth"', false);
 
         $this->post('/apply', [
-            'preferred_name' => 'Alex River',
-            'legal_name' => 'Alexandra River',
-            'email' => 'alex.river@example.com',
+            'preferred_name' => 'Zara River',
+            'legal_name' => 'Zara Alexandra River',
+            'email' => 'zara.river@example.com',
             'mobile' => '0400 111 222',
             'neighbourhood' => 'Ngulingah',
             'stages' => ['S3'],
@@ -287,20 +287,49 @@ class CasualHrTest extends TestCase
             'heard_about' => 'A teacher at the school',
         ])->assertRedirect(route('apply'));
 
-        $this->assertSame('applicant', Person::where('email', 'alex.river@example.com')->first()->status);
+        $this->assertSame('applicant', Person::where('email', 'zara.river@example.com')->first()->status);
         $this->post('/apply', [
-            'preferred_name' => 'Alex River',
-            'legal_name' => 'Alexandra River',
-            'email' => 'alex.river@example.com',
+            'preferred_name' => 'Zara River',
+            'legal_name' => 'Zara Alexandra River',
+            'email' => 'zara.river@example.com',
             'mobile' => '0400 111 222',
             'neighbourhood' => 'Ngulingah',
             'stages' => ['S3'],
             'right_to_work' => 'Australian citizen. This is a fictional application.',
         ])->assertSessionHasErrors('email');
-        $this->assertSame(1, Person::where('email', 'alex.river@example.com')->count());
+        $this->assertSame(1, Person::where('email', 'zara.river@example.com')->count());
 
         $hr = User::where('email', 'hr@living.school')->first();
-        $this->actingAs($hr)->get(route('casuals.index'))->assertSee('Alex River')->assertSee('Application received');
+        $director = User::where('email', 'director@living.school')->first();
+        $alex = Person::where('email', 'zara.river@example.com')->first();
+
+        $this->actingAs($hr)->get(route('casuals.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Zara River', 'Pat Red'])
+            ->assertSee('New candidate')
+            ->assertSee('Australian citizen. This is a fictional application.')
+            ->assertSee('Heard about the school from A teacher at the school.')
+            ->assertSee('Application received')
+            ->assertDontSee('See what Zara River sees');
+
+        $this->actingAs($hr)->get(route('casuals.show', $alex))
+            ->assertOk()
+            ->assertSee('New candidate')
+            ->assertSee('Send the invite on Person')
+            ->assertDontSee('eTAMS does not show an active level');
+
+        $this->actingAs($director)->get(route('casuals.index'))
+            ->assertOk()
+            ->assertSee('Zara River')
+            ->assertSee('New candidate')
+            ->assertDontSee('Australian citizen. This is a fictional application.');
+
+        $this->actingAs($hr)->get(route('casuals.index', ['focus' => 'candidates']))
+            ->assertSee('Zara River')
+            ->assertDontSee('Pat Red');
+        $this->actingAs($hr)->get(route('casuals.index', ['light' => 'red']))
+            ->assertSee('Pat Red')
+            ->assertDontSee('Zara River');
     }
 
     public function test_director_cannot_open_the_wwcc_form(): void

@@ -88,11 +88,21 @@ class CasualController extends Controller
         $sensitive = $kind === 'manage';
 
         if ($request->filled('light')) {
-            $people = $people->where('gate.light', $request->string('light'))->values();
+            $people = $people
+                ->where('status', '!=', 'applicant')
+                ->where('gate.light', $request->string('light'))
+                ->values();
         }
         if ($sensitive && $request->filled('focus')) {
             $focus = $request->string('focus')->toString();
             $people = $people->filter(function (Person $person) use ($focus) {
+                if ($focus === 'candidates') {
+                    return $person->status === 'applicant';
+                }
+                if ($person->status === 'applicant') {
+                    return false;
+                }
+
                 return match ($focus) {
                     'induction' => collect($person->gate['reasons'])->contains(
                         fn ($reason) => str_contains($reason['text'], 'Day-one')
@@ -104,6 +114,12 @@ class CasualController extends Controller
                 };
             })->values();
         }
+
+        $people = $people
+            ->where('status', 'applicant')
+            ->sortByDesc('created_at')
+            ->concat($people->where('status', '!=', 'applicant')->sortBy('preferred_name'))
+            ->values();
 
         return view('casuals.index', [
             'people' => $people,

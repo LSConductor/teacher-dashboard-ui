@@ -45,11 +45,28 @@
             }
         }
     }
+    if ($person->status === 'applicant') {
+        $openTab = 'person';
+        $tabLevel = array_fill_keys(array_keys($tabLevel), null);
+    }
     $tabs = ['person' => 'Person', 'clearances' => 'Clearances', 'day' => 'The day', 'learning' => 'Learning', 'paper' => 'Records'];
 @endphp
 <h1>{{ $person->preferred_name }}</h1>
-<p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
+@if($person->status === 'applicant')
+    <p><span class="status candidate">New candidate</span></p>
+@else
+    <p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
+@endif
 <p class="lede">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) }}</p>
+@if($person->status === 'applicant')
+    @if($canEdit && $person->right_to_work)
+        <p>{{ $person->right_to_work }}</p>
+    @endif
+    @if($canEdit && $person->heard_about)
+        <p class="meta">Heard about the school from {{ $person->heard_about }}.</p>
+    @endif
+    <p>{{ $canEdit ? 'Send the invite on Person when you are ready. The clearances and the contract come after they sign in.' : 'HR has this application. Not bookable yet.' }}</p>
+@endif
 <div class="actions" style="margin-bottom:18px;">
     @if($person->mobile && (\App\Hr\Roles::kind(auth()->user()) !== 'neighbourhood' || $gate['light'] === 'green'))
         <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->preferred_name }}</a>
@@ -62,24 +79,26 @@
     @if(in_array(auth()->user()->role, ['hr','conductor','casual']))
         <a class="button ghost" href="{{ route('casuals.forms', $person) }}">Forms</a>
     @endif
-    @if($canEdit)
+    @if($canEdit && $person->status !== 'applicant')
         <form method="post" action="{{ route('view-as.start', $person) }}">
             @csrf
             <button class="ghost" type="submit">See what {{ $person->preferred_name }} sees</button>
         </form>
     @endif
 </div>
-@if($canEdit)
+@if($canEdit && $person->status !== 'applicant')
     <p class="meta">Opens their day, sign-on, and people page, so you can check a problem.</p>
 @endif
 @if($person->mentor)
     <p class="muted">Mentor: {{ $person->mentor->name }} @if($person->mentor->mobile)· {{ $person->mentor->mobile }}@endif</p>
 @endif
+@if($person->status !== 'applicant')
 @forelse($gate['reasons'] as $reason)
     <p class="alarm-row"><span class="alarm-pill {{ $reason['level'] }}">{{ $reason['level'] === 'red' ? 'Red' : 'Amber' }}</span> {{ $reason['text'] }}</p>
 @empty
     <p>Clear to teach.</p>
 @endforelse
+@endif
 
 <div class="{{ $canEdit ? 'file-card' : 'file-open' }}">
 @if($canEdit)

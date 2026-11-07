@@ -118,6 +118,8 @@
         .person.green { border-left-color: var(--green); background: #f3faf6; color: var(--ink); }
         .person.amber { border-left-color: var(--amber); background: #fff8ee; color: var(--ink); }
         .person.red { border-left-color: var(--red); background: #fdf5f5; color: var(--ink); }
+        .person.candidate { border-left-color: var(--navy); background: #f4f7fa; color: var(--ink); }
+        .status.candidate { background: #e4edf4; color: var(--navy); }
         .portrait { width: 128px; height: 128px; object-fit: cover; border-radius: 14px; display: block; margin-bottom: 10px; background: #f4f1ea; border: 1px solid var(--line); }
         article[draggable="true"] { cursor: grab; }
         article[draggable="true"].dragging { opacity: .55; }

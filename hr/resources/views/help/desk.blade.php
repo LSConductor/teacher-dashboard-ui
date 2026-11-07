@@ -13,7 +13,7 @@
         <p><a class="link" href="{{ route('apply') }}">{{ route('apply') }}</a></p>
         <ol>
             <li>They send their name, a way to reach them, the stages they can teach, and their right to work.</li>
-            <li>They appear on the List with “Application received.” Open the person. They are not bookable yet.</li>
+            <li>They appear at the top of the List as a new candidate, with what they wrote. They are not bookable yet.</li>
             <li>On Person, press Create invite link. Email that link only to them. It lasts 7 days and works once.</li>
             <li>They set a password and start day-one induction.</li>
             <li>Record the WWCC and the accreditation on Clearances. The Conductor records that eTAMS lines up.</li>

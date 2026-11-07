@@ -59,6 +59,7 @@
             <option value="alignment" @selected(request('focus')==='alignment')>Waiting on the Conductor</option>
             <option value="provisional" @selected(request('focus')==='provisional')>Conditional or Provisional</option>
             <option value="expiring" @selected(request('focus')==='expiring')>Expiry watch</option>
+            <option value="candidates" @selected(request('focus')==='candidates')>New candidates</option>
         </select>
     </div>
     @endif
@@ -69,6 +70,34 @@
 @endif
 
 @forelse($people as $person)
+    @if($person->status === 'applicant')
+    <article class="person candidate">
+        <div>
+            <span class="status candidate">New candidate</span>
+        </div>
+        <div>
+            <h2><a href="{{ route('casuals.show', $person) }}">{{ $person->preferred_name }}</a></h2>
+            <p class="meta">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) ?: 'Stages not set' }}</p>
+            <p class="meta">{{ $person->email }}@if($person->mobile) · {{ $person->mobile }}@endif</p>
+            @if($sensitive)
+                @if($person->right_to_work)
+                    <p>{{ $person->right_to_work }}</p>
+                @endif
+                @if($person->heard_about)
+                    <p class="meta">Heard about the school from {{ $person->heard_about }}.</p>
+                @endif
+            @endif
+            <p class="meta">Application received. Not bookable yet. Open the file and send the invite when you are ready.</p>
+            <div class="actions">
+                @if($person->mobile && \App\Hr\Roles::kind(auth()->user()) !== 'neighbourhood')
+                    <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->preferred_name }}</a>
+                @endif
+                <a class="button ghost" href="mailto:{{ $person->email }}">Email</a>
+                <a class="button" href="{{ route('casuals.show', $person) }}">Open the file</a>
+            </div>
+        </div>
+    </article>
+    @else
     <article class="person {{ $person->gate['light'] }}">
         <div>
             <span class="status {{ $person->gate['light'] }}">{{ $labels[$person->gate['light']] }}</span>
@@ -76,9 +105,6 @@
         <div>
             <h2><a href="{{ route('casuals.show', $person) }}">{{ $person->preferred_name }}</a></h2>
             <p class="meta">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) ?: 'Stages not set' }}</p>
-            @if($person->status === 'applicant')
-                <p class="meta">Application received. Not on the bookable list yet.</p>
-            @endif
             <p class="meta">
                 Mentor {{ $person->mentor->name ?? 'not named' }}
                 @if($person->director_name) · Director {{ $person->director_name }} @endif
@@ -119,6 +145,7 @@
             </div>
         </div>
     </article>
+    @endif
 @empty
     <div class="card">No casuals in this view.</div>
 @endforelse
