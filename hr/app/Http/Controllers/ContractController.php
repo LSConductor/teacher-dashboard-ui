@@ -153,6 +153,7 @@ class ContractController extends Controller
             'sent_at' => now(),
         ]);
         Audit::record('contract.sent', $contract, ['template' => $template->key, 'version' => $template->version]);
+        $this->receiptWithEngagement($person, $template->key);
 
         return redirect()->route('casuals.show', $person);
     }
@@ -223,6 +224,7 @@ class ContractController extends Controller
             'sent_at' => now(),
         ]);
         Audit::record('contract.sent', $contract, ['template' => $template->key, 'version' => $template->version]);
+        $this->receiptWithEngagement($person, $template->key);
 
         return back();
     }
@@ -271,6 +273,15 @@ class ContractController extends Controller
         Audit::record('contract.moved', $contract, ['from' => $from->id, 'to' => $to->id]);
 
         return redirect()->route('casuals.show', $to)->with('status', 'Contract moved to '.$to->preferred_name.'.');
+    }
+
+    private function receiptWithEngagement(Person $person, string $key): void
+    {
+        if ($key !== 'casual-pool' || \App\Hr\ContractDesk::alreadySent($person, 'ceis-receipt')) {
+            return;
+        }
+
+        \App\Hr\ContractDesk::issue($person, 'ceis-receipt');
     }
 
     private function library(int $schoolId)

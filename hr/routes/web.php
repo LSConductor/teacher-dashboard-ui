@@ -6,7 +6,9 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CasualController;
 use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\CasualLetterController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\PeopleController;
@@ -35,6 +37,8 @@ Route::post('/apply', [ApplicationController::class, 'store'])->name('apply.stor
 Route::middleware('guest')->group(function () {
     Route::get('/login', [SessionController::class, 'create'])->name('login');
     Route::post('/login', [SessionController::class, 'store']);
+    Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
+    Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
     Route::get('/invites/{token}', [InviteController::class, 'accept'])->name('invites.accept');
     Route::post('/invites/{token}', [InviteController::class, 'complete']);
 });
@@ -56,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/casuals/{person}/forms/wwcc', [FormController::class, 'wwcc'])->name('casuals.forms.wwcc');
     Route::get('/casuals/{person}/forms/availability', [FormController::class, 'availability'])->name('casuals.forms.availability');
     Route::post('/casuals/{person}/forms/availability', [FormController::class, 'saveAvailability']);
+    Route::get('/casuals/{person}/casual-status-letter', [CasualLetterController::class, 'show'])->middleware('manages')->name('casuals.letter');
     Route::get('/casuals/{person}', [CasualController::class, 'show'])->name('casuals.show');
     Route::put('/casuals/{person}', [CasualController::class, 'update'])->name('casuals.update');
 

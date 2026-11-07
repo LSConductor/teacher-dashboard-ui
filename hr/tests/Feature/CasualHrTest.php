@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Hr\Roles;
 use App\Hr\StaffPhoto;
 use App\Models\Contract;
+use App\Models\InductionAcknowledgement;
 use App\Models\StaffRole;
 use App\Models\ContractTemplate;
 use App\Models\InductionModule;
@@ -13,7 +14,9 @@ use App\Models\Person;
 use App\Models\School;
 use App\Models\User;
 use App\Models\WwccCheck;
+use App\Services\ClearToTeach;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Database\Seeders\HrSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -866,6 +869,259 @@ class CasualHrTest extends TestCase
         $casual = StaffRole::where('slug', 'casual')->where('school_id', $hr->school_id)->first();
         $this->actingAs($hr)->delete(route('setup.roles.destroy', $casual))
             ->assertSessionHasErrors('role');
+    }
+
+    public function test_the_light_stays_red_until_clearance_level_day_one_and_alignment(): void
+    {
+        $gate = app(ClearToTeach::class);
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $this->assertSame('green', $gate->assess($sam)['light']);
+
+        $sam->wwcc->update(['wwcc_number' => 'APP999']);
+        $app = $gate->assess($sam->fresh());
+        $this->assertSame('red', $app['light']);
+        $this->assertTrue(collect($app['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'An APP number is not a clearance'
+        ));
+
+        $sam->wwcc->update([
+            'wwcc_number' => 'WWC100E',
+            'outcome' => 'cleared',
+            'verified_at' => null,
+        ]);
+        $this->assertSame('red', $gate->assess($sam->fresh())['light']);
+
+        $sam->wwcc->update(['verified_at' => now(), 'expires_on' => now()->addYear()]);
+        $sam->accreditation->update(['level' => null]);
+        $this->assertSame('red', $gate->assess($sam->fresh())['light']);
+
+        $sam->accreditation->update(['level' => 'proficient', 'alignment' => 'pending']);
+        $aligned = $gate->assess($sam->fresh());
+        $this->assertSame('red', $aligned['light']);
+        $this->assertTrue(collect($aligned['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'The Conductor has not recorded eTAMS alignment'
+        ));
+
+        $sam->accreditation->update(['alignment' => 'approved']);
+        InductionAcknowledgement::where('person_id', $sam->id)->delete();
+        $day = $gate->assess($sam->fresh());
+        $this->assertSame('red', $day['light']);
+        $this->assertTrue(collect($day['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'Day-one induction is incomplete'
+        ));
+    }
+
+    public function test_a_director_can_call_green_and_cannot_book_red(): void
+    {
+        $director = User::where('email', 'director@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+
+        $this->actingAs($director)->get(route('casuals.index'))
+            ->assertOk()
+            ->assertSee('Call Sam Green')
+            ->assertDontSee('Call Pat Red');
+
+        $this->actingAs($director)->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('Call Sam Green');
+
+        $this->actingAs($director)->get(route('casuals.show', $pat))
+            ->assertOk()
+            ->assertDontSee('Call Pat Red')
+            ->assertSee('There is no override.');
+
+        $this->actingAs($director)
+            ->post(route('casuals.bookings', $pat), [
+                'booked_on' => now()->toDateString(),
+                'class_label' => 'Director try',
+                'conductor_note' => 'Please book Pat',
+            ])
+            ->assertSessionHasErrors('booking');
+        $this->assertDatabaseMissing('bookings', ['person_id' => $pat->id]);
+
+        $this->actingAs($director)
+            ->post(route('casuals.bookings', $sam), [
+                'booked_on' => now()->addDay()->toDateString(),
+                'class_label' => 'Director day',
+                'start_time' => '9:00',
+                'finish_time' => '3:15',
+            ])
+            ->assertRedirect();
+        $this->assertDatabaseHas('bookings', [
+            'person_id' => $sam->id,
+            'class_label' => 'Director day',
+            'light_at_booking' => 'green',
+        ]);
+    }
+
+    public function test_the_conductor_cannot_override_a_red_light(): void
+    {
+        $conductor = User::where('email', 'conductor@living.school')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+
+        $this->actingAs($conductor)
+            ->from(route('casuals.show', $pat))
+            ->post(route('casuals.bookings', $pat), [
+                'booked_on' => now()->toDateString(),
+                'class_label' => 'Override day',
+                'conductor_note' => 'I know this person.',
+            ])
+            ->assertSessionHasErrors('booking');
+
+        $this->assertDatabaseMissing('bookings', ['person_id' => $pat->id]);
+        $this->actingAs($conductor)
+            ->get(route('casuals.show', $pat))
+            ->assertSee('There is no override.');
+    }
+
+    public function test_hr_can_produce_a_casual_status_letter(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $sam->bookings()->create([
+            'school_id' => $sam->school_id,
+            'booked_on' => now()->subYears(8)->toDateString(),
+            'class_label' => 'Ancient class',
+            'program_source' => 'wordpress',
+            'light_at_booking' => 'green',
+            'created_by' => $hr->id,
+        ]);
+
+        $this->actingAs($director)->get(route('casuals.letter', $sam))->assertForbidden();
+
+        $this->actingAs($hr)
+            ->get(route('casuals.letter', $sam))
+            ->assertOk()
+            ->assertSee('Casual teacher status')
+            ->assertSee('seven years')
+            ->assertSee('Samantha Green')
+            ->assertSee('S3 sample')
+            ->assertDontSee('Ancient class')
+            ->assertDontSee($sam->wwcc->wwcc_number)
+            ->assertDontSee('1990-04-12');
+    }
+
+    public function test_a_booking_files_the_day_confirmation_and_the_ceis_receipt(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $ceis = ContractTemplate::where('key', 'ceis-receipt')->where('status', 'published')->first();
+        $day = ContractTemplate::where('key', 'day-booking')->where('status', 'published')->first();
+        $pool = ContractTemplate::where('key', 'casual-pool')->where('status', 'published')->first();
+
+        $this->actingAs($hr)
+            ->get(route('casuals.show', $sam))
+            ->assertSee('Record the Casual Employment Information Statement receipt');
+
+        $this->actingAs($hr)
+            ->post(route('casuals.contracts.issue', $sam), ['template_id' => $ceis->id])
+            ->assertRedirect();
+
+        $receipt = Contract::where('person_id', $sam->id)->where('template_id', $ceis->id)->first();
+        $this->assertNotNull($receipt);
+        $this->assertSame('sent', $receipt->status);
+        $this->assertStringContainsString('Casual Employment Information Statement', $receipt->merged_body);
+        $this->assertStringNotContainsString($sam->wwcc->wwcc_number, $receipt->merged_body);
+
+        $this->actingAs($hr)
+            ->post(route('casuals.bookings', $sam), [
+                'booked_on' => now()->addDays(2)->toDateString(),
+                'class_label' => 'Confirmation class',
+                'start_time' => '9:00',
+                'finish_time' => '3:15',
+            ])
+            ->assertRedirect();
+
+        $body = Contract::where('person_id', $sam->id)->where('template_id', $day->id)->latest('id')->first()->merged_body;
+        $this->assertStringContainsString('Confirmation class', $body);
+        $this->assertStringContainsString('9:00', $body);
+        $this->assertStringContainsString('3:15', $body);
+        $this->assertStringNotContainsString($sam->wwcc->wwcc_number, $body);
+
+        $this->actingAs($hr)
+            ->post(route('casuals.contracts.issue', $sam), ['template_id' => $pool->id])
+            ->assertRedirect();
+        $this->assertSame(1, Contract::where('person_id', $sam->id)->where('template_id', $ceis->id)->count());
+    }
+
+    public function test_google_sign_in_uses_the_school_account_and_the_password_remains(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('Continue with Google')
+            ->assertSee('Password');
+
+        $this->followingRedirects()
+            ->get(route('auth.google'))
+            ->assertSee('GOOGLE_CLIENT_ID')
+            ->assertSee('GOOGLE_CLIENT_SECRET');
+
+        $this->post('/login', [
+            'email' => 'hr@living.school',
+            'password' => 'living-demo',
+        ])->assertRedirect(route('casuals.index'));
+        Auth::logout();
+        $this->flushSession();
+
+        config([
+            'services.google.client_id' => 'school-client-id',
+            'services.google.client_secret' => 'school-client-secret',
+            'services.google.hosted_domain' => 'living.school',
+        ]);
+
+        $schoolId = User::where('email', 'hr@living.school')->first()->school_id;
+        $casual = User::create([
+            'name' => 'Sam School',
+            'email' => 'sam.school@living.school',
+            'password' => 'living-demo',
+            'school_id' => $schoolId,
+            'role' => 'casual',
+        ]);
+
+        $googleEmail = 'sam.school@living.school';
+        $googleSub = 'google-sub-sam';
+        Http::fake(function ($request) use (&$googleEmail, &$googleSub) {
+            if (str_contains($request->url(), 'oauth2.googleapis.com/token')) {
+                return Http::response(['access_token' => 'token-from-google']);
+            }
+
+            return Http::response([
+                'sub' => $googleSub,
+                'email' => $googleEmail,
+                'email_verified' => true,
+            ]);
+        });
+
+        $this->withSession(['google_oauth_state' => 'state-token'])
+            ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
+            ->assertRedirect(route('casuals.index'));
+        $this->assertAuthenticatedAs($casual);
+        $this->assertSame('google-sub-sam', $casual->fresh()->google_sub);
+
+        $this->post(route('logout'))->assertRedirect();
+        $this->assertGuest();
+
+        $googleEmail = 'outsider@gmail.com';
+        $googleSub = 'google-sub-gmail';
+        $this->withSession(['google_oauth_state' => 'state-token'])
+            ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+
+        $googleEmail = 'new.teacher@living.school';
+        $googleSub = 'google-sub-new';
+        $this->withSession(['google_oauth_state' => 'state-token'])
+            ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+        $this->assertNull(User::where('email', 'new.teacher@living.school')->first());
+
+        $this->post('/login', [
+            'email' => 'hr@living.school',
+            'password' => 'living-demo',
+        ])->assertRedirect(route('casuals.index'));
     }
 
     private function tinyJpeg(): string

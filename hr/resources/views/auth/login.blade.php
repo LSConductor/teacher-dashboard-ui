@@ -2,7 +2,8 @@
 @section('content')
 <div class="card" style="max-width:420px; margin:40px auto;">
     <h1>Staff sign in</h1>
-    <p class="muted">One account for casual HR. The primary program builder is unchanged.</p>
+    <p class="muted">A casual uses their Living School Google account. The password below stays for this build.</p>
+    <p><a class="button" href="{{ route('auth.google') }}">Continue with Google</a></p>
     <form method="post" action="{{ route('login') }}">
         @csrf
         <label for="email">Email</label>

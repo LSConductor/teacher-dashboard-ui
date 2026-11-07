@@ -13,8 +13,11 @@
 <p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
 <p class="lede">{{ $person->legal_name }} · {{ $person->neighbourhood }} · {{ implode(', ', $person->stages ?? []) }}</p>
 <div class="actions" style="margin-bottom:18px;">
-    @if($person->mobile)
-        <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->mobile }}</a>
+    @if($person->mobile && (\App\Hr\Roles::kind(auth()->user()) !== 'neighbourhood' || $gate['light'] === 'green'))
+        <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->preferred_name }}</a>
+    @endif
+    @if($canEdit)
+        <a class="button ghost" href="{{ route('casuals.letter', $person) }}">Casual-status letter</a>
     @endif
     <a class="button ghost" href="mailto:{{ $person->email }}">Email</a>
     <a class="button" href="{{ route('casuals.pack', $person) }}" style="background: {{ $dayDone >= $dayOne->count() && $dayOne->count() > 0 ? '#14663d' : '#8a4b00' }}">Day-one {{ $dayDone }} of {{ $dayOne->count() }}</a>
@@ -154,6 +157,17 @@
         <pre style="white-space:pre-wrap; font-family:system-ui,sans-serif; font-size:14px;">{{ $contract->merged_body }}</pre>
     @endforeach
     @if($canEdit)
+        @php
+            $ceis = \App\Hr\ContractDesk::published($person, 'ceis-receipt');
+            $ceisSent = \App\Hr\ContractDesk::alreadySent($person, 'ceis-receipt');
+        @endphp
+        @if($ceis && ! $ceisSent)
+            <form method="post" action="{{ route('casuals.contracts.issue', $person) }}">
+                @csrf
+                <input type="hidden" name="template_id" value="{{ $ceis->id }}">
+                <p><button type="submit">Record the Casual Employment Information Statement receipt</button></p>
+            </form>
+        @endif
         <form method="post" action="{{ route('casuals.contracts.issue', $person) }}">
             @csrf
             <label for="template_id">Send a published template</label>
@@ -170,12 +184,17 @@
 @if(in_array(auth()->user()->role, ['hr','conductor','office','director']))
 <div class="card">
     <h2>Book a day</h2>
-    <p class="muted">The plan link points at the primary portal. This app does not edit programs.</p>
+    @if($gate['light'] === 'red')
+        <p>This casual is red and cannot be booked. There is no override.</p>
+    @else
+    <p class="muted">The plan link points at the primary portal. This app does not edit programs. Booking also files the one-day confirmation.</p>
     <form method="post" action="{{ route('casuals.bookings', $person) }}" class="grid">
         @csrf
         <div><label for="booked_on">Date</label><input id="booked_on" type="date" name="booked_on" required></div>
         <div><label for="class_label">Class</label><input id="class_label" name="class_label" required></div>
         <div><label for="teacher_name">Teacher they are with</label><input id="teacher_name" name="teacher_name" placeholder="The class teacher"></div>
+        <div><label for="start_time">Start</label><input id="start_time" name="start_time" value="9:00"></div>
+        <div><label for="finish_time">Finish</label><input id="finish_time" name="finish_time" value="3:15"></div>
         <div><label for="plan_url">Plan link</label><input id="plan_url" name="plan_url" type="url" placeholder="https://portal.living.school/..."></div>
         <div><label for="external_program_id">Primary program id</label><input id="external_program_id" name="external_program_id"></div>
         @if(auth()->user()->role === 'conductor')
@@ -183,6 +202,7 @@
         @endif
         <p><button type="submit">Book</button></p>
     </form>
+    @endif
     @foreach($person->bookings->sortByDesc('booked_on') as $booking)
         <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }}@if($booking->teacher_name) · {{ $booking->teacher_name }}@endif · {{ $booking->light_at_booking }}
             @if($booking->plan_url)<a href="{{ $booking->plan_url }}">Open plan</a>@endif

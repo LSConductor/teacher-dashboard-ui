@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\InductionModule;
 use App\Models\Person;
+use App\Models\WwccCheck;
 
 class ClearToTeach
 {
@@ -20,16 +21,21 @@ class ClearToTeach
         }
 
         $accreditation = $person->accreditation;
-        if (! $accreditation || $accreditation->status !== 'active') {
-            $reasons[] = ['level' => 'red', 'text' => 'NESA accreditation is not active'];
+        $activeLevel = $accreditation && in_array($accreditation->level, [
+            'conditional', 'provisional', 'proficient', 'highly_accomplished', 'lead',
+        ], true);
+        if (! $accreditation || $accreditation->status !== 'active' || ! $activeLevel) {
+            $reasons[] = ['level' => 'red', 'text' => 'eTAMS does not show an active level'];
         } elseif ($accreditation->alignment !== 'approved') {
-            $reasons[] = ['level' => 'red', 'text' => 'Conductor has not approved eTAMS alignment'];
+            $reasons[] = ['level' => 'red', 'text' => 'The Conductor has not recorded eTAMS alignment'];
         }
 
         $wwcc = $person->wwcc;
-        if (! $wwcc || $wwcc->outcome !== 'cleared') {
-            $reasons[] = ['level' => 'red', 'text' => 'WWCC paid clearance is not verified'];
-        } elseif ($wwcc->expires_on && $wwcc->expires_on->isPast()) {
+        if ($wwcc && WwccCheck::looksLikeApplicationNumber($wwcc->wwcc_number)) {
+            $reasons[] = ['level' => 'red', 'text' => 'An APP number is not a clearance'];
+        } elseif (! $wwcc || $wwcc->outcome !== 'cleared' || ! $wwcc->verified_at || ! $wwcc->expires_on) {
+            $reasons[] = ['level' => 'red', 'text' => 'WWCC is not a verified clearance'];
+        } elseif ($wwcc->expires_on->isPast()) {
             $reasons[] = ['level' => 'red', 'text' => 'WWCC clearance has expired'];
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\ContractDesk;
 use App\Hr\Roles;
 use App\Models\Person;
 use App\Services\Audit;
@@ -22,11 +23,13 @@ class BookingController extends Controller
             'plan_url' => ['nullable', 'url'],
             'external_program_id' => ['nullable', 'string', 'max:80'],
             'conductor_note' => ['nullable', 'string'],
+            'start_time' => ['nullable', 'string', 'max:20'],
+            'finish_time' => ['nullable', 'string', 'max:20'],
         ]);
 
         $assessment = $gate->assess($person);
         if ($assessment['light'] === 'red') {
-            return back()->withErrors(['booking' => 'This casual is red and cannot be booked. WWCC and accreditation cannot be overridden.']);
+            return back()->withErrors(['booking' => 'This casual is red and cannot be booked. There is no override.']);
         }
         if ($assessment['light'] === 'amber') {
             if ($request->user()->role !== 'conductor' || blank($data['conductor_note'] ?? null)) {
@@ -48,6 +51,13 @@ class BookingController extends Controller
         ]);
         Audit::record('booking.created', $booking, ['light' => $assessment['light']]);
 
-        return back();
+        ContractDesk::issue($person, 'day-booking', array_filter([
+            'class_label' => $data['class_label'],
+            'booked_on' => $data['booked_on'],
+            'start_time' => $data['start_time'] ?? null,
+            'finish_time' => $data['finish_time'] ?? null,
+        ]));
+
+        return back()->with('status', 'Booked. The one-day confirmation is with the contracts.');
     }
 }

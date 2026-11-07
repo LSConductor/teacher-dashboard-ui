@@ -75,8 +75,8 @@
                 <p class="meta">{{ $person->gate['reasons'][0]['text'] }}</p>
             @endif
             <div class="actions">
-                @if($person->mobile)
-                    <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->mobile }}</a>
+                @if($person->mobile && (\App\Hr\Roles::kind(auth()->user()) !== 'neighbourhood' || $person->gate['light'] === 'green'))
+                    <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->preferred_name }}</a>
                 @endif
                 <a class="button ghost" href="mailto:{{ $person->email }}">Email</a>
                 @if($person->today_booking?->plan_url)
