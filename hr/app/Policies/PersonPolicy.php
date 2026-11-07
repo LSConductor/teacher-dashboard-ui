@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Hr\Neighbourhood;
 use App\Hr\Roles;
 use App\Models\Person;
 use App\Models\User;
@@ -16,7 +17,7 @@ class PersonPolicy
 
         return match (Roles::kind($user)) {
             'casual' => (int) $user->person_id === (int) $person->id,
-            'neighbourhood' => $user->neighbourhood === $person->neighbourhood,
+            'neighbourhood' => Neighbourhood::teaches($person, $user->neighbourhood),
             'support' => (int) $user->id === (int) $person->mentor_user_id,
             'manage', 'front_desk' => true,
             default => false,

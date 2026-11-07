@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BookingController;
@@ -46,6 +47,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
+    Route::get('/access', [AccessController::class, 'show'])->name('access');
     Route::post('/people/order', [PeopleController::class, 'order'])->middleware('manages')->name('people.order');
     Route::get('/people/{member}/photo', [PeopleController::class, 'photo'])->name('people.photo');
     Route::get('/casuals', [CasualController::class, 'index'])->name('casuals.index');

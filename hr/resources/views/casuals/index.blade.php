@@ -22,6 +22,22 @@
         <label for="q">Name</label>
         <input id="q" name="q" value="{{ request('q') }}">
     </div>
+    @if($lockedNeighbourhood)
+    <div>
+        <label for="neighbourhood">Learning neighbourhood</label>
+        <input id="neighbourhood" value="{{ $lockedNeighbourhood }}" readonly>
+    </div>
+    @elseif($neighbourhoods)
+    <div>
+        <label for="neighbourhood">Learning neighbourhood</label>
+        <select id="neighbourhood" name="neighbourhood">
+            <option value="">Every neighbourhood</option>
+            @foreach($neighbourhoods as $name)
+                <option value="{{ $name }}" @selected(request('neighbourhood')===$name)>{{ $name }}</option>
+            @endforeach
+        </select>
+    </div>
+    @endif
     <div>
         <label for="light">Clear to teach</label>
         <select id="light" name="light">
@@ -45,6 +61,9 @@
     @endif
     <button type="submit">Show</button>
 </form>
+@if($lockedNeighbourhood)
+    <p class="muted">Showing {{ $lockedNeighbourhood }} only.</p>
+@endif
 
 @forelse($people as $person)
     <article class="person {{ $person->gate['light'] }}">

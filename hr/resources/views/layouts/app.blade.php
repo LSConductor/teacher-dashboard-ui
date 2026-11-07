@@ -121,6 +121,7 @@
             @endif
             <a href="{{ route('people') }}">People</a>
             <a href="{{ route('casuals.index') }}">List</a>
+            <a href="{{ route('access') }}">Access</a>
             @if(\App\Hr\Roles::manages(auth()->user()))
                 <a href="{{ route('setup') }}">Setup</a>
                 <a href="{{ route('templates.index') }}">Contracts</a>

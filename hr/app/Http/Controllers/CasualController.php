@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\Neighbourhood;
 use App\Hr\Roles;
 use App\Models\InductionModule;
 use App\Models\Person;
@@ -20,16 +21,24 @@ class CasualController extends Controller
             ->with(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements', 'mentor', 'bookings']);
 
         $kind = Roles::kind($user);
+        $lockedNeighbourhood = null;
         if ($kind === 'casual') {
             $query->where('id', $user->person_id);
         } elseif ($kind === 'neighbourhood') {
-            $query->where('neighbourhood', $user->neighbourhood);
+            if (Neighbourhood::coversAll($user->neighbourhood)) {
+                $lockedNeighbourhood = null;
+            } elseif (filled($user->neighbourhood)) {
+                $lockedNeighbourhood = $user->neighbourhood;
+                Neighbourhood::restrict($query, $lockedNeighbourhood);
+            } else {
+                $query->whereRaw('0 = 1');
+            }
         } elseif ($kind === 'support') {
             $query->where('mentor_user_id', $user->id);
         }
 
-        if ($request->filled('neighbourhood') && in_array($kind, ['manage', 'front_desk'], true)) {
-            $query->where('neighbourhood', $request->string('neighbourhood'));
+        if ($lockedNeighbourhood === null && $request->filled('neighbourhood') && in_array($kind, ['manage', 'front_desk', 'neighbourhood'], true)) {
+            Neighbourhood::restrict($query, $request->string('neighbourhood')->toString());
         }
         if ($request->filled('q')) {
             $term = '%'.$request->string('q').'%';
@@ -90,6 +99,10 @@ class CasualController extends Controller
         return view('casuals.index', [
             'people' => $people,
             'sensitive' => $sensitive,
+            'lockedNeighbourhood' => $lockedNeighbourhood,
+            'neighbourhoods' => in_array($kind, ['manage', 'front_desk'], true) || ($kind === 'neighbourhood' && $lockedNeighbourhood === null)
+                ? Neighbourhood::names((int) $user->school_id)
+                : [],
         ]);
     }
 

@@ -1482,6 +1482,86 @@ class CasualHrTest extends TestCase
         ]);
     }
 
+    public function test_a_director_searches_only_their_learning_neighbourhood(): void
+    {
+        $director = User::where('email', 'director@living.school')->first();
+        $hr = User::where('email', 'hr@living.school')->first();
+        $office = User::where('email', 'office@living.school')->first();
+        $mentor = User::where('email', 'mentor@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $this->assertSame('Ngulingah', $director->neighbourhood);
+
+        $yirran = Person::create([
+            'school_id' => $director->school_id,
+            'preferred_name' => 'Yirran Only',
+            'legal_name' => 'Yirran Only',
+            'email' => 'yirran.only@example.com',
+            'neighbourhood' => 'Yirran',
+            'status' => 'casual_pool',
+        ]);
+        $covers = Person::create([
+            'school_id' => $director->school_id,
+            'preferred_name' => 'Covers Ngulingah',
+            'legal_name' => 'Covers Ngulingah',
+            'email' => 'covers.ngulingah@example.com',
+            'neighbourhood' => 'Yirran',
+            'neighbourhoods' => ['Ngulingah'],
+            'status' => 'casual_pool',
+        ]);
+
+        $this->actingAs($director)
+            ->get(route('casuals.index', ['q' => 'Yirran', 'neighbourhood' => 'Yirran']))
+            ->assertOk()
+            ->assertSee('Learning neighbourhood')
+            ->assertSee('Showing Ngulingah only.')
+            ->assertDontSee('Yirran Only');
+
+        $this->actingAs($director)
+            ->get(route('casuals.index', ['q' => 'Covers']))
+            ->assertOk()
+            ->assertSee('Covers Ngulingah');
+
+        $this->actingAs($director)->get(route('casuals.show', $yirran))->assertForbidden();
+        $this->actingAs($director)->get(route('casuals.show', $covers))->assertOk();
+        $this->actingAs($director)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertDontSee('Signed sample engagement')
+            ->assertDontSee($sam->wwcc->wwcc_number);
+
+        $this->actingAs($hr)
+            ->get(route('casuals.index', ['neighbourhood' => 'Yirran']))
+            ->assertOk()
+            ->assertSee('Yirran Only')
+            ->assertSee('Learning neighbourhood')
+            ->assertDontSee('Sam Green');
+
+        $this->actingAs($office)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertDontSee($sam->wwcc->wwcc_number)
+            ->assertDontSee('Signed sample engagement');
+
+        $this->actingAs($mentor)->get(route('casuals.show', $yirran))->assertForbidden();
+        $this->actingAs($mentor)->get(route('casuals.show', $covers))->assertForbidden();
+
+        $this->actingAs($director)
+            ->get(route('access'))
+            ->assertOk()
+            ->assertSee('Casuals in Ngulingah')
+            ->assertSee('Another neighbourhood')
+            ->assertDontSee('Every role');
+
+        $this->actingAs($hr)
+            ->get(route('access'))
+            ->assertOk()
+            ->assertSee('Every role')
+            ->assertSee('WWCC number, date of birth, and contract text');
+
+        $this->actingAs($director)->get(route('setup'))->assertForbidden();
+        $this->actingAs($office)->get(route('audit.index'))->assertForbidden();
+    }
+
     private function tinyJpeg(): string
     {
         $image = imagecreatetruecolor(2, 2);

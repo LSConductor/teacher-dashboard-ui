@@ -136,6 +136,7 @@
     @endforeach
 </div>
 
+@if($sensitive)
 <div class="card">
     <h2 id="contracts">Contracts</h2>
     @foreach($person->contracts as $contract)
@@ -187,6 +188,7 @@
         </form>
     @endif
 </div>
+@endif
 
 @if(in_array(auth()->user()->role, ['hr','conductor','office','director']))
 <div class="card">
