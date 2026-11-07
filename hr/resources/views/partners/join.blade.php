@@ -1,9 +1,12 @@
 @extends('layouts.app')
 @section('content')
-<section class="card" style="max-width:640px; margin:0 auto;">
-    <p class="muted" style="letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#14324a;">Parents as partners</p>
-    <h1>Help at Living School</h1>
-    <p class="lede">Six short pages, one check, and a few lines about what you can offer. There is no community to join. HR is told when you finish.</p>
+<section class="card welcome">
+    <p class="record-kicker">For parents and grandparents</p>
+    <h1>Thank you for offering to help</h1>
+    <p>This page is for parents and grandparents of Living School. It is not the form for casual teachers.</p>
+    <p>The paper is the course in full. Read it whenever you like. The six short pages here walk the same ground, then ask what you can offer. There is no community to join. HR is told when you finish.</p>
+    <p><a class="button ghost" href="{{ asset('parents-as-partners.pdf') }}">Read the Parents as partners paper</a></p>
+    <h2>Tell us who you are</h2>
     <form method="post" action="{{ route('partners.join.store') }}">
         @csrf
         <label for="preferred_name">Your name</label>

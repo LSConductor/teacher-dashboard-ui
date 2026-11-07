@@ -49,7 +49,11 @@ class PartnerCourseTest extends TestCase
     {
         $this->get(route('partners.join'))
             ->assertOk()
-            ->assertSee('Help at Living School')
+            ->assertSee('Parents as partners')
+            ->assertSee('Thank you for offering to help')
+            ->assertSee('not the form for casual teachers')
+            ->assertSee('parents-as-partners.pdf', false)
+            ->assertDontSee('Casual teachers')
             ->assertDontSee('Complete Lesson');
 
         $this->post(route('partners.join.store'), [
@@ -62,6 +66,10 @@ class PartnerCourseTest extends TestCase
 
         $ada = Partner::where('email', 'ada.river@example.com')->first();
         $this->assertNotNull($ada);
+        $this->get(route('partners.course', $ada))
+            ->assertOk()
+            ->assertSee('Parents as partners')
+            ->assertDontSee('Casual teachers');
         $this->get(route('partners.page', [$ada, 'confidence']))->assertRedirect();
 
         foreach (PartnerPage::orderBy('sort')->get() as $page) {

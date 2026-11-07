@@ -33,8 +33,13 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.app', function ($view) {
             $user = auth()->user();
+            $route = request()->route()?->getName() ?? '';
+            $partnerFacing = str_starts_with($route, 'partners.')
+                && ! in_array($route, ['partners.index', 'partners.show', 'partners.volunteer'], true);
             $place = null;
-            if ($user instanceof User && Roles::isCasual($user) && $user->person_id) {
+            if ($partnerFacing) {
+                $place = 'Parents as partners';
+            } elseif ($user instanceof User && Roles::isCasual($user) && $user->person_id) {
                 $place = Person::query()->whereKey($user->person_id)->value('neighbourhood');
             }
             $view->with('placeName', filled($place) ? $place : null);
