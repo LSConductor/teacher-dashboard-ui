@@ -722,6 +722,57 @@ class CasualHrTest extends TestCase
             ->assertDontSee('Save order');
     }
 
+    public function test_a_photo_over_15_megabytes_is_resized_and_the_card_is_kept(): void
+    {
+        Storage::fake('local');
+        $hr = User::where('email', 'hr@living.school')->first();
+        $bytes = $this->tinyJpeg().str_repeat('A', 16000 * 1024);
+        $this->assertGreaterThan(15360 * 1024, strlen($bytes));
+
+        $this->actingAs($hr)->post(route('setup.staff.store'), [
+            'name' => 'Cloudia Darvill',
+            'email' => 'cloudia.darvill@living.school',
+            'role' => 'mentor',
+            'password' => 'living-demo',
+            'password_confirmation' => 'living-demo',
+            'photo' => UploadedFile::fake()->createWithContent('cloudia.jpg', $bytes),
+        ])->assertRedirect(route('setup.staff'))
+            ->assertSessionHas('status', 'Cloudia Darvill can sign in.');
+
+        $member = User::where('email', 'cloudia.darvill@living.school')->first();
+        $this->assertNotNull($member);
+        Storage::disk('local')->assertExists($member->photo_path);
+        $this->assertLessThan(15360 * 1024, Storage::disk('local')->size($member->photo_path));
+        $sized = getimagesize(Storage::disk('local')->path($member->photo_path));
+        $this->assertSame(StaffPhoto::SIZE, $sized[0]);
+        $this->assertSame(StaffPhoto::SIZE, $sized[1]);
+        $this->assertSame('image/jpeg', $sized['mime']);
+        $this->actingAs($hr)->get(route('setup.staff'))->assertOk()->assertSee('Cloudia Darvill');
+    }
+
+    public function test_a_staff_card_is_kept_when_the_photo_cannot_be_used(): void
+    {
+        Storage::fake('local');
+        $hr = User::where('email', 'hr@living.school')->first();
+
+        $this->actingAs($hr)->post(route('setup.staff.store'), [
+            'name' => 'Cloudia Darvill',
+            'email' => 'cloudia.darvill@living.school',
+            'role' => 'mentor',
+            'password' => 'living-demo',
+            'password_confirmation' => 'living-demo',
+            'photo' => UploadedFile::fake()->createWithContent('notes.jpg', str_repeat('not-a-photo', 100)),
+        ])->assertRedirect(route('setup.staff'));
+
+        $member = User::where('email', 'cloudia.darvill@living.school')->first();
+        $this->assertNotNull($member);
+        $this->assertNull($member->photo_path);
+        $status = session('status');
+        $this->assertStringContainsString('Cloudia Darvill can sign in.', $status);
+        $this->assertStringContainsString('card was saved', $status);
+        $this->actingAs($hr)->get(route('setup.staff'))->assertOk()->assertSee('Cloudia Darvill');
+    }
+
     public function test_a_wide_photo_is_cropped_to_a_square(): void
     {
         Storage::fake('local');
@@ -815,6 +866,16 @@ class CasualHrTest extends TestCase
         $casual = StaffRole::where('slug', 'casual')->where('school_id', $hr->school_id)->first();
         $this->actingAs($hr)->delete(route('setup.roles.destroy', $casual))
             ->assertSessionHasErrors('role');
+    }
+
+    private function tinyJpeg(): string
+    {
+        $image = imagecreatetruecolor(2, 2);
+        ob_start();
+        imagejpeg($image);
+        imagedestroy($image);
+
+        return ob_get_clean();
     }
 
     private function tinyPng(): string

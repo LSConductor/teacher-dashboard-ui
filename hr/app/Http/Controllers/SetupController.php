@@ -45,7 +45,6 @@ class SetupController extends Controller
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
             'people_note' => ['nullable', 'string', 'max:280'],
-            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:15360'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
         $this->requireNeighbourhood((int) $request->user()->school_id, $data['role'], $data['neighbourhood'] ?? null);
@@ -62,7 +61,7 @@ class SetupController extends Controller
             'days_on_site' => $data['days_on_site'] ?? null,
             'people_note' => $data['people_note'] ?? null,
         ]);
-        $this->storePhoto($request, $member);
+        $photoNote = $this->storePhoto($request, $member);
         $max = (int) User::query()->where('school_id', $member->school_id)->max('people_sort');
         if ($max > 0) {
             $member->people_sort = $max + 1;
@@ -70,7 +69,7 @@ class SetupController extends Controller
         $member->save();
         Audit::record('staff.created', $member, ['role' => $member->role]);
 
-        return redirect()->route('setup.staff')->with('status', $member->name.' can sign in.');
+        return redirect()->route('setup.staff')->with('status', $this->staffStatus($member->name.' can sign in.', $photoNote));
     }
 
     public function editStaff(Request $request, User $member)
@@ -95,7 +94,6 @@ class SetupController extends Controller
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
             'people_note' => ['nullable', 'string', 'max:280'],
-            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:15360'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
         $this->requireNeighbourhood((int) $member->school_id, $data['role'], $data['neighbourhood'] ?? null);
@@ -131,7 +129,7 @@ class SetupController extends Controller
         if (! empty($data['password'])) {
             $member->password = $data['password'];
         }
-        $this->storePhoto($request, $member);
+        $photoNote = $this->storePhoto($request, $member);
         $member->save();
 
         if ($member->person_id) {
@@ -145,7 +143,16 @@ class SetupController extends Controller
         }
         Audit::record('staff.updated', $member, ['role' => $member->role]);
 
-        return redirect()->route('setup.staff')->with('status', $member->name.' is updated.');
+        return redirect()->route('setup.staff')->with('status', $this->staffStatus($member->name.' is updated.', $photoNote));
+    }
+
+    private function staffStatus(string $saved, ?string $photoNote): string
+    {
+        if (! $photoNote) {
+            return $saved;
+        }
+
+        return $saved.' '.$photoNote;
     }
 
     private function requireNeighbourhood(int $schoolId, string $role, ?string $neighbourhood): void
@@ -282,19 +289,32 @@ class SetupController extends Controller
         return back();
     }
 
-    private function storePhoto(Request $request, User $member): void
+    private function storePhoto(Request $request, User $member): ?string
     {
         if ($request->boolean('remove_photo') && filled($member->photo_path)) {
             Storage::disk('local')->delete($member->photo_path);
             $member->photo_path = null;
         }
         if (! $request->hasFile('photo')) {
-            return;
+            return null;
         }
-        if (filled($member->photo_path)) {
+        $file = $request->file('photo');
+        if (! $file->isValid()) {
+            return 'The photo was not added, and the card was saved.';
+        }
+        try {
+            $path = StaffPhoto::store($file);
+        } catch (ValidationException $exception) {
+            $reason = $exception->errors()['photo'][0] ?? 'Choose a JPEG or PNG photo.';
+
+            return 'The photo was not added, and the card was saved. '.$reason;
+        }
+        if (filled($member->photo_path) && $member->photo_path !== $path) {
             Storage::disk('local')->delete($member->photo_path);
         }
-        $member->photo_path = StaffPhoto::store($request->file('photo'));
+        $member->photo_path = $path;
+
+        return null;
     }
 
     private function videoLink(?string $value): ?string

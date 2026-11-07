@@ -37,7 +37,7 @@
         <p class="muted">School business only. Do not enter a home number.</p>
         <label for="photo">Photo</label>
         <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp">
-        <p class="muted">Optional. A large photo is cropped to a square and reduced automatically.</p>
+        <p class="muted">Optional. A large photo is cropped to a square and reduced before it is saved. If the photo cannot be used, the staff card is still saved.</p>
         <label for="on_people_page">
             <input id="on_people_page" name="on_people_page" type="checkbox" value="1" @checked(old('on_people_page')) style="width:auto;">
             Show on the people page
