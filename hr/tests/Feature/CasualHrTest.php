@@ -688,6 +688,37 @@ class CasualHrTest extends TestCase
         $this->get(route('people.photo', $conductor))->assertRedirect(route('login'));
     }
 
+    public function test_an_admin_can_save_the_people_card_order(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = User::where('email', 'sam.green@example.com')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $office = User::where('email', 'office@living.school')->first();
+        $mentor = User::where('email', 'mentor@living.school')->first();
+
+        $this->actingAs($director)->post(route('people.order'), [
+            'order' => [$mentor->id, $office->id, $director->id],
+        ])->assertForbidden();
+
+        $this->actingAs($hr)->get(route('people'))
+            ->assertOk()
+            ->assertSee('Save order')
+            ->assertSee('Move up');
+
+        $this->actingAs($hr)->post(route('people.order'), [
+            'order' => [$mentor->id, $office->id, $director->id],
+        ])->assertRedirect(route('people'));
+
+        $this->assertSame(1, $mentor->fresh()->people_sort);
+        $this->assertSame(2, $office->fresh()->people_sort);
+        $this->assertSame(3, $director->fresh()->people_sort);
+
+        $this->actingAs($sam)->get(route('people'))
+            ->assertOk()
+            ->assertSeeInOrder(['Mentor Teacher', 'Office', 'Ngulingah Director'])
+            ->assertDontSee('Save order');
+    }
+
     public function test_a_wide_photo_is_cropped_to_a_square(): void
     {
         Storage::fake('local');

@@ -89,6 +89,8 @@
         .person.amber { border-left-color: var(--amber); }
         .person.red { border-left-color: var(--red); }
         .portrait { width: 144px; height: 144px; object-fit: cover; border-radius: 12px; display: block; margin-bottom: 10px; background: #f4f1ea; }
+        article[draggable="true"] { cursor: grab; }
+        article[draggable="true"].dragging { opacity: .55; }
         .person h2 { font-size: 24px; margin: 0; }
         .person h2 a { color: inherit; text-decoration: none; }
         .person h2 a:hover { text-decoration: underline; }

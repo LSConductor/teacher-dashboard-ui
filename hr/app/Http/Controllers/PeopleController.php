@@ -6,6 +6,7 @@ use App\Hr\PeopleCards;
 use App\Hr\StaffPhoto;
 use App\Models\Person;
 use App\Models\User;
+use App\Services\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,6 +42,38 @@ class PeopleController extends Controller
             'managing' => $managing,
             'person' => $person,
         ]);
+    }
+
+    public function order(Request $request)
+    {
+        $data = $request->validate([
+            'order' => ['required', 'array', 'min:1'],
+            'order.*' => ['integer'],
+        ]);
+        $ids = array_values(array_unique(array_map('intval', $data['order'])));
+        $members = User::query()
+            ->where('school_id', $request->user()->school_id)
+            ->whereIn('id', $ids)
+            ->where('role', '!=', 'casual')
+            ->get()
+            ->keyBy('id');
+        $position = 1;
+        $first = null;
+        foreach ($ids as $id) {
+            $member = $members->get($id);
+            if (! $member) {
+                continue;
+            }
+            $member->people_sort = $position;
+            $member->save();
+            $first ??= $member;
+            $position++;
+        }
+        if ($first) {
+            Audit::record('people.ordered', $first, ['order' => $ids]);
+        }
+
+        return redirect()->route('people')->with('status', 'The people order is saved.');
     }
 
     public function photo(Request $request, User $member)

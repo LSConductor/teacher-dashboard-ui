@@ -58,6 +58,10 @@ class SetupController extends Controller
             'people_note' => $data['people_note'] ?? null,
         ]);
         $this->storePhoto($request, $member);
+        $max = (int) User::query()->where('school_id', $member->school_id)->max('people_sort');
+        if ($max > 0) {
+            $member->people_sort = $max + 1;
+        }
         $member->save();
         Audit::record('staff.created', $member, ['role' => $member->role]);
 

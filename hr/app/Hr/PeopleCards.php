@@ -13,7 +13,7 @@ class PeopleCards
     {
         return self::staff($person->school_id)
             ->filter(fn (User $member) => self::visibleToPerson($member, $person))
-            ->sortBy(fn (User $member) => [self::rank($member), $member->name])
+            ->sortBy(fn (User $member) => self::placement($member))
             ->values();
     }
 
@@ -21,7 +21,7 @@ class PeopleCards
     {
         return self::staff($schoolId)
             ->filter(fn (User $member) => self::visibleInNeighbourhood($member, $neighbourhood))
-            ->sortBy(fn (User $member) => [self::rank($member), $member->name])
+            ->sortBy(fn (User $member) => self::placement($member))
             ->values();
     }
 
@@ -29,7 +29,7 @@ class PeopleCards
     {
         return self::staff($schoolId)
             ->filter(fn (User $member) => self::isKeyPerson($member))
-            ->sortBy(fn (User $member) => [self::rank($member), $member->neighbourhood ?? '', $member->name])
+            ->sortBy(fn (User $member) => self::placement($member))
             ->values();
     }
 
@@ -189,6 +189,17 @@ class PeopleCards
     private static function coversAll(?string $neighbourhood): bool
     {
         return in_array(strtolower(trim((string) $neighbourhood)), ['whole school', 'all', 'all neighbourhoods'], true);
+    }
+
+    private static function placement(User $member): array
+    {
+        $placed = (int) $member->people_sort;
+
+        return [
+            $placed > 0 ? 0 : 1,
+            $placed > 0 ? $placed : self::rank($member),
+            $member->name,
+        ];
     }
 
     private static function rank(User $member): int
