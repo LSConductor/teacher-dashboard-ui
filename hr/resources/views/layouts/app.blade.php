@@ -118,6 +118,7 @@
             @endif
             <a href="{{ route('casuals.index') }}">List</a>
             @if(in_array(auth()->user()->role, ['hr','conductor']))
+                <a href="{{ route('setup') }}">Setup</a>
                 <a href="{{ route('templates.index') }}">Contracts</a>
                 <a href="{{ route('templates.complete') }}">Send a contract</a>
                 <a href="{{ route('audit.index') }}">Audit</a>
@@ -130,6 +131,9 @@
 <main class="wrap">
     @if($errors->any())
         <div class="card error">{{ $errors->first() }}</div>
+    @endif
+    @if(session('status'))
+        <div class="card">{{ session('status') }}</div>
     @endif
     @if(session('invite_url'))
         <div class="card">Invite link, shown once: <a href="{{ session('invite_url') }}">{{ session('invite_url') }}</a></div>

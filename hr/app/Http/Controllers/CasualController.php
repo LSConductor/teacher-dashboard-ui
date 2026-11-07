@@ -116,16 +116,21 @@ class CasualController extends Controller
         ]);
         $modules = InductionModule::query()
             ->where('school_id', $person->school_id)
+            ->whereIn('phase', ['day_one', 'later'])
             ->orderBy('sort')
             ->get();
+        $canEdit = request()->user()->can('updateFile', $person);
 
         return view('casuals.show', [
             'person' => $person,
             'gate' => $gate->assess($person),
             'modules' => $modules,
             'mentors' => $this->mentors(),
+            'colleagues' => $canEdit
+                ? Person::query()->where('school_id', $person->school_id)->where('id', '!=', $person->id)->orderBy('preferred_name')->get()
+                : collect(),
             'sensitive' => request()->user()->can('viewSensitive', $person),
-            'canEdit' => request()->user()->can('updateFile', $person),
+            'canEdit' => $canEdit,
         ]);
     }
 

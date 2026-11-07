@@ -369,4 +369,83 @@ class CasualHrTest extends TestCase
             'password' => 'living-demo',
         ])->assertRedirect('/start?code=come-back');
     }
+
+    public function test_hr_setup_manages_quests_staff_and_contracts(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+
+        $this->actingAs($director)->get(route('setup'))->assertForbidden();
+        $this->actingAs($hr)->get(route('setup'))->assertOk()->assertSee('Induction quests');
+
+        $this->actingAs($hr)->post(route('setup.induction.store'), [
+            'title' => 'Flood wardens',
+            'body' => 'Walk the class to the high ground named for that neighbourhood.',
+            'phase' => 'later',
+        ])->assertRedirect(route('setup.induction'));
+        $quest = InductionModule::where('title', 'Flood wardens')->first();
+        $this->assertSame('later', $quest->phase);
+
+        $this->actingAs($hr)->post(route('setup.induction.move', $quest), ['phase' => 'day_one']);
+        $this->assertSame('day_one', $quest->fresh()->phase);
+
+        $child = InductionModule::where('title', 'Child protection and mandatory reporting')->first();
+        $this->actingAs($hr)->put(route('setup.induction.update', $child), [
+            'title' => $child->title,
+            'body' => $child->body."\n\nA new sentence for this version.",
+        ])->assertRedirect(route('setup.induction'));
+        $this->assertSame(2, $child->fresh()->version);
+
+        $this->actingAs($hr)->post(route('setup.staff.store'), [
+            'name' => 'Yirran Director',
+            'email' => 'yirran.director@living.school',
+            'role' => 'director',
+            'neighbourhood' => 'Yirran',
+            'mobile' => '0400 000 300',
+            'password' => 'living-demo',
+            'password_confirmation' => 'living-demo',
+        ])->assertRedirect(route('setup.staff'));
+        $this->assertNotNull(User::where('email', 'yirran.director@living.school')->first());
+
+        $this->actingAs($hr)->from(route('setup.staff.edit', $hr))->put(route('setup.staff.update', $hr), [
+            'name' => $hr->name,
+            'email' => $hr->email,
+            'role' => 'office',
+        ])->assertSessionHasErrors('role');
+        $this->assertSame('hr', $hr->fresh()->role);
+
+        $this->actingAs($hr)->post(route('templates.store'), [
+            'name' => 'Visitor note',
+            'body' => 'Hello {{preferred_name}}.',
+        ])->assertRedirect();
+        $this->assertSame('draft', ContractTemplate::where('key', 'visitor-note')->first()->status);
+
+        $pool = ContractTemplate::where('key', 'casual-pool')->where('status', 'published')->first();
+        $before = (int) $pool->sort;
+        $this->actingAs($hr)->post(route('templates.move', $pool), ['direction' => 'down']);
+        $this->assertNotSame($before, (int) $pool->fresh()->sort);
+
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+        $pat = Person::where('email', 'pat.red@example.com')->first();
+        $day = ContractTemplate::where('key', 'day-booking')->where('status', 'published')->first();
+        $this->actingAs($hr)->post(route('templates.complete.send'), [
+            'person_id' => $sam->id,
+            'template_id' => $day->id,
+            'class_label' => 'S2 cover',
+            'booked_on' => now()->toDateString(),
+        ]);
+        $sent = Contract::where('person_id', $sam->id)->where('status', 'sent')->first();
+        $this->actingAs($hr)->post(route('contracts.move', $sent), ['person_id' => $pat->id])
+            ->assertRedirect(route('casuals.show', $pat));
+        $this->assertSame($pat->id, $sent->fresh()->person_id);
+        $this->assertStringContainsString('Pat Red', $sent->fresh()->merged_body);
+
+        $signed = Contract::where('person_id', $sam->id)->where('status', 'signed')->first();
+        $this->actingAs($hr)->post(route('contracts.move', $signed), ['person_id' => $pat->id])->assertStatus(422);
+        $this->assertSame($sam->id, $signed->fresh()->person_id);
+
+        $this->actingAs($hr)->get(route('setup.induction'))->assertOk()->assertSee('Flood wardens')->assertSee('Move up');
+        $this->actingAs($hr)->get(route('setup.staff'))->assertOk()->assertSee('Yirran Director');
+        $this->actingAs($hr)->get(route('templates.index'))->assertOk()->assertSee('Visitor note')->assertSee('Move up');
+    }
 }

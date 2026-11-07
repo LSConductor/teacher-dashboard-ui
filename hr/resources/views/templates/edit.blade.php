@@ -8,7 +8,7 @@
     <input id="name" name="name" value="{{ $template->name }}" @disabled($template->status !== 'draft')>
     <label for="body">Body</label>
     <textarea id="body" name="body" rows="14" @disabled($template->status !== 'draft')>{{ $template->body }}</textarea>
-    <p class="muted">Merge fields: {{preferred_name}}, {{legal_name}}, {{email}}, {{mobile}}, {{neighbourhood}}, {{nesa_number}}, {{director_name}}, {{director_mobile}}, {{today}}. WWCC number and date of birth are not merge fields.</p>
+    <p class="muted">Merge fields: @{{preferred_name}}, @{{legal_name}}, @{{email}}, @{{mobile}}, @{{neighbourhood}}, @{{nesa_number}}, @{{director_name}}, @{{director_mobile}}, @{{today}}. WWCC number and date of birth are not merge fields.</p>
     @if($template->status === 'draft')
         <p><button type="submit">Save draft</button></p>
     @endif

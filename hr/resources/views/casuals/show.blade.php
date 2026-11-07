@@ -136,6 +136,23 @@
                 <form method="post" action="{{ route('contracts.sign', $contract) }}" style="display:inline">@csrf<button type="submit">Sign</button></form>
             @endif
         </p>
+        @if($canEdit && $contract->status === 'sent')
+            <form method="post" action="{{ route('contracts.withdraw', $contract) }}" style="margin-bottom:8px;">@csrf<button class="ghost" type="submit">Withdraw</button></form>
+            @if($colleagues->isNotEmpty())
+                <form method="post" action="{{ route('contracts.move', $contract) }}" class="grid">
+                    @csrf
+                    <div>
+                        <label for="move_person_{{ $contract->id }}">Move this unsigned contract</label>
+                        <select id="move_person_{{ $contract->id }}" name="person_id">
+                            @foreach($colleagues as $colleague)
+                                <option value="{{ $colleague->id }}">{{ $colleague->preferred_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <p><button class="ghost" type="submit">Move</button></p>
+                </form>
+            @endif
+        @endif
         <pre style="white-space:pre-wrap; font-family:system-ui,sans-serif; font-size:14px;">{{ $contract->merged_body }}</pre>
     @endforeach
     @if($canEdit)

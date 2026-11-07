@@ -56,6 +56,7 @@ class StartController extends Controller
 
         $modules = InductionModule::query()
             ->where('school_id', $person->school_id)
+            ->whereIn('phase', ['day_one', 'later'])
             ->orderBy('sort')
             ->get(['id', 'phase', 'version', 'title']);
         $acked = $person->acknowledgements->mapWithKeys(

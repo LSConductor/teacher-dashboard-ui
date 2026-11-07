@@ -14,6 +14,7 @@ class InductionController extends Controller
         $this->authorize('view', $person);
         $modules = InductionModule::query()
             ->where('school_id', $person->school_id)
+            ->whereIn('phase', ['day_one', 'later'])
             ->orderBy('sort')
             ->get();
         $person->load('acknowledgements');

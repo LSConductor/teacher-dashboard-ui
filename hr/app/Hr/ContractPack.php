@@ -4,6 +4,7 @@ namespace App\Hr;
 
 use App\Models\ContractTemplate;
 use App\Models\School;
+use Illuminate\Support\Facades\Schema;
 
 class ContractPack
 {
@@ -68,7 +69,9 @@ class ContractPack
 
     public static function ensure(School $school): void
     {
-        foreach (self::templates() as $template) {
+        $hasSort = Schema::hasColumn('contract_templates', 'sort');
+        foreach (self::templates() as $index => $template) {
+            $sort = $hasSort ? ['sort' => $index + 1] : [];
             $published = ContractTemplate::firstOrCreate(
                 ['school_id' => $school->id, 'key' => $template['key'], 'version' => 1],
                 [
@@ -76,7 +79,7 @@ class ContractPack
                     'body' => $template['body'],
                     'status' => 'published',
                     'published_at' => now(),
-                ]
+                ] + $sort
             );
             ContractTemplate::firstOrCreate(
                 ['school_id' => $school->id, 'key' => $template['key'], 'version' => 2],
@@ -84,7 +87,7 @@ class ContractPack
                     'name' => $template['name'],
                     'body' => $published->body,
                     'status' => 'draft',
-                ]
+                ] + $sort
             );
         }
     }

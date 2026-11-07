@@ -10,6 +10,7 @@ use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\SetupController;
 use App\Http\Controllers\StartController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +63,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/casuals/{person}/invite', [InviteController::class, 'store'])->name('casuals.invite');
 
     Route::middleware('role:hr,conductor')->group(function () {
+        Route::get('/setup', [SetupController::class, 'index'])->name('setup');
+        Route::get('/setup/staff', [SetupController::class, 'staff'])->name('setup.staff');
+        Route::post('/setup/staff', [SetupController::class, 'storeStaff'])->name('setup.staff.store');
+        Route::get('/setup/staff/{member}', [SetupController::class, 'editStaff'])->name('setup.staff.edit');
+        Route::put('/setup/staff/{member}', [SetupController::class, 'updateStaff'])->name('setup.staff.update');
+        Route::get('/setup/induction', [SetupController::class, 'induction'])->name('setup.induction');
+        Route::post('/setup/induction', [SetupController::class, 'storeInduction'])->name('setup.induction.store');
+        Route::get('/setup/induction/{module}', [SetupController::class, 'editInduction'])->name('setup.induction.edit');
+        Route::put('/setup/induction/{module}', [SetupController::class, 'updateInduction'])->name('setup.induction.update');
+        Route::post('/setup/induction/{module}/move', [SetupController::class, 'moveInduction'])->name('setup.induction.move');
+        Route::post('/templates', [ContractController::class, 'store'])->name('templates.store');
+        Route::post('/templates/{template}/move', [ContractController::class, 'move'])->name('templates.move');
+        Route::post('/templates/{template}/archive', [ContractController::class, 'archive'])->name('templates.archive');
+        Route::post('/contracts/{contract}/withdraw', [ContractController::class, 'withdraw'])->name('contracts.withdraw');
+        Route::post('/contracts/{contract}/move', [ContractController::class, 'moveContract'])->name('contracts.move');
         Route::get('/templates/complete', [ContractController::class, 'complete'])->name('templates.complete');
         Route::post('/templates/complete', [ContractController::class, 'send'])->name('templates.complete.send');
         Route::get('/templates', [ContractController::class, 'index'])->name('templates.index');
