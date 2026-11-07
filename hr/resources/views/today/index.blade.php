@@ -2,6 +2,9 @@
 @section('content')
 <h1>Today</h1>
 <p class="lede">The time is the school clock, Australia/Sydney. The office code is the proof someone was at the school. A phone location is not the record.</p>
+@unless($holdsCode)
+    <p>Ask the office to read today's code, then type it here. It is not your password.</p>
+@endunless
 @if($holdsCode)
     <article class="card">
         <h2>Office code</h2>

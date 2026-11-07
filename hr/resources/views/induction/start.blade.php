@@ -50,59 +50,84 @@
 @else
 @php
     $labels = ['green' => 'Clear to teach', 'amber' => 'Needs a note', 'red' => 'Do not book'];
+    $openSteps = collect($steps)->reject(fn ($step) => $step['done'])->values();
+    $doneSteps = collect($steps)->filter(fn ($step) => $step['done'])->values();
+    $waitingToSign = $today && str_starts_with((string) $rollLabel, 'Not signed');
 @endphp
-<section id="start">
-    <p class="muted" style="letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#14324a;">Casual Induction</p>
-    <h1>{{ $person->preferred_name }}</h1>
-    <p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
-    <p class="lede">
-        Office (02) 5632 1218. School day 9:00–3:15.
-        @if($director)
-            Director {{ $director->name }}@if($director->mobile), {{ $director->mobile }}@endif.
-        @else
-            Your director is not named yet. Call the office.
-        @endif
-        @if($person->mentor) Mentor {{ $person->mentor->name }}. @endif
-    </p>
-    <div class="actions" style="margin-bottom:18px;">
-        @if($director?->mobile)
-            <a class="button" href="tel:{{ preg_replace('/\s+/', '', $director->mobile) }}">Call {{ $director->name }}</a>
-        @endif
-        <a class="button ghost" href="tel:0256321218">Call the office</a>
-        @if($today?->plan_url)
-            <a class="button ghost" href="{{ $today->plan_url }}" target="_blank" rel="noopener">Open the plan</a>
-        @endif
+<section id="start" class="dayboard">
+    <article class="dayhero">
+        <p class="kicker">{{ now()->timezone('Australia/Sydney')->format('l j F') }}</p>
         @if($today)
-            <a class="button" href="{{ route('today') }}">Sign on for today</a>
+            <h1>{{ $today->class_label }}</h1>
+            <p class="lede">
+                @if($today->teacher_name)With {{ $today->teacher_name }}. @endif
+                {{ $rollLabel }}.
+            </p>
+            @if($waitingToSign)
+                <p><a class="button" href="{{ route('today') }}">Sign on for today</a></p>
+            @else
+                <p><a class="button ghost" href="{{ route('today') }}">Open today</a></p>
+            @endif
+        @else
+            <h1>{{ $person->preferred_name }}</h1>
+            <p class="lede">You are not booked today.</p>
         @endif
-        @if($today && $incidentDesk)
-            <a class="button ghost" href="{{ $incidentDesk }}" target="_blank" rel="noopener">Open the incident desk</a>
+        <p><span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span></p>
+        @if($gate['reasons'])
+            <p>{{ $gate['reasons'][0]['text'] }}</p>
         @endif
-        <a class="button ghost" href="{{ route('people') }}">People on site</a>
-        <a class="button" href="{{ route('casuals.pack', $person) }}" style="background: {{ $dayDone >= $dayTotal && $dayTotal > 0 ? '#14663d' : '#8a4b00' }}">Day-one {{ $dayDone }} of {{ $dayTotal }}</a>
-    </div>
-    @if($today)
-        <p>{{ $rollLabel }}. {{ $today->class_label }}.</p>
-    @endif
-    @if($gate['reasons'])
-        <p class="lede">{{ $gate['reasons'][0]['text'] }}</p>
-    @else
-        <p class="lede">You are clear to teach.</p>
-    @endif
-    @foreach($steps as $step)
-        <article class="person {{ $step['done'] ? 'green' : 'red' }}">
-            <div>
-                <span class="status {{ $step['done'] ? 'green' : 'amber' }}">{{ $step['done'] ? 'Done' : 'To do' }}</span>
-            </div>
-            <div>
-                <h2>{{ $step['title'] }}</h2>
-                <p class="meta">{{ $step['detail'] }}</p>
-                <div class="actions">
-                    <a class="button" href="{{ $step['href'] }}">{{ $step['action'] }}</a>
+        <div class="quiet-links">
+            @if($director?->mobile)
+                <a href="tel:{{ preg_replace('/\s+/', '', $director->mobile) }}">Call {{ $director->name }}</a>
+            @endif
+            <a href="tel:0256321218">Call the office</a>
+            @if($today?->plan_url)
+                <a href="{{ $today->plan_url }}" target="_blank" rel="noopener">Open the plan</a>
+            @endif
+            @if($today && $incidentDesk)
+                <a href="{{ $incidentDesk }}" target="_blank" rel="noopener">Open the incident desk</a>
+            @endif
+            <a href="{{ route('people') }}">People on site</a>
+            <a href="{{ route('casuals.pack', $person) }}">Day-one {{ $dayDone }} of {{ $dayTotal }}</a>
+        </div>
+        <p class="meta">
+            Office (02) 5632 1218. School day 9:00–3:15.
+            @if($director)
+                Your director is {{ $director->name }}@if($director->mobile), {{ $director->mobile }}@endif.
+            @else
+                Your director is not named yet. Call the office.
+            @endif
+            @if($person->mentor) Mentor {{ $person->mentor->name }}. @endif
+        </p>
+    </article>
+    @if($openSteps->isNotEmpty())
+        <h2>Still to do</h2>
+        @foreach($openSteps as $step)
+            <article class="person red">
+                <div><span class="status amber">To do</span></div>
+                <div>
+                    <h2>{{ $step['title'] }}</h2>
+                    <p class="meta">{{ $step['detail'] }}</p>
+                    <div class="actions"><a class="button" href="{{ $step['href'] }}">{{ $step['action'] }}</a></div>
                 </div>
-            </div>
-        </article>
-    @endforeach
+            </article>
+        @endforeach
+    @endif
+    @if($doneSteps->isNotEmpty())
+        <details class="done-list">
+            <summary>Already done</summary>
+            @foreach($doneSteps as $step)
+                <article class="person green">
+                    <div><span class="status green">Done</span></div>
+                    <div>
+                        <h2>{{ $step['title'] }}</h2>
+                        <p class="meta">{{ $step['detail'] }}</p>
+                        <div class="actions"><a class="button ghost" href="{{ $step['href'] }}">{{ $step['action'] }}</a></div>
+                    </div>
+                </article>
+            @endforeach
+        </details>
+    @endif
 </section>
 @endif
 @endsection

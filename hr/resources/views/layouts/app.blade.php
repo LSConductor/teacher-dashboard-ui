@@ -129,6 +129,14 @@
         .sheet-body p { margin: 0 0 14px; }
         .sheet-foot { padding: 4px 32px 22px; color: var(--muted); font-size: 13px; }
         .day-code { font-size: 42px; letter-spacing: .28em; font-weight: 750; margin: 8px 0 0; }
+        .dayboard { max-width: 760px; }
+        .dayhero { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 26px 28px 20px; margin: 0 0 22px; }
+        .dayhero .kicker { margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+        .dayhero h1 { font-size: 42px; line-height: 1.05; margin: 0 0 8px; }
+        .quiet-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 8px; }
+        .quiet-links a { color: var(--navy); font-weight: 650; }
+        details.done-list summary { cursor: pointer; font-weight: 650; margin: 18px 0 12px; }
+        nav a.minor { font-weight: 500; opacity: .8; }
         @media (max-width: 720px) {
             header { align-items: flex-start; flex-direction: column; }
             .person, .grid { grid-template-columns: 1fr; }
@@ -146,23 +154,26 @@
     @auth
         <nav>
             @if(\App\Hr\Roles::isCasual(auth()->user()))
-                <a href="{{ route('start') }}">Start</a>
-            @endif
-            <a href="{{ route('people') }}">People</a>
-            <a href="{{ route('casuals.index') }}">List</a>
-            <a href="{{ route('today') }}">Today</a>
-            @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
-                <a href="{{ route('watch') }}">Watch</a>
-            @endif
-            <a href="{{ route('access') }}">Access</a>
-            @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'neighbourhood'], true))
-                <a href="{{ route('partners.index') }}">Partners</a>
-            @endif
-            @if(\App\Hr\Roles::manages(auth()->user()))
-                <a href="{{ route('setup') }}">Setup</a>
-                <a href="{{ route('templates.index') }}">Contracts</a>
-                <a href="{{ route('templates.complete') }}">Send a contract</a>
-                <a href="{{ route('audit.index') }}">Audit</a>
+                <a href="{{ route('start') }}">Today</a>
+                <a href="{{ route('today') }}">Sign on</a>
+                <a href="{{ route('people') }}">People</a>
+            @else
+                <a href="{{ route('today') }}">Today</a>
+                @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
+                    <a href="{{ route('watch') }}">Watch</a>
+                @endif
+                <a href="{{ route('people') }}">People</a>
+                <a href="{{ route('casuals.index') }}">List</a>
+                <a class="minor" href="{{ route('access') }}">Access</a>
+                @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'neighbourhood'], true))
+                    <a class="minor" href="{{ route('partners.index') }}">Partners</a>
+                @endif
+                @if(\App\Hr\Roles::manages(auth()->user()))
+                    <a class="minor" href="{{ route('setup') }}">Setup</a>
+                    <a class="minor" href="{{ route('templates.index') }}">Contracts</a>
+                    <a class="minor" href="{{ route('templates.complete') }}">Send a contract</a>
+                    <a class="minor" href="{{ route('audit.index') }}">Audit</a>
+                @endif
             @endif
             <span class="who">{{ auth()->user()->name }} · {{ \App\Hr\Roles::labelFor(auth()->user()) }}</span>
             <form action="{{ route('logout') }}" method="post">@csrf<button class="quiet" type="submit">Sign out</button></form>
