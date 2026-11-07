@@ -56,17 +56,101 @@ class RecordController extends Controller
             in_array(Roles::kind($user), ['manage', 'support'], true) || (int) $user->person_id === (int) $person->id,
             403
         );
+        $standards = $request->input('standards');
+        if (is_array($standards)) {
+            $request->merge(['standards' => implode(', ', array_map('strval', $standards))]);
+        }
         $data = $request->validate([
             'occurred_on' => ['required', 'date'],
             'name' => ['required', 'string', 'max:160'],
             'provider' => ['nullable', 'string', 'max:160'],
             'hours' => ['required', 'numeric', 'min:0.25', 'max:100'],
-            'standards' => ['nullable', 'string', 'max:80'],
+            'standards' => ['required', 'string', 'max:80'],
             'activity_type' => ['nullable', 'string', 'max:80'],
         ]);
         $entry = $person->pdEntries()->create($data + ['school_id' => $person->school_id]);
         Audit::record('pd.added', $entry, ['hours' => $entry->hours]);
 
         return back();
+    }
+
+    public function goal(Request $request, Person $person)
+    {
+        $this->writePerformance($request, $person);
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+            'descriptors' => ['nullable', 'string', 'max:80'],
+        ]);
+        $record = $person->performanceRecords()->updateOrCreate(
+            ['kind' => 'goal'],
+            $data + $this->performanceMeta($request, $person, 'goal')
+        );
+        Audit::record('goal.saved', $record);
+
+        return back();
+    }
+
+    public function observation(Request $request, Person $person)
+    {
+        $this->writePerformance($request, $person);
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+            'next_step' => ['required', 'string', 'max:2000'],
+            'descriptors' => ['nullable', 'string', 'max:80'],
+        ]);
+        $record = $person->performanceRecords()->updateOrCreate(
+            ['kind' => 'observation'],
+            $data + $this->performanceMeta($request, $person, 'observation')
+        );
+        Audit::record('observation.saved', $record);
+
+        return back();
+    }
+
+    public function annual(Person $person)
+    {
+        $this->authorize('view', $person);
+        $person->load('annualReview.author');
+        $user = request()->user();
+
+        return view('casuals.annual', [
+            'person' => $person,
+            'annual' => $person->annualReview,
+            'canWrite' => in_array(Roles::kind($user), ['neighbourhood', 'support', 'manage'], true),
+        ]);
+    }
+
+    public function saveAnnual(Request $request, Person $person)
+    {
+        $this->writePerformance($request, $person);
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+            'students_did' => ['required', 'string', 'max:2000'],
+            'keep_doing' => ['required', 'string', 'max:2000'],
+            'change_next' => ['required', 'string', 'max:2000'],
+        ]);
+        $record = $person->performanceRecords()->updateOrCreate(
+            ['kind' => 'annual'],
+            $data + $this->performanceMeta($request, $person, 'annual')
+        );
+        Audit::record('annual.saved', $record);
+
+        return redirect()->route('casuals.annual', $person);
+    }
+
+    private function writePerformance(Request $request, Person $person): void
+    {
+        $this->authorize('view', $person);
+        abort_unless(in_array(Roles::kind($request->user()), ['neighbourhood', 'support', 'manage'], true), 403);
+    }
+
+    private function performanceMeta(Request $request, Person $person, string $kind): array
+    {
+        return [
+            'school_id' => $person->school_id,
+            'kind' => $kind,
+            'recorded_on' => now()->timezone('Australia/Sydney')->toDateString(),
+            'author_id' => $request->user()->id,
+        ];
     }
 }

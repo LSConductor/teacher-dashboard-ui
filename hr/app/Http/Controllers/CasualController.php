@@ -61,6 +61,8 @@ class CasualController extends Controller
                 fn ($booking) => $booking->booked_on->isSameDay(now())
             );
             $person->last_day = $person->bookings->sortByDesc('booked_on')->first()?->booked_on;
+            $person->wwcc_watch = $gate->datePhrase($person->wwcc?->expires_on);
+            $person->maintenance_watch = $gate->datePhrase($person->accreditation?->maintenance_end);
 
             return $person;
         });
@@ -79,7 +81,7 @@ class CasualController extends Controller
                     ),
                     'alignment' => ($person->accreditation->alignment ?? 'pending') === 'pending',
                     'provisional' => in_array($person->accreditation->level ?? '', ['conditional', 'provisional'], true),
-                    'expiring' => $person->wwcc?->expires_on && $person->wwcc->expires_on->lte(now()->addDays(30)),
+                    'expiring' => $person->wwcc_watch !== 'in date' || $person->maintenance_watch !== 'in date',
                     default => true,
                 };
             })->values();
@@ -115,6 +117,7 @@ class CasualController extends Controller
         $person->load([
             'accreditation', 'wwcc', 'contracts.template', 'acknowledgements',
             'bookings', 'unavailabilities', 'dayNotes.author', 'pdEntries', 'mentor',
+            'supervisor', 'goal', 'observation', 'annualReview',
         ]);
         $modules = InductionModule::query()
             ->where('school_id', $person->school_id)
@@ -133,7 +136,37 @@ class CasualController extends Controller
                 : collect(),
             'sensitive' => request()->user()->can('viewSensitive', $person),
             'canEdit' => $canEdit,
+            'canWritePerformance' => in_array(Roles::kind(request()->user()), ['neighbourhood', 'support', 'manage'], true),
+            'canRecordLearning' => in_array(Roles::kind(request()->user()), ['manage', 'support'], true)
+                || (int) request()->user()->person_id === (int) $person->id,
+            'wwccWatch' => $gate->datePhrase($person->wwcc?->expires_on),
+            'maintenanceWatch' => $gate->datePhrase($person->accreditation?->maintenance_end),
         ]);
+    }
+
+    public function nameMentor(Request $request, Person $person)
+    {
+        $this->authorize('updateFile', $person);
+        $data = $request->validate([
+            'mentor_user_id' => ['nullable', 'integer'],
+            'supervisor_user_id' => ['nullable', 'integer'],
+        ]);
+        foreach (['mentor_user_id', 'supervisor_user_id'] as $field) {
+            if (empty($data[$field])) {
+                $data[$field] = null;
+                continue;
+            }
+            $named = User::query()
+                ->where('school_id', $person->school_id)
+                ->where('role', 'mentor')
+                ->whereKey($data[$field])
+                ->exists();
+            abort_unless($named, 422);
+        }
+        $person->update($data);
+        Audit::record('person.mentor', $person);
+
+        return back();
     }
 
     public function update(Request $request, Person $person)

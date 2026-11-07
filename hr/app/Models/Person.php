@@ -14,7 +14,7 @@ class Person extends Model
         'postal_address', 'emergency_contact_name', 'emergency_contact_mobile',
         'neighbourhood', 'stages', 'status', 'right_to_work', 'heard_about',
         'adjustments', 'payroll_declaration_lodged', 'blocked', 'block_reason',
-        'mentor_user_id', 'available_days', 'earliest_start', 'neighbourhoods',
+        'mentor_user_id', 'supervisor_user_id', 'available_days', 'earliest_start', 'neighbourhoods',
     ];
 
     protected function casts(): array
@@ -36,6 +36,11 @@ class Person extends Model
     public function mentor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'mentor_user_id');
+    }
+
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor_user_id');
     }
 
     public function accreditation(): HasOne
@@ -76,5 +81,25 @@ class Person extends Model
     public function pdEntries(): HasMany
     {
         return $this->hasMany(PdEntry::class);
+    }
+
+    public function performanceRecords(): HasMany
+    {
+        return $this->hasMany(PerformanceRecord::class);
+    }
+
+    public function goal(): HasOne
+    {
+        return $this->hasOne(PerformanceRecord::class)->where('kind', 'goal');
+    }
+
+    public function observation(): HasOne
+    {
+        return $this->hasOne(PerformanceRecord::class)->where('kind', 'observation');
+    }
+
+    public function annualReview(): HasOne
+    {
+        return $this->hasOne(PerformanceRecord::class)->where('kind', 'annual');
     }
 }

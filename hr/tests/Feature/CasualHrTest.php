@@ -141,7 +141,7 @@ class CasualHrTest extends TestCase
             'schools', 'users', 'people', 'accreditations', 'wwcc_checks',
             'induction_modules', 'induction_acknowledgements', 'contract_templates',
             'contracts', 'bookings', 'unavailabilities', 'day_notes', 'pd_entries',
-            'invites', 'audit_logs',
+            'invites', 'audit_logs', 'performance_records',
         ];
 
         foreach ($tables as $table) {
@@ -1236,6 +1236,250 @@ class CasualHrTest extends TestCase
         $this->assertSame(500, $response->getStatusCode());
         $this->assertStringContainsString('APP_KEY is missing', $response->getContent());
         $this->assertStringContainsString('php8.4 artisan key:generate --force', $response->getContent());
+    }
+
+    public function test_a_lapsed_or_missing_date_stays_red_and_warns_before_it_lapses(): void
+    {
+        $gate = app(ClearToTeach::class);
+        $director = User::where('email', 'director@living.school')->first();
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+
+        $sam->accreditation->update(['maintenance_end' => now()->subDay()->toDateString()]);
+        $lapsed = $gate->assess($sam->fresh());
+        $this->assertSame('red', $lapsed['light']);
+        $this->assertTrue(collect($lapsed['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'Accreditation maintenance has lapsed'
+        ));
+
+        $this->actingAs($director)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('Expiry watch')
+            ->assertSee('Accreditation maintenance has lapsed')
+            ->assertSee('There is no override.')
+            ->assertDontSee($sam->wwcc->wwcc_number);
+
+        $this->actingAs($director)
+            ->from(route('casuals.show', $sam))
+            ->post(route('casuals.bookings', $sam), [
+                'booked_on' => now()->addDays(2)->toDateString(),
+                'class_label' => 'After lapse',
+            ])
+            ->assertSessionHasErrors('booking');
+        $this->assertDatabaseMissing('bookings', ['class_label' => 'After lapse']);
+
+        $sam->accreditation->update(['maintenance_end' => null]);
+        $missing = $gate->assess($sam->fresh());
+        $this->assertSame('red', $missing['light']);
+        $this->assertTrue(collect($missing['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'Accreditation maintenance date is missing'
+        ));
+
+        $sam->accreditation->update(['maintenance_end' => now()->addYears(2)->toDateString()]);
+        $sam->wwcc->update(['expires_on' => null]);
+        $noExpiry = $gate->assess($sam->fresh());
+        $this->assertSame('red', $noExpiry['light']);
+        $this->assertTrue(collect($noExpiry['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'WWCC expiry date is missing'
+        ));
+
+        $sam->wwcc->update(['expires_on' => now()->subDay()->toDateString()]);
+        $wwccLapsed = $gate->assess($sam->fresh());
+        $this->assertSame('red', $wwccLapsed['light']);
+        $this->assertTrue(collect($wwccLapsed['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'WWCC clearance has lapsed'
+        ));
+
+        $sam->wwcc->update(['expires_on' => now()->addDays(10)->toDateString()]);
+        $sam->accreditation->update(['maintenance_end' => now()->addDays(12)->toDateString()]);
+        $soon = $gate->assess($sam->fresh());
+        $this->assertSame('amber', $soon['light']);
+        $this->assertTrue(collect($soon['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'WWCC expires within 30 days'
+        ));
+        $this->assertTrue(collect($soon['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'Accreditation maintenance ends within 30 days'
+        ));
+
+        $this->actingAs($hr)
+            ->get(route('casuals.index', ['focus' => 'expiring']))
+            ->assertOk()
+            ->assertSee('Sam Green')
+            ->assertSee('due within 30 days');
+
+        $this->actingAs($director)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('due within 30 days')
+            ->assertDontSee($sam->fresh()->wwcc->wwcc_number);
+    }
+
+    public function test_the_casual_file_holds_a_goal_a_day_note_an_observation_and_an_annual_page(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $mentor = User::where('email', 'mentor@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+
+        $this->actingAs($hr)
+            ->post(route('casuals.mentor', $sam), [
+                'mentor_user_id' => $mentor->id,
+                'supervisor_user_id' => '',
+            ])
+            ->assertRedirect();
+        $this->assertSame($mentor->id, (int) $sam->fresh()->mentor_user_id);
+
+        $this->actingAs($hr)
+            ->post(route('casuals.goal', $sam), [
+                'body' => 'Lead a calm morning meeting',
+                'descriptors' => '4.1',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($mentor)
+            ->post(route('casuals.notes', $sam), [
+                'body' => 'The class settled after recess.',
+                'descriptors' => '4.1',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($mentor)
+            ->post(route('casuals.observation', $sam), [
+                'body' => 'Students knew where to sit.',
+                'next_step' => 'Name the quiet students next.',
+                'descriptors' => '4.1, 5.2',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($hr)
+            ->post(route('casuals.annual', $sam), [
+                'body' => 'The morning meeting held.',
+                'students_did' => 'They read the plan aloud.',
+                'keep_doing' => 'Keep the three-line note.',
+                'change_next' => 'Ask one student to lead.',
+            ])
+            ->assertRedirect(route('casuals.annual', $sam));
+
+        $this->actingAs($hr)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('Lead a calm morning meeting')
+            ->assertSee('The class settled after recess.')
+            ->assertSee('Students knew where to sit.')
+            ->assertSee('Name the quiet students next.')
+            ->assertSee($mentor->name);
+
+        $this->actingAs($hr)
+            ->get(route('casuals.annual', $sam))
+            ->assertOk()
+            ->assertSee('They read the plan aloud.')
+            ->assertSee('Ask one student to lead.')
+            ->assertSee('What to keep');
+    }
+
+    public function test_professional_learning_records_hours_against_the_standards(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+
+        $this->actingAs($hr)
+            ->from(route('casuals.show', $sam))
+            ->post(route('casuals.pd', $sam), [
+                'occurred_on' => now()->toDateString(),
+                'name' => 'Morning meeting practice',
+                'provider' => 'Living School',
+                'hours' => 2,
+                'activity_type' => 'school',
+            ])
+            ->assertSessionHasErrors('standards');
+
+        $this->actingAs($hr)
+            ->post(route('casuals.pd', $sam), [
+                'occurred_on' => now()->toDateString(),
+                'name' => 'Morning meeting practice',
+                'provider' => 'Living School',
+                'hours' => 2,
+                'standards' => ['4', '6'],
+                'activity_type' => 'school',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($hr)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('Morning meeting practice')
+            ->assertSee('Standards 4, 6')
+            ->assertSee('2 hours recorded against the teacher standards.');
+
+        $this->actingAs($hr)
+            ->get(route('casuals.letter', $sam))
+            ->assertOk()
+            ->assertSee('S3 sample')
+            ->assertSee('bookings already stored')
+            ->assertDontSee('Morning meeting practice')
+            ->assertDontSee($sam->wwcc->wwcc_number);
+    }
+
+    public function test_a_conditional_or_provisional_casual_stays_red_until_a_supervisor_is_named(): void
+    {
+        $gate = app(ClearToTeach::class);
+        $hr = User::where('email', 'hr@living.school')->first();
+        $director = User::where('email', 'director@living.school')->first();
+        $mentor = User::where('email', 'mentor@living.school')->first();
+        $sam = Person::where('email', 'sam.green@example.com')->first();
+
+        $this->assertNull($sam->supervisor_user_id);
+        $this->assertSame('green', $gate->assess($sam)['light']);
+
+        $sam->accreditation->update(['level' => 'provisional']);
+        $provisional = $gate->assess($sam->fresh());
+        $this->assertSame('red', $provisional['light']);
+        $this->assertTrue(collect($provisional['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'An Accreditation Supervisor is not named'
+        ));
+
+        $this->actingAs($director)
+            ->from(route('casuals.show', $sam))
+            ->post(route('casuals.bookings', $sam), [
+                'booked_on' => now()->addDays(3)->toDateString(),
+                'class_label' => 'No supervisor',
+            ])
+            ->assertSessionHasErrors('booking');
+        $this->assertDatabaseMissing('bookings', ['class_label' => 'No supervisor']);
+
+        $sam->accreditation->update(['level' => 'conditional']);
+        $this->assertSame('red', $gate->assess($sam->fresh())['light']);
+
+        $this->actingAs($hr)
+            ->post(route('casuals.mentor', $sam), [
+                'mentor_user_id' => $mentor->id,
+                'supervisor_user_id' => $mentor->id,
+            ])
+            ->assertRedirect();
+
+        $named = $gate->assess($sam->fresh());
+        $this->assertSame('green', $named['light']);
+        $this->assertFalse(collect($named['reasons'])->contains(
+            fn ($reason) => str_contains($reason['text'], 'Accreditation Supervisor')
+        ));
+
+        $this->actingAs($hr)
+            ->get(route('casuals.show', $sam))
+            ->assertOk()
+            ->assertSee('Accreditation Supervisor')
+            ->assertSee($mentor->name);
+
+        $this->actingAs($director)
+            ->post(route('casuals.bookings', $sam), [
+                'booked_on' => now()->addDays(4)->toDateString(),
+                'class_label' => 'Supervisor named',
+            ])
+            ->assertRedirect();
+        $this->assertDatabaseHas('bookings', [
+            'person_id' => $sam->id,
+            'class_label' => 'Supervisor named',
+            'light_at_booking' => 'green',
+        ]);
     }
 
     private function tinyJpeg(): string

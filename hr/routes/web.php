@@ -73,6 +73,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/casuals/{person}/bookings', [BookingController::class, 'store'])->name('casuals.bookings');
     Route::post('/casuals/{person}/unavailability', [RecordController::class, 'unavailability'])->name('casuals.unavailability');
     Route::post('/casuals/{person}/notes', [RecordController::class, 'dayNote'])->name('casuals.notes');
+    Route::post('/casuals/{person}/goal', [RecordController::class, 'goal'])->name('casuals.goal');
+    Route::post('/casuals/{person}/observation', [RecordController::class, 'observation'])->name('casuals.observation');
+    Route::get('/casuals/{person}/annual', [RecordController::class, 'annual'])->name('casuals.annual');
+    Route::post('/casuals/{person}/annual', [RecordController::class, 'saveAnnual']);
+    Route::post('/casuals/{person}/mentor', [CasualController::class, 'nameMentor'])->name('casuals.mentor');
     Route::post('/casuals/{person}/pd', [RecordController::class, 'pd'])->name('casuals.pd');
     Route::post('/casuals/{person}/invite', [InviteController::class, 'store'])->name('casuals.invite');
 

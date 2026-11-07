@@ -39,7 +39,7 @@
             <option value="induction" @selected(request('focus')==='induction')>Day-one unfinished</option>
             <option value="alignment" @selected(request('focus')==='alignment')>Waiting on the Conductor</option>
             <option value="provisional" @selected(request('focus')==='provisional')>Conditional or Provisional</option>
-            <option value="expiring" @selected(request('focus')==='expiring')>WWCC expiring in 30 days</option>
+            <option value="expiring" @selected(request('focus')==='expiring')>Expiry watch</option>
         </select>
     </div>
     @endif
@@ -66,8 +66,8 @@
                 <p class="meta">
                     {{ ucfirst($person->accreditation->level ?? 'accreditation unknown') }}
                     · alignment {{ $person->accreditation->alignment ?? 'pending' }}
-                    · WWCC {{ optional($person->wwcc->expires_on ?? null)->toDateString() ?? 'not verified' }}
-                    · maintenance {{ optional($person->accreditation->maintenance_end ?? null)->toDateString() ?? 'not recorded' }}
+                    · WWCC @if($person->wwcc?->expires_on){{ $person->wwcc->expires_on->toDateString() }}@if($person->wwcc_watch !== 'in date') · {{ $person->wwcc_watch }}@endif @else missing @endif
+                    · maintenance @if($person->accreditation?->maintenance_end){{ $person->accreditation->maintenance_end->toDateString() }}@if($person->maintenance_watch !== 'in date') · {{ $person->maintenance_watch }}@endif @else missing @endif
                     · last day {{ optional($person->last_day)->toDateString() ?? 'none' }}
                 </p>
             @endif
