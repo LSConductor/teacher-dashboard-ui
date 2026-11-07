@@ -45,7 +45,7 @@
             }
         }
     }
-    if ($person->status === 'applicant') {
+    if ($person->status === 'applicant' || $person->archived_at) {
         $openTab = 'person';
         $tabLevel = array_fill_keys(array_keys($tabLevel), null);
     }
@@ -59,7 +59,9 @@
             <h1>{{ $person->preferred_name }}</h1>
             <p class="identity-legal">{{ $person->legal_name }}</p>
         </div>
-        @if($person->status === 'applicant')
+        @if($person->archived_at)
+            <span class="status archived">Archived</span>
+        @elseif($person->status === 'applicant')
             <span class="status candidate">New candidate</span>
         @else
             <span class="status {{ $gate['light'] }}">{{ $labels[$gate['light']] }}</span>
@@ -99,10 +101,30 @@
         <p class="meta">Opens their day, sign-on, and people page, so you can check a problem.</p>
     @endif
 </article>
-@if($person->status !== 'applicant')
+@if($person->archived_at)
+    <p>{{ $person->preferred_name }} is off the casual list. The file is kept, so they can come back.</p>
+@elseif($person->status !== 'applicant')
 @foreach($gate['reasons'] as $reason)
     <p class="alarm-row"><span class="alarm-pill {{ $reason['level'] }}">{{ $reason['level'] === 'red' ? 'Red' : 'Amber' }}</span> {{ $reason['text'] }}</p>
 @endforeach
+@endif
+@if($canEdit)
+<div class="card">
+    <h2>{{ $person->archived_at ? 'Bring back' : 'Leave the list' }}</h2>
+    @if($person->archived_at)
+        <p>The file stays. Bringing {{ $person->preferred_name }} back puts them on the casual list again.</p>
+        <form method="post" action="{{ route('casuals.restore', $person) }}">
+            @csrf
+            <button type="submit">Bring {{ $person->preferred_name }} back</button>
+        </form>
+    @else
+        <p>Take {{ $person->preferred_name }} off the casual list. Nothing is deleted. You can bring them back from Archived.</p>
+        <form method="post" action="{{ route('casuals.archive', $person) }}">
+            @csrf
+            <button class="ghost" type="submit">Archive {{ $person->preferred_name }}</button>
+        </form>
+    @endif
+</div>
 @endif
 
 <div class="{{ $canEdit ? 'file-card' : 'file-open' }}">
@@ -169,7 +191,11 @@
     <h2>Expiry watch</h2>
     <p>WWCC @if($person->wwcc?->expires_on){{ $person->wwcc->expires_on->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $wwccWatch }}</p>
     <p>Accreditation maintenance @if($person->accreditation?->maintenance_end){{ $person->accreditation->maintenance_end->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $maintenanceWatch }}</p>
-    <p class="muted">A date inside 30 days is a warning. A missing or lapsed date keeps the light red, and a Director cannot book that casual.</p>
+    @if($onSchoolList)
+        <p class="muted">On the casual list of 30 July 2026. An expiry date on that list is a checked WWCC. A date that has passed stays red. The clearance number was not on the sheet.</p>
+    @else
+        <p class="muted">A date inside 30 days is a warning. A missing or lapsed date keeps the light red, and a Director cannot book that casual.</p>
+    @endif
 </div>
 @if($sensitive)
 <div class="grid">
@@ -177,6 +203,9 @@
         @csrf
         <h2>WWCC</h2>
         <p class="muted">HR verifies this with the Office of the Children’s Guardian. An APP number is rejected.</p>
+        @if($onSchoolList && blank($person->wwcc->wwcc_number ?? null))
+            <p class="muted">The expiry was accepted from the 30 July 2026 list. Add the clearance number when you have it.</p>
+        @endif
         <label for="wwcc_number">WWCC number</label>
         <input id="wwcc_number" name="wwcc_number" value="{{ old('wwcc_number', $person->wwcc->wwcc_number ?? '') }}" required>
         <label for="name_on_check">Name on the check</label>

@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/casuals/{person}/see', [ViewAsController::class, 'start'])->middleware('manages')->name('view-as.start');
     Route::get('/casuals/{person}', [CasualController::class, 'show'])->name('casuals.show');
     Route::put('/casuals/{person}', [CasualController::class, 'update'])->name('casuals.update');
+    Route::post('/casuals/{person}/archive', [CasualController::class, 'archive'])->name('casuals.archive');
+    Route::post('/casuals/{person}/restore', [CasualController::class, 'restore'])->name('casuals.restore');
 
     Route::post('/casuals/{person}/wwcc', [ComplianceController::class, 'wwcc'])->name('casuals.wwcc');
     Route::post('/casuals/{person}/accreditation', [ComplianceController::class, 'accreditation'])->name('casuals.accreditation');

@@ -21,7 +21,7 @@ class CasualController extends Controller
         $user = $request->user();
         $query = Person::query()
             ->where('school_id', $user->school_id)
-            ->with(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements', 'mentor', 'bookings']);
+            ->with(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements', 'mentor', 'bookings', 'dayNotes']);
 
         $kind = Roles::kind($user);
         $lockedNeighbourhood = null;
@@ -42,6 +42,11 @@ class CasualController extends Controller
 
         if ($lockedNeighbourhood === null && $request->filled('neighbourhood') && in_array($kind, ['manage', 'front_desk', 'neighbourhood'], true)) {
             Neighbourhood::restrict($query, $request->string('neighbourhood')->toString());
+        }
+        if ($kind === 'manage' && $request->string('focus')->toString() === 'archived') {
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
         }
         if ($request->filled('q')) {
             $term = '%'.$request->string('q').'%';
@@ -96,6 +101,9 @@ class CasualController extends Controller
         if ($sensitive && $request->filled('focus')) {
             $focus = $request->string('focus')->toString();
             $people = $people->filter(function (Person $person) use ($focus) {
+                if ($focus === 'archived') {
+                    return $person->archived_at !== null;
+                }
                 if ($focus === 'candidates') {
                     return $person->status === 'applicant';
                 }
@@ -171,13 +179,14 @@ class CasualController extends Controller
             'modules' => $modules,
             'mentors' => $this->mentors(),
             'colleagues' => $canEdit
-                ? Person::query()->where('school_id', $person->school_id)->where('id', '!=', $person->id)->orderBy('preferred_name')->get()
+                ? Person::query()->where('school_id', $person->school_id)->where('id', '!=', $person->id)->whereNull('archived_at')->orderBy('preferred_name')->get()
                 : collect(),
             'sensitive' => request()->user()->can('viewSensitive', $person),
             'canEdit' => $canEdit,
             'canWritePerformance' => in_array(Roles::kind(request()->user()), ['neighbourhood', 'support', 'manage'], true),
             'canRecordLearning' => in_array(Roles::kind(request()->user()), ['manage', 'support'], true)
                 || (int) request()->user()->person_id === (int) $person->id,
+            'onSchoolList' => $gate->onSchoolList($person),
             'incidentDesk' => School::query()->whereKey($person->school_id)->value('incident_desk_url'),
             'wwccWatch' => $gate->datePhrase($person->wwcc?->expires_on),
             'maintenanceWatch' => $gate->datePhrase($person->accreditation?->maintenance_end),
@@ -216,6 +225,30 @@ class CasualController extends Controller
         Audit::record('person.updated', $person);
 
         return back();
+    }
+
+    public function archive(Request $request, Person $person)
+    {
+        $this->authorize('updateFile', $person);
+        abort_if($person->archived_at, 422);
+        $person->update(['archived_at' => now()]);
+        Audit::record('person.archived', $person);
+
+        return redirect()
+            ->route('casuals.index')
+            ->with('status', $person->preferred_name.' is archived. The file is kept. Bring them back from Archived on the casual list.');
+    }
+
+    public function restore(Request $request, Person $person)
+    {
+        $this->authorize('updateFile', $person);
+        abort_unless($person->archived_at, 422);
+        $person->update(['archived_at' => null]);
+        Audit::record('person.restored', $person);
+
+        return redirect()
+            ->route('casuals.show', $person)
+            ->with('status', $person->preferred_name.' is back on the casual list.');
     }
 
     private function validated(Request $request): array

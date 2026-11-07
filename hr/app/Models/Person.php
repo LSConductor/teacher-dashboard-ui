@@ -15,6 +15,7 @@ class Person extends Model
         'neighbourhood', 'stages', 'status', 'right_to_work', 'heard_about',
         'adjustments', 'payroll_declaration_lodged', 'blocked', 'block_reason',
         'mentor_user_id', 'supervisor_user_id', 'available_days', 'earliest_start', 'neighbourhoods',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -25,6 +26,7 @@ class Person extends Model
             'neighbourhoods' => 'array',
             'payroll_declaration_lodged' => 'boolean',
             'blocked' => 'boolean',
+            'archived_at' => 'datetime',
         ];
     }
 

@@ -17,29 +17,48 @@ class ClearToTeach
         $person->loadMissing(['accreditation', 'wwcc', 'contracts.template', 'acknowledgements']);
         $reasons = [];
 
+        if ($person->archived_at) {
+            return [
+                'light' => 'red',
+                'reasons' => [['level' => 'red', 'text' => 'Archived from the casual list']],
+            ];
+        }
+
         if ($person->blocked) {
             $reasons[] = ['level' => 'red', 'text' => $person->block_reason ?: 'Blocked from teaching'];
         }
 
+        $listed = $this->onSchoolList($person);
         $accreditation = $person->accreditation;
-        $activeLevel = $accreditation && in_array($accreditation->level, [
-            'conditional', 'provisional', 'proficient', 'highly_accomplished', 'lead',
-        ], true);
-        if (! $accreditation || $accreditation->status !== 'active' || ! $activeLevel) {
-            $reasons[] = ['level' => 'red', 'text' => 'eTAMS does not show an active level'];
-        } elseif ($accreditation->alignment !== 'approved') {
-            $reasons[] = ['level' => 'red', 'text' => 'The Conductor has not recorded eTAMS alignment'];
-        }
-
-        if ($accreditation && in_array($accreditation->level, ['conditional', 'provisional'], true) && ! $person->supervisor_user_id) {
-            $reasons[] = ['level' => 'red', 'text' => 'An Accreditation Supervisor is not named'];
-        }
-
         $maintenance = $this->datePhrase($accreditation?->maintenance_end);
-        if ($maintenance === 'missing') {
-            $reasons[] = ['level' => 'red', 'text' => 'Accreditation maintenance date is missing'];
-        } elseif ($maintenance === 'lapsed') {
-            $reasons[] = ['level' => 'red', 'text' => 'Accreditation maintenance has lapsed'];
+        if ($listed) {
+            if ($accreditation && in_array($accreditation->status, ['suspended', 'cancelled'], true)) {
+                $reasons[] = ['level' => 'red', 'text' => 'eTAMS does not show an active level'];
+            } elseif ($accreditation && $accreditation->alignment === 'declined') {
+                $reasons[] = ['level' => 'red', 'text' => 'The Conductor declined eTAMS alignment'];
+            }
+            if ($maintenance === 'lapsed') {
+                $reasons[] = ['level' => 'red', 'text' => 'Accreditation maintenance has lapsed'];
+            }
+        } else {
+            $activeLevel = $accreditation && in_array($accreditation->level, [
+                'conditional', 'provisional', 'proficient', 'highly_accomplished', 'lead',
+            ], true);
+            if (! $accreditation || $accreditation->status !== 'active' || ! $activeLevel) {
+                $reasons[] = ['level' => 'red', 'text' => 'eTAMS does not show an active level'];
+            } elseif ($accreditation->alignment !== 'approved') {
+                $reasons[] = ['level' => 'red', 'text' => 'The Conductor has not recorded eTAMS alignment'];
+            }
+
+            if ($accreditation && in_array($accreditation->level, ['conditional', 'provisional'], true) && ! $person->supervisor_user_id) {
+                $reasons[] = ['level' => 'red', 'text' => 'An Accreditation Supervisor is not named'];
+            }
+
+            if ($maintenance === 'missing') {
+                $reasons[] = ['level' => 'red', 'text' => 'Accreditation maintenance date is missing'];
+            } elseif ($maintenance === 'lapsed') {
+                $reasons[] = ['level' => 'red', 'text' => 'Accreditation maintenance has lapsed'];
+            }
         }
 
         $wwcc = $person->wwcc;
@@ -62,7 +81,7 @@ class ClearToTeach
                 && $contract->template
                 && $contract->template->key === 'casual-pool';
         });
-        if (! $signedPool) {
+        if (! $listed && ! $signedPool) {
             $reasons[] = ['level' => 'red', 'text' => 'Casual engagement is not signed'];
         }
 
@@ -77,7 +96,7 @@ class ClearToTeach
         $dayOneOpen = $modules->where('phase', 'day_one')->contains(
             fn ($module) => (int) ($acked[$module->id] ?? 0) < $module->version
         );
-        if ($dayOneOpen) {
+        if (! $listed && $dayOneOpen) {
             $reasons[] = ['level' => 'red', 'text' => 'Day-one induction is incomplete'];
         }
 
@@ -86,7 +105,7 @@ class ClearToTeach
         );
 
         $red = collect($reasons)->contains(fn ($reason) => $reason['level'] === 'red');
-        if (! $red && $laterOpen) {
+        if (! $listed && ! $red && $laterOpen) {
             $reasons[] = ['level' => 'amber', 'text' => 'Later induction is still open'];
         }
         if ($wwccPhrase === 'due within 30 days') {
@@ -119,5 +138,18 @@ class ClearToTeach
         }
 
         return 'in date';
+    }
+
+    public function onSchoolList(Person $person): bool
+    {
+        if ($person->status !== 'casual_pool' || $person->archived_at) {
+            return false;
+        }
+        $person->loadMissing('dayNotes');
+
+        return $person->dayNotes->contains(function ($note) {
+            return $note->descriptors === 'import'
+                && str_starts_with((string) $note->body, 'Casual list 30 July 2026.');
+        });
     }
 }

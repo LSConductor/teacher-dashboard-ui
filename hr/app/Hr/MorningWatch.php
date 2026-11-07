@@ -16,6 +16,7 @@ class MorningWatch
     {
         $query = Person::query()
             ->where('school_id', $user->school_id)
+            ->whereNull('archived_at')
             ->with(['wwcc', 'accreditation', 'standardsNotices'])
             ->orderBy('preferred_name');
 

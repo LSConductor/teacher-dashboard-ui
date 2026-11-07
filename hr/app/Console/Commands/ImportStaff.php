@@ -40,7 +40,7 @@ class ImportStaff extends Command
         foreach ($result['needs_email'] as $row) {
             $this->line(($row['legal_name'] ?? 'Unnamed').' · '.($row['list'] ?? '').' · '.($row['why'] ?? ''));
         }
-        $this->line('Pay rates were left out. A WWCC expiry is stored, and the clearance stays unverified until HR records the number.');
+        $this->line('Pay rates were left out. An expiry date on this list is a checked WWCC. The number was not on the sheet. A date that has passed stays red.');
 
         return self::SUCCESS;
     }

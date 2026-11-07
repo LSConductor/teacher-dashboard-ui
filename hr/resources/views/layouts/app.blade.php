@@ -128,6 +128,7 @@
         .person.red { border-left-color: #e7c9c6; background: #fdf8f7; color: var(--ink); }
         .person.candidate { border-left-color: #c5d3e0; background: #f5f8fb; color: var(--ink); }
         .status.candidate { background: #e8eef4; color: var(--navy); border-color: #d5e0ea; }
+        .status.archived { background: #f3efe8; color: var(--ink); border-color: #e4dccf; }
         .welcome { max-width: 640px; margin: 0 auto 16px; }
         .identity { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 28px 32px 22px; margin: 0 0 18px; }
         .identity-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }

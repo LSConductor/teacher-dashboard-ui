@@ -60,6 +60,7 @@
             <option value="provisional" @selected(request('focus')==='provisional')>Conditional or Provisional</option>
             <option value="expiring" @selected(request('focus')==='expiring')>Expiry watch</option>
             <option value="candidates" @selected(request('focus')==='candidates')>New candidates</option>
+            <option value="archived" @selected(request('focus')==='archived')>Archived</option>
         </select>
     </div>
     @endif
@@ -70,7 +71,26 @@
 @endif
 
 @forelse($people as $person)
-    @if($person->status === 'applicant')
+    @if($person->archived_at)
+    <article class="person">
+        <div>
+            <span class="status archived">Archived</span>
+        </div>
+        <div>
+            <h2><a href="{{ route('casuals.show', $person) }}">{{ $person->preferred_name }}</a></h2>
+            <p class="meta">{{ $person->legal_name }} · Off the casual list. The file is kept.</p>
+            <div class="actions">
+                <a class="button" href="{{ route('casuals.show', $person) }}">Open the file</a>
+                @if($sensitive)
+                    <form method="post" action="{{ route('casuals.restore', $person) }}">
+                        @csrf
+                        <button type="submit">Bring back</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+    </article>
+    @elseif($person->status === 'applicant')
     <article class="person candidate">
         <div>
             <span class="status candidate">New candidate</span>
@@ -123,6 +143,7 @@
                 <p class="meta">{{ $person->gate['reasons'][0]['text'] }}</p>
             @endif
             <div class="actions">
+                <a class="button" href="{{ route('casuals.show', $person) }}">Open the file</a>
                 @if($person->mobile && (\App\Hr\Roles::kind(auth()->user()) !== 'neighbourhood' || $person->gate['light'] === 'green'))
                     <a class="button" href="tel:{{ preg_replace('/\s+/', '', $person->mobile) }}">Call {{ $person->preferred_name }}</a>
                 @endif

@@ -100,7 +100,7 @@ class ContractController extends Controller
     public function complete(Request $request, ContractMerger $merger)
     {
         $schoolId = $request->user()->school_id;
-        $people = Person::query()->where('school_id', $schoolId)->orderBy('preferred_name')->get();
+        $people = Person::query()->where('school_id', $schoolId)->whereNull('archived_at')->orderBy('preferred_name')->get();
         $templates = ContractTemplate::query()
             ->where('school_id', $schoolId)
             ->where('status', 'published')

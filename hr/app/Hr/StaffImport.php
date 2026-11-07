@@ -62,7 +62,7 @@ class StaffImport
             'status' => ($row['status'] ?? '') === 'applicant' ? 'applicant' : 'casual_pool',
         ]);
         $this->accreditation($school, $person, $row);
-        $this->wwcc($school, $person, $row);
+        $this->wwcc($school, $author, $person, $row);
         $this->note($school, $author, $person, $row);
     }
 
@@ -99,7 +99,7 @@ class StaffImport
             $person->save();
         }
         $changed = $this->accreditation($school, $person, $row) || $changed;
-        $changed = $this->wwcc($school, $person, $row) || $changed;
+        $changed = $this->wwcc($school, $author, $person, $row) || $changed;
         $changed = $this->note($school, $author, $person, $row) || $changed;
 
         return $changed;
@@ -137,7 +137,7 @@ class StaffImport
     /**
      * @param  array<string, mixed>  $row
      */
-    private function wwcc(School $school, Person $person, array $row): bool
+    private function wwcc(School $school, ?User $author, Person $person, array $row): bool
     {
         $expires = $this->blank($row['wwcc_expires_on'] ?? null);
         if (! $expires) {
@@ -147,18 +147,17 @@ class StaffImport
         if ($record->verified_at || filled($record->wwcc_number)) {
             return false;
         }
-        $changed = ! $record->exists || blank($record->expires_on);
         $record->school_id = $school->id;
         $record->name_on_check = $record->name_on_check ?: $person->legal_name;
-        $record->outcome = $record->outcome ?: 'pending';
         if (blank($record->expires_on)) {
             $record->expires_on = $expires;
         }
-        if ($changed) {
-            $record->save();
-        }
+        $record->outcome = 'cleared';
+        $record->verified_at = now();
+        $record->verified_by = $author?->id;
+        $record->save();
 
-        return $changed;
+        return true;
     }
 
     /**

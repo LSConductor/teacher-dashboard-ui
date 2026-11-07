@@ -50,6 +50,12 @@
     <p class="meta">Leave these until the job comes up.</p>
 
     <article class="guide-job">
+        <h2>Open a file, or take someone off the list</h2>
+        <p>On the casual list, press Open the file. The name is a link as well.</p>
+        <p>To take someone off the list, open the file and press Archive. Nothing is deleted. Choose Archived in the File menu, then Bring back, when they return.</p>
+    </article>
+
+    <article class="guide-job">
         <h2>The light is not green</h2>
         <p>Green can be booked from the person’s file, on The day. Amber needs a note from the Conductor on that day. Red is not booked. A WWCC or accreditation problem is not overridden.</p>
         <p>Watch lists what falls due in the next 30 days. Open the file and record the new date. The clearance number is not on that page.</p>
