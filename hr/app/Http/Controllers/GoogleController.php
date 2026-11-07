@@ -47,11 +47,10 @@ class GoogleController extends Controller
         }
 
         $email = strtolower(trim((string) ($profile['email'] ?? '')));
-        $domain = config('services.google.hosted_domain', 'living.school');
         $verified = filter_var($profile['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        if (! $verified || ! str_ends_with($email, '@'.$domain)) {
+        if (! $verified || ! $google->acceptsSchoolEmail($email)) {
             return redirect()->route('login')->withErrors([
-                'email' => 'Use a Living School Google account (@'.$domain.').',
+                'email' => 'Use a Living School Google account (@living.school or @livingschool.nsw.edu.au).',
             ]);
         }
 

@@ -1124,6 +1124,53 @@ class CasualHrTest extends TestCase
         ])->assertRedirect(route('casuals.index'));
     }
 
+    public function test_google_sign_in_accepts_a_saved_nsw_school_email(): void
+    {
+        config([
+            'services.google.client_id' => 'school-client-id',
+            'services.google.client_secret' => 'school-client-secret',
+        ]);
+
+        $schoolId = User::where('email', 'hr@living.school')->first()->school_id;
+        $conductor = User::where('email', 'conductor@living.school')->first();
+        $conductor->email = 'john@livingschool.nsw.edu.au';
+        $conductor->save();
+
+        $googleEmail = 'john@livingschool.nsw.edu.au';
+        $googleSub = 'google-sub-john';
+        Http::fake(function ($request) use (&$googleEmail, &$googleSub) {
+            if (str_contains($request->url(), 'oauth2.googleapis.com/token')) {
+                return Http::response(['access_token' => 'token-from-google']);
+            }
+
+            return Http::response([
+                'sub' => $googleSub,
+                'email' => $googleEmail,
+                'email_verified' => true,
+            ]);
+        });
+
+        $this->withSession(['google_oauth_state' => 'state-token'])
+            ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
+            ->assertRedirect(route('casuals.index'));
+        $this->assertAuthenticatedAs($conductor);
+        $this->assertSame(1, User::where('email', 'john@livingschool.nsw.edu.au')->count());
+
+        $this->post(route('logout'))->assertRedirect();
+        $this->assertGuest();
+
+        $googleEmail = 'someone.else@livingschool.nsw.edu.au';
+        $googleSub = 'google-sub-unknown';
+
+        $this->followingRedirects()
+            ->withSession(['google_oauth_state' => 'state-token'])
+            ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
+            ->assertSee('not on the casual list');
+        $this->assertGuest();
+        $this->assertNull(User::where('email', 'someone.else@livingschool.nsw.edu.au')->first());
+        $this->assertSame($schoolId, $conductor->fresh()->school_id);
+    }
+
     public function test_home_and_logout_work_without_the_google_column(): void
     {
         config([

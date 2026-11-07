@@ -18,6 +18,26 @@ class GoogleSignIn
         return config('services.google.redirect') ?: url('/auth/google/callback');
     }
 
+    /**
+     * @return list<string>
+     */
+    public function schoolDomains(): array
+    {
+        return ['living.school', 'livingschool.nsw.edu.au'];
+    }
+
+    public function acceptsSchoolEmail(string $email): bool
+    {
+        $email = strtolower(trim($email));
+        foreach ($this->schoolDomains() as $domain) {
+            if (str_ends_with($email, '@'.$domain)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function authorizationUrl(string $state): string
     {
         return 'https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query([
@@ -26,7 +46,6 @@ class GoogleSignIn
             'response_type' => 'code',
             'scope' => 'openid email profile',
             'state' => $state,
-            'hd' => config('services.google.hosted_domain', 'living.school'),
             'prompt' => 'select_account',
         ]);
     }
