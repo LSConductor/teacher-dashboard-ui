@@ -390,7 +390,11 @@
                 </form>
             @endif
         @endif
-        <pre style="white-space:pre-wrap; font-family:system-ui,sans-serif; font-size:14px;">{{ $contract->merged_body }}</pre>
+        @include('documents.sheet', [
+            'title' => $contract->template->name,
+            'meta' => 'Version '.$contract->version.' · '.$contract->status.($contract->sent_at ? ' · '.$contract->sent_at->timezone('Australia/Sydney')->format('j M Y g:i a') : ''),
+            'body' => $contract->merged_body,
+        ])
     @endforeach
     @if($canEdit)
         @php

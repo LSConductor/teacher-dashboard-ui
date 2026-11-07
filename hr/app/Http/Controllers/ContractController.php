@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Hr\ContractPack;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
 use App\Models\Person;
@@ -15,6 +16,7 @@ class ContractController extends Controller
 {
     public function index(Request $request)
     {
+        ContractPack::refreshUntouched($request->user()->school_id);
         $templates = $this->library($request->user()->school_id);
 
         return view('templates.index', [
@@ -161,8 +163,13 @@ class ContractController extends Controller
     public function edit(ContractTemplate $template)
     {
         abort_unless($template->school_id === auth()->user()->school_id, 404);
+        ContractPack::refreshUntouched($template->school_id);
+        $template->refresh();
 
-        return view('templates.edit', compact('template'));
+        return view('templates.edit', [
+            'template' => $template,
+            'preview' => app(ContractMerger::class)->sample($template->body),
+        ]);
     }
 
     public function update(Request $request, ContractTemplate $template)

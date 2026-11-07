@@ -34,4 +34,24 @@ class ContractMerger
 
         return strtr($template->body, $replacements);
     }
+
+    public function sample(string $body): string
+    {
+        return strtr($body, [
+            '{{preferred_name}}' => 'Sam Green',
+            '{{legal_name}}' => 'Samantha Green',
+            '{{email}}' => 'sam.green@living.school',
+            '{{mobile}}' => '0400 000 111',
+            '{{neighbourhood}}' => 'Ngulingah',
+            '{{nesa_number}}' => 'NESA000',
+            '{{director_name}}' => 'Rob Roberts',
+            '{{director_mobile}}' => '0400 000 100',
+            '{{today}}' => now()->timezone('Australia/Sydney')->format('j F Y'),
+            '{{class_label}}' => 'S3 sample',
+            '{{booked_on}}' => now()->timezone('Australia/Sydney')->format('j F Y'),
+            '{{start_time}}' => '9:00',
+            '{{finish_time}}' => '3:15',
+            '{{office_phone}}' => '(02) 5632 1218',
+        ]);
+    }
 }

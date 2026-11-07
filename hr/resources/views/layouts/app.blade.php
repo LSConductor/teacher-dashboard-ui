@@ -119,6 +119,15 @@
         .alarm-pill.amber { background: var(--amber-bg); color: var(--amber); }
         .alarm-pill.red { background: var(--red-bg); color: var(--red); }
         .alarm-row { margin: 0 0 8px; }
+        .sheet { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 0 0 18px; max-width: 740px; }
+        .sheet-head { background: var(--navy); color: #fff; padding: 22px 32px 18px; }
+        .sheet-head span { display: block; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; opacity: .72; }
+        .sheet-head strong { display: block; margin-top: 4px; font-size: 20px; font-weight: 650; }
+        .sheet-body { padding: 28px 32px 8px; font-family: Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; font-size: 18px; line-height: 1.55; }
+        .sheet-body h2 { font-family: "Segoe UI", system-ui, sans-serif; font-size: 28px; line-height: 1.2; font-weight: 680; margin: 0 0 8px; }
+        .sheet-body .sheet-meta { font-family: "Segoe UI", system-ui, sans-serif; font-size: 14px; color: var(--muted); margin: 0 0 18px; }
+        .sheet-body p { margin: 0 0 14px; }
+        .sheet-foot { padding: 4px 32px 22px; color: var(--muted); font-size: 13px; }
         @media (max-width: 720px) {
             header { align-items: flex-start; flex-direction: column; }
             .person, .grid { grid-template-columns: 1fr; }

@@ -31,6 +31,7 @@ class ContractDesk
 
     public static function issue(Person $person, string $key, array $extra = []): ?Contract
     {
+        ContractPack::refreshUntouched($person->school_id);
         $template = self::published($person, $key);
         if (! $template) {
             return null;

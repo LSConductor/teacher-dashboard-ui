@@ -1563,6 +1563,28 @@ class CasualHrTest extends TestCase
         $this->actingAs($office)->get(route('audit.index'))->assertForbidden();
     }
 
+    public function test_an_untouched_booking_note_opens_as_a_letter(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $template = ContractTemplate::where('key', 'day-booking')->where('status', 'published')->first();
+        $template->update([
+            'body' => "{{preferred_name}} ({{mobile}}) is booked on {{booked_on}} for {{class_label}} in {{neighbourhood}}.\nThe day runs {{start_time}} to {{finish_time}}. Director {{director_name}}, {{director_mobile}}. Office {{office_phone}}.\nThis note does not include a WWCC number or a date of birth.",
+        ]);
+
+        $this->actingAs($hr)
+            ->get(route('templates.edit', $template))
+            ->assertOk()
+            ->assertSee('How a sent copy looks')
+            ->assertSee('Living School confirms one day of casual teaching.')
+            ->assertSee('Sam Green')
+            ->assertSee('class="sheet"', false);
+
+        $this->assertStringContainsString(
+            'Living School confirms one day of casual teaching.',
+            $template->fresh()->body
+        );
+    }
+
     public function test_hr_turns_one_card_and_a_director_does_not(): void
     {
         $hr = User::where('email', 'hr@living.school')->first();
