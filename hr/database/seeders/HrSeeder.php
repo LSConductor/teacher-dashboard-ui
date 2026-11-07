@@ -45,6 +45,12 @@ class HrSeeder extends Seeder
             'neighbourhood' => 'Ngulingah',
             'mobile' => '0400 000 100',
         ]);
+        $this->card($director, [
+            'on_people_page' => true,
+            'people_title' => 'Ngulingah Director',
+            'days_on_site' => 'Monday to Friday',
+            'people_note' => 'Call if the plan is unclear or a student needs a director.',
+        ]);
         $mentor = $this->user('mentor@living.school', [
             'name' => 'Mentor Teacher',
             'password' => $password,
@@ -52,11 +58,23 @@ class HrSeeder extends Seeder
             'role' => 'mentor',
             'mobile' => '0400 000 200',
         ]);
-        $this->user('office@living.school', [
+        $this->card($mentor, [
+            'on_people_page' => true,
+            'people_title' => 'Mentor',
+            'days_on_site' => 'Monday to Thursday',
+            'people_note' => 'Your mentor for the casual pool.',
+        ]);
+        $office = $this->user('office@living.school', [
             'name' => 'Office',
             'password' => $password,
             'school_id' => $school->id,
             'role' => 'office',
+        ]);
+        $this->card($office, [
+            'on_people_page' => true,
+            'people_title' => 'Office',
+            'days_on_site' => 'Monday to Friday',
+            'people_note' => 'Sign in here when you arrive. School day 9:00–3:15.',
         ]);
 
         $dayOne = [
@@ -153,11 +171,12 @@ class HrSeeder extends Seeder
                 'neighbourhoods' => ['Ngulingah'],
             ]);
         }
-        Booking::firstOrCreate(
+        $booking = Booking::firstOrCreate(
             ['person_id' => $green->id, 'booked_on' => now()->toDateString()],
             [
                 'school_id' => $school->id,
                 'class_label' => 'S3 sample',
+                'teacher_name' => 'Alex Sample',
                 'plan_url' => 'https://portal.living.school/',
                 'program_source' => 'wordpress',
                 'external_program_id' => 'sample-s3',
@@ -165,6 +184,10 @@ class HrSeeder extends Seeder
                 'created_by' => $conductor->id,
             ]
         );
+        if (blank($booking->teacher_name)) {
+            $booking->teacher_name = 'Alex Sample';
+            $booking->save();
+        }
 
         $this->user('sam.green@example.com', [
             'name' => 'Sam Green',
@@ -230,5 +253,12 @@ class HrSeeder extends Seeder
     private function user(string $email, array $attributes): User
     {
         return User::firstOrCreate(['email' => $email], $attributes);
+    }
+
+    private function card(User $user, array $fields): void
+    {
+        if ($user->people_title === null) {
+            $user->fill($fields)->save();
+        }
     }
 }

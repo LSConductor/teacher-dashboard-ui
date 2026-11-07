@@ -6,8 +6,10 @@ use App\Models\InductionModule;
 use App\Models\Person;
 use App\Models\User;
 use App\Services\Audit;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class SetupController extends Controller
 {
@@ -34,6 +36,9 @@ class SetupController extends Controller
             'role' => ['required', Rule::in(['hr', 'conductor', 'director', 'mentor', 'office'])],
             'neighbourhood' => ['nullable', 'string', 'max:80', 'required_if:role,director'],
             'mobile' => ['nullable', 'string', 'max:40'],
+            'people_title' => ['nullable', 'string', 'max:80'],
+            'days_on_site' => ['nullable', 'string', 'max:80'],
+            'people_note' => ['nullable', 'string', 'max:280'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
         $member = User::create([
@@ -44,6 +49,10 @@ class SetupController extends Controller
             'role' => $data['role'],
             'neighbourhood' => $data['neighbourhood'] ?? null,
             'mobile' => $data['mobile'] ?? null,
+            'on_people_page' => $request->boolean('on_people_page'),
+            'people_title' => $data['people_title'] ?? null,
+            'days_on_site' => $data['days_on_site'] ?? null,
+            'people_note' => $data['people_note'] ?? null,
         ]);
         Audit::record('staff.created', $member, ['role' => $member->role]);
 
@@ -66,6 +75,9 @@ class SetupController extends Controller
             'role' => ['required', Rule::in(['hr', 'conductor', 'director', 'mentor', 'office', 'casual'])],
             'neighbourhood' => ['nullable', 'string', 'max:80', 'required_if:role,director'],
             'mobile' => ['nullable', 'string', 'max:40'],
+            'people_title' => ['nullable', 'string', 'max:80'],
+            'days_on_site' => ['nullable', 'string', 'max:80'],
+            'people_note' => ['nullable', 'string', 'max:280'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -92,6 +104,10 @@ class SetupController extends Controller
             'role' => $data['role'],
             'neighbourhood' => $data['neighbourhood'] ?? null,
             'mobile' => $data['mobile'] ?? null,
+            'on_people_page' => $request->boolean('on_people_page'),
+            'people_title' => $data['people_title'] ?? null,
+            'days_on_site' => $data['days_on_site'] ?? null,
+            'people_note' => $data['people_note'] ?? null,
         ]);
         if (! empty($data['password'])) {
             $member->password = $data['password'];
@@ -157,15 +173,30 @@ class SetupController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'body' => ['required', 'string'],
-            'video_url' => ['nullable', 'url', 'max:255'],
+            'video_url' => ['nullable', 'string', 'max:2000'],
         ]);
-        $data['video_url'] = ($data['video_url'] ?? null) ?: null;
-        $changed = $data['title'] !== $module->title || $data['body'] !== $module->body;
+        $data['body'] = preg_replace("~\r\n?~", "\n", $data['body']);
+        if ($request->exists('video_url')) {
+            $data['video_url'] = $this->videoLink($data['video_url'] ?? null);
+        }
+        $currentBody = preg_replace("~\r\n?~", "\n", (string) $module->body);
+        $changed = $data['title'] !== $module->title || $data['body'] !== $currentBody;
         $acknowledged = $module->acknowledgements()->where('module_version', $module->version)->exists();
         if ($changed && $acknowledged) {
             $data['version'] = $module->version + 1;
         }
-        $module->update($data);
+        try {
+            $module->update($data);
+        } catch (QueryException $exception) {
+            if (! $this->videoColumnRejected($exception)) {
+                throw $exception;
+            }
+            report($exception);
+
+            return back()->withErrors([
+                'video_url' => 'The video could not be stored. Run the latest database update on the server, then save the link again.',
+            ])->withInput();
+        }
         Audit::record('induction.updated', $module, ['version' => $module->version]);
         $status = isset($data['version'])
             ? 'Saved as version '.$module->version.'. Earlier acknowledgements do not cover the new wording.'
@@ -220,6 +251,35 @@ class SetupController extends Controller
         Audit::record('induction.moved', $module, ['direction' => $direction]);
 
         return back();
+    }
+
+    private function videoLink(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+        if (! preg_match('~^https?://~i', $value)) {
+            $value = 'https://'.ltrim($value, '/');
+        }
+        if (filter_var($value, FILTER_VALIDATE_URL) === false) {
+            throw ValidationException::withMessages([
+                'video_url' => 'Paste a full video link, starting with https://.',
+            ]);
+        }
+
+        return $value;
+    }
+
+    private function videoColumnRejected(QueryException $exception): bool
+    {
+        $message = $exception->getMessage();
+
+        return str_contains($message, 'video_url')
+            || str_contains($message, 'Unknown column')
+            || str_contains($message, 'no such column')
+            || str_contains($message, 'Data too long')
+            || str_contains($message, 'too long');
     }
 
     private function questData(Request $request): array

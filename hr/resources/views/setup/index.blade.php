@@ -22,7 +22,7 @@
     <div><span class="status">Staff</span></div>
     <div>
         <h2>Staff accounts</h2>
-        <p class="meta">Add a director, mentor, or office account, and move someone to another neighbourhood. You cannot change your own role.</p>
+        <p class="meta">Add a director, mentor, or office account, and write the card a casual sees on the people page. You cannot change your own role.</p>
         <div class="actions"><a class="button" href="{{ route('setup.staff') }}">Open staff</a></div>
     </div>
 </article>

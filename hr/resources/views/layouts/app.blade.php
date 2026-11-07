@@ -116,6 +116,7 @@
             @if(auth()->user()->role === 'casual')
                 <a href="{{ route('start') }}">Start</a>
             @endif
+            <a href="{{ route('people') }}">People</a>
             <a href="{{ route('casuals.index') }}">List</a>
             @if(in_array(auth()->user()->role, ['hr','conductor']))
                 <a href="{{ route('setup') }}">Setup</a>

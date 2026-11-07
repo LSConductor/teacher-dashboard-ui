@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Booking extends Model
 {
     protected $fillable = [
-        'school_id', 'person_id', 'booked_on', 'class_label', 'plan_url',
+        'school_id', 'person_id', 'booked_on', 'class_label', 'teacher_name', 'plan_url',
         'program_source', 'external_program_id', 'light_at_booking',
         'conductor_note', 'covering_note', 'created_by',
     ];

@@ -16,6 +16,7 @@ use Database\Seeders\HrSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
 
 class CasualHrTest extends TestCase
@@ -500,5 +501,112 @@ class CasualHrTest extends TestCase
         $this->actingAs($hr)->get(route('setup.induction'))->assertOk()->assertSee('Flood wardens')->assertSee('Move up');
         $this->actingAs($hr)->get(route('setup.staff'))->assertOk()->assertSee('Yirran Director');
         $this->actingAs($hr)->get(route('templates.index'))->assertOk()->assertSee('Visitor note')->assertSee('Move up');
+    }
+
+    public function test_a_casual_sees_the_people_on_site(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = User::where('email', 'sam.green@example.com')->first();
+        $director = User::where('email', 'director@living.school')->first();
+
+        $this->actingAs($hr)->post(route('setup.staff.store'), [
+            'name' => 'Yirran Director',
+            'email' => 'yirran.director@living.school',
+            'role' => 'director',
+            'neighbourhood' => 'Yirran',
+            'mobile' => '0400 000 300',
+            'on_people_page' => '1',
+            'people_title' => 'Yirran Director',
+            'days_on_site' => 'Tuesday and Wednesday',
+            'people_note' => 'Yirran only.',
+            'password' => 'living-demo',
+            'password_confirmation' => 'living-demo',
+        ])->assertRedirect(route('setup.staff'));
+
+        $office = User::where('email', 'office@living.school')->first();
+        $this->actingAs($hr)->put(route('setup.staff.update', $office), [
+            'name' => 'Office',
+            'email' => $office->email,
+            'role' => 'office',
+            'on_people_page' => '1',
+            'people_title' => 'Front office',
+            'days_on_site' => 'Monday to Friday',
+            'people_note' => 'Collect your lanyard here.',
+            'mobile' => '0256321218',
+        ])->assertRedirect(route('setup.staff'));
+
+        Auth::logout();
+        $this->get(route('people'))->assertRedirect(route('login'));
+
+        $this->actingAs($sam)->get(route('people'))
+            ->assertOk()
+            ->assertSee('Alex Sample')
+            ->assertSee('S3 sample')
+            ->assertSee('Ngulingah Director')
+            ->assertSee('Front office')
+            ->assertSee('Collect your lanyard here.')
+            ->assertSee('Mentor Teacher')
+            ->assertSee('Call Ngulingah Director')
+            ->assertSee('mailto:director@living.school', false)
+            ->assertDontSee('Yirran Director')
+            ->assertDontSee('HR Officer')
+            ->assertDontSee('John Stewart')
+            ->assertDontSee('Pat Red')
+            ->assertDontSee('WWCC');
+
+        $this->actingAs($director)->get(route('people'))
+            ->assertOk()
+            ->assertSee('Ngulingah Director')
+            ->assertDontSee('Yirran Director');
+
+        $this->actingAs($hr)->get(route('people'))
+            ->assertOk()
+            ->assertSee('Not on the people page')
+            ->assertSee('HR Officer')
+            ->assertSee('Yirran Director');
+    }
+
+    public function test_saving_a_video_link_does_not_error(): void
+    {
+        $hr = User::where('email', 'hr@living.school')->first();
+        $module = InductionModule::where('title', 'Child protection and mandatory reporting')->first();
+        $version = $module->version;
+        $long = 'https://videos.example.com/'.str_repeat('a', 380);
+
+        $this->actingAs($hr)->put(route('setup.induction.update', $module), [
+            'title' => $module->title,
+            'body' => $module->body,
+            'video_url' => 'youtu.be/abcdefghijk',
+        ])->assertRedirect(route('setup.induction'));
+
+        $module->refresh();
+        $this->assertSame('https://youtu.be/abcdefghijk', $module->video_url);
+        $this->assertSame($version, $module->version);
+
+        $this->actingAs($hr)->from(route('setup.induction.edit', $module))->put(route('setup.induction.update', $module), [
+            'title' => $module->title,
+            'body' => $module->body,
+            'video_url' => 'not a link',
+        ])->assertRedirect(route('setup.induction.edit', $module))
+            ->assertSessionHasErrors('video_url');
+        $this->assertSame('https://youtu.be/abcdefghijk', $module->fresh()->video_url);
+
+        $this->actingAs($hr)->put(route('setup.induction.update', $module), [
+            'title' => $module->title,
+            'body' => $module->body,
+            'video_url' => $long,
+        ])->assertRedirect(route('setup.induction'));
+        $this->assertSame($long, $module->fresh()->video_url);
+
+        Schema::table('induction_modules', function (Blueprint $table) {
+            $table->dropColumn('video_url');
+        });
+
+        $this->actingAs($hr)->from(route('setup.induction.edit', $module))->put(route('setup.induction.update', $module), [
+            'title' => $module->title,
+            'body' => $module->body,
+            'video_url' => 'https://youtu.be/abcdefghijk',
+        ])->assertRedirect(route('setup.induction.edit', $module))
+            ->assertSessionHasErrors('video_url');
     }
 }

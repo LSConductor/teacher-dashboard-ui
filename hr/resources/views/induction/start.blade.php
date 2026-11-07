@@ -72,6 +72,7 @@
         @if($today?->plan_url)
             <a class="button ghost" href="{{ $today->plan_url }}" target="_blank" rel="noopener">Open the plan</a>
         @endif
+        <a class="button ghost" href="{{ route('people') }}">People on site</a>
         <a class="button" href="{{ route('casuals.pack', $person) }}" style="background: {{ $dayDone >= $dayTotal && $dayTotal > 0 ? '#14663d' : '#8a4b00' }}">Day-one {{ $dayDone }} of {{ $dayTotal }}</a>
     </div>
     @if($gate['reasons'])

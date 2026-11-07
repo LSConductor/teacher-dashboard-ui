@@ -175,6 +175,7 @@
         @csrf
         <div><label for="booked_on">Date</label><input id="booked_on" type="date" name="booked_on" required></div>
         <div><label for="class_label">Class</label><input id="class_label" name="class_label" required></div>
+        <div><label for="teacher_name">Teacher they are with</label><input id="teacher_name" name="teacher_name" placeholder="The class teacher"></div>
         <div><label for="plan_url">Plan link</label><input id="plan_url" name="plan_url" type="url" placeholder="https://portal.living.school/..."></div>
         <div><label for="external_program_id">Primary program id</label><input id="external_program_id" name="external_program_id"></div>
         @if(auth()->user()->role === 'conductor')
@@ -183,7 +184,7 @@
         <p><button type="submit">Book</button></p>
     </form>
     @foreach($person->bookings->sortByDesc('booked_on') as $booking)
-        <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }} · {{ $booking->light_at_booking }}
+        <p>{{ $booking->booked_on->timezone('Australia/Sydney')->toFormattedDateString() }} · {{ $booking->class_label }}@if($booking->teacher_name) · {{ $booking->teacher_name }}@endif · {{ $booking->light_at_booking }}
             @if($booking->plan_url)<a href="{{ $booking->plan_url }}">Open plan</a>@endif
         </p>
     @endforeach

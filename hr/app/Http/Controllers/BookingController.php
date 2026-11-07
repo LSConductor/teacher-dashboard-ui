@@ -17,6 +17,7 @@ class BookingController extends Controller
         $data = $request->validate([
             'booked_on' => ['required', 'date'],
             'class_label' => ['required', 'string', 'max:120'],
+            'teacher_name' => ['nullable', 'string', 'max:120'],
             'plan_url' => ['nullable', 'url'],
             'external_program_id' => ['nullable', 'string', 'max:80'],
             'conductor_note' => ['nullable', 'string'],
@@ -36,6 +37,7 @@ class BookingController extends Controller
             'school_id' => $person->school_id,
             'booked_on' => $data['booked_on'],
             'class_label' => $data['class_label'],
+            'teacher_name' => $data['teacher_name'] ?? null,
             'plan_url' => $data['plan_url'] ?? null,
             'external_program_id' => $data['external_program_id'] ?? null,
             'program_source' => 'wordpress',
