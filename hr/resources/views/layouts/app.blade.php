@@ -141,6 +141,9 @@
             <a href="{{ route('people') }}">People</a>
             <a href="{{ route('casuals.index') }}">List</a>
             <a href="{{ route('access') }}">Access</a>
+            @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'neighbourhood'], true))
+                <a href="{{ route('partners.index') }}">Partners</a>
+            @endif
             @if(\App\Hr\Roles::manages(auth()->user()))
                 <a href="{{ route('setup') }}">Setup</a>
                 <a href="{{ route('templates.index') }}">Contracts</a>

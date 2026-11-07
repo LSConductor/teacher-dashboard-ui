@@ -12,6 +12,9 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\InductionController;
 use App\Http\Controllers\InviteController;
+use App\Http\Controllers\PartnerDeskController;
+use App\Http\Controllers\PartnerJoinController;
+use App\Http\Controllers\PartnerSetupController;
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\RoleController;
@@ -34,6 +37,16 @@ Route::get('/casual-induction', function () {
 });
 Route::get('/apply', [ApplicationController::class, 'create'])->name('apply');
 Route::post('/apply', [ApplicationController::class, 'store'])->name('apply.store');
+Route::get('/partners/join', [PartnerJoinController::class, 'create'])->name('partners.join');
+Route::post('/partners/join', [PartnerJoinController::class, 'store'])->name('partners.join.store');
+Route::get('/partners/go/{partner:token}', [PartnerJoinController::class, 'course'])->name('partners.course');
+Route::get('/partners/go/{partner:token}/pages/{slug}', [PartnerJoinController::class, 'page'])->name('partners.page');
+Route::post('/partners/go/{partner:token}/pages/{slug}', [PartnerJoinController::class, 'next'])->name('partners.page.next');
+Route::get('/partners/go/{partner:token}/check', [PartnerJoinController::class, 'check'])->name('partners.check');
+Route::post('/partners/go/{partner:token}/check', [PartnerJoinController::class, 'saveCheck'])->name('partners.check.save');
+Route::get('/partners/go/{partner:token}/about', [PartnerJoinController::class, 'about'])->name('partners.about');
+Route::post('/partners/go/{partner:token}/about', [PartnerJoinController::class, 'saveAbout'])->name('partners.about.save');
+Route::get('/partners/go/{partner:token}/done', [PartnerJoinController::class, 'done'])->name('partners.done');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [SessionController::class, 'create'])->name('login');
@@ -48,6 +61,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
     Route::get('/access', [AccessController::class, 'show'])->name('access');
+    Route::get('/partners', [PartnerDeskController::class, 'index'])->name('partners.index');
+    Route::get('/partners/{partner}', [PartnerDeskController::class, 'show'])->name('partners.show');
+    Route::post('/partners/{partner}/check', [PartnerDeskController::class, 'volunteer'])->name('partners.volunteer');
     Route::post('/people/order', [PeopleController::class, 'order'])->middleware('manages')->name('people.order');
     Route::get('/people/{member}/photo', [PeopleController::class, 'photo'])->name('people.photo');
     Route::get('/casuals', [CasualController::class, 'index'])->name('casuals.index');
@@ -99,6 +115,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/setup/induction/{module}', [SetupController::class, 'editInduction'])->name('setup.induction.edit');
         Route::put('/setup/induction/{module}', [SetupController::class, 'updateInduction'])->name('setup.induction.update');
         Route::post('/setup/induction/{module}/move', [SetupController::class, 'moveInduction'])->name('setup.induction.move');
+        Route::get('/setup/partners', [PartnerSetupController::class, 'index'])->name('setup.partners');
+        Route::get('/setup/partners/check', [PartnerSetupController::class, 'check'])->name('setup.partners.check');
+        Route::put('/setup/partners/check', [PartnerSetupController::class, 'updateCheck'])->name('setup.partners.check.update');
+        Route::get('/setup/partners/{page}', [PartnerSetupController::class, 'edit'])->name('setup.partners.edit');
+        Route::put('/setup/partners/{page}', [PartnerSetupController::class, 'update'])->name('setup.partners.update');
         Route::post('/templates', [ContractController::class, 'store'])->name('templates.store');
         Route::post('/templates/{template}/move', [ContractController::class, 'move'])->name('templates.move');
         Route::post('/templates/{template}/archive', [ContractController::class, 'archive'])->name('templates.archive');

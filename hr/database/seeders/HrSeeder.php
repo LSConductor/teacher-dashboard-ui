@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Hr\ContractPack;
 use App\Hr\InductionPack;
+use App\Hr\PartnerPack;
 use App\Hr\Roles;
 use App\Models\Booking;
 use App\Models\Contract;
@@ -104,6 +105,7 @@ class HrSeeder extends Seeder
         }
 
         ContractPack::ensure($school);
+        PartnerPack::ensure($school);
         $template = ContractTemplate::query()
             ->where('school_id', $school->id)
             ->where('key', 'casual-pool')

@@ -142,6 +142,7 @@ class CasualHrTest extends TestCase
             'induction_modules', 'induction_acknowledgements', 'contract_templates',
             'contracts', 'bookings', 'unavailabilities', 'day_notes', 'pd_entries',
             'invites', 'audit_logs', 'performance_records',
+            'partner_pages', 'partner_checks', 'partners',
         ];
 
         foreach ($tables as $table) {

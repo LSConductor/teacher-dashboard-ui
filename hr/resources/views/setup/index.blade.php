@@ -3,6 +3,14 @@
 <h1>Setup</h1>
 <p class="lede">A role that manages the school opens this page. A neighbourhood lead sees their casuals and does not open setup. A published contract and an acknowledged quest keep the version already used.</p>
 <article class="person green">
+    <div><span class="status green">Partners</span></div>
+    <div>
+        <h2>Parents as partners</h2>
+        <p class="meta">Edit the six pages, the introduction video, and the check. A parent finishes here, then HR records the volunteer check.</p>
+        <div class="actions"><a class="button" href="{{ route('setup.partners') }}">Open the course</a></div>
+    </div>
+</article>
+<article class="person green">
     <div><span class="status green">Quests</span></div>
     <div>
         <h2>Induction quests</h2>

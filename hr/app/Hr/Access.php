@@ -15,12 +15,12 @@ class Access
     {
         return [
             'manage' => [
-                'opens' => 'Every casual. WWCC, date of birth, contracts, the casual-status letter, setup, audit, and the NESA export.',
+                'opens' => 'Every casual. WWCC, date of birth, contracts, the casual-status letter, setup, audit, the NESA export, and the parents as partners course including the volunteer check.',
                 'closed' => 'A red casual still cannot be booked. Pay and student records are not in this app.',
             ],
             'neighbourhood' => [
-                'opens' => 'Casuals in their learning neighbourhood, including a casual who listed that neighbourhood. Call when the light is green. Book a green casual. A note from the day.',
-                'closed' => 'Another neighbourhood. WWCC number, date of birth, and contract text. Setup, audit, and the casual-status letter.',
+                'opens' => 'Casuals in their learning neighbourhood, including a casual who listed that neighbourhood. Call when the light is green. Book a green casual. A note from the day. Ready parent and grandparent helpers in that neighbourhood.',
+                'closed' => 'Another neighbourhood. WWCC number, date of birth, and contract text. A helper’s clearance number, and a helper HR has not cleared. Setup, audit, and the casual-status letter.',
             ],
             'support' => [
                 'opens' => 'The casuals who name them as mentor. The goal, the note from the day, the observation, the annual page, and professional learning hours.',
@@ -46,9 +46,9 @@ class Access
             'closed' => 'This sign-in cannot open a casual file.',
         ];
         if ($kind === 'neighbourhood' && Neighbourhood::coversAll($user->neighbourhood)) {
-            $row['opens'] = 'Every learning neighbourhood. Call when the light is green. Book a green casual. A note from the day.';
+            $row['opens'] = 'Every learning neighbourhood. Call when the light is green. Book a green casual. A note from the day. Ready parent and grandparent helpers.';
         } elseif ($kind === 'neighbourhood' && filled($user->neighbourhood)) {
-            $row['opens'] = 'Casuals in '.$user->neighbourhood.', including a casual who listed '.$user->neighbourhood.'. Call when the light is green. Book a green casual. A note from the day.';
+            $row['opens'] = 'Casuals in '.$user->neighbourhood.', including a casual who listed '.$user->neighbourhood.'. Call when the light is green. Book a green casual. A note from the day. Ready parent and grandparent helpers in '.$user->neighbourhood.'.';
         }
 
         return $row;
