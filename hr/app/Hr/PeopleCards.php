@@ -111,7 +111,7 @@ class PeopleCards
 
     private static function visibleToPerson(User $member, Person $person): bool
     {
-        if ($member->role === 'director' && $member->neighbourhood === $person->neighbourhood) {
+        if ($member->role === 'director' && self::sameOrWholeSchool($member->neighbourhood, $person->neighbourhood)) {
             return true;
         }
         if ($member->role === 'office') {
@@ -126,13 +126,13 @@ class PeopleCards
 
     private static function visibleInNeighbourhood(User $member, ?string $neighbourhood): bool
     {
-        if ($member->role === 'director' && $member->neighbourhood === $neighbourhood) {
+        if ($member->role === 'director' && self::sameOrWholeSchool($member->neighbourhood, $neighbourhood)) {
             return true;
         }
         if ($member->role === 'office') {
             return true;
         }
-        if ($member->role === 'mentor' && (blank($member->neighbourhood) || $member->neighbourhood === $neighbourhood)) {
+        if ($member->role === 'mentor' && self::sameOrWholeSchool($member->neighbourhood, $neighbourhood)) {
             return true;
         }
 
@@ -154,7 +154,41 @@ class PeopleCards
             return false;
         }
 
-        return blank($member->neighbourhood) || $member->neighbourhood === $neighbourhood;
+        return self::sameOrWholeSchool($member->neighbourhood, $neighbourhood);
+    }
+
+    public static function viewerCanSee(User $viewer, User $member): bool
+    {
+        if ((int) $viewer->school_id !== (int) $member->school_id || $member->role === 'casual') {
+            return false;
+        }
+        if (in_array($viewer->role, ['hr', 'conductor'], true)) {
+            return true;
+        }
+        if ($viewer->role === 'casual' && $viewer->person_id) {
+            $person = Person::query()->where('school_id', $viewer->school_id)->find($viewer->person_id);
+
+            return $person ? self::visibleToPerson($member, $person) : false;
+        }
+        if ($viewer->role === 'director') {
+            return self::visibleInNeighbourhood($member, $viewer->neighbourhood);
+        }
+
+        return self::isKeyPerson($member);
+    }
+
+    private static function sameOrWholeSchool(?string $cardNeighbourhood, ?string $casualNeighbourhood): bool
+    {
+        if (blank($cardNeighbourhood) || self::coversAll($cardNeighbourhood)) {
+            return true;
+        }
+
+        return $cardNeighbourhood === $casualNeighbourhood;
+    }
+
+    private static function coversAll(?string $neighbourhood): bool
+    {
+        return in_array(strtolower(trim((string) $neighbourhood)), ['whole school', 'all', 'all neighbourhoods'], true);
     }
 
     private static function rank(User $member): int

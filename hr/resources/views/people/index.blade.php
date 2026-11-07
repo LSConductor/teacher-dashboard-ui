@@ -8,9 +8,9 @@
 @endif
 <h1>People</h1>
 @if($person)
-    <p class="lede">These are the people to find when you arrive. The teacher is the class you are with. Your director and the office are the calls to make.</p>
+    <p class="lede">These are the people to find when you arrive. The teacher is the class you are with. Call or email for school business while you are on site. If a child is in immediate danger, call 000, then your director. Do not pass these numbers or photos on.</p>
 @elseif($managing)
-    <p class="lede">A casual opens this page on the day they attend. Their neighbourhood director, the office, and their mentor always show. Open a staff card and tick “Show on the people page” to add anyone else, with the days they are on site. Cards edited on the WordPress site stay there until you write them here.</p>
+    <p class="lede">A casual opens this page on the day they attend. Their neighbourhood director, the office, and their mentor always show. Use a work mobile and a work email. A photo is optional, so a casual can recognise the person. Home addresses, personal email, and WWCC numbers stay off this page. Write Whole School when every casual should see the card.</p>
 @else
     <p class="lede">These are the people a casual meets on site: the neighbourhood director, the office, and the mentors.</p>
 @endif
@@ -35,6 +35,9 @@
 @forelse($cards as $member)
     <article class="person {{ $member->role === 'director' ? 'green' : '' }}">
         <div>
+            @if($member->photo_path)
+                <img class="portrait" src="{{ route('people.photo', $member) }}" alt="Photo of {{ $member->name }}">
+            @endif
             <span class="status {{ $member->role === 'director' ? 'green' : ($member->role === 'office' ? 'amber' : '') }}">{{ \App\Hr\PeopleCards::title($member) }}</span>
         </div>
         <div>
@@ -43,7 +46,11 @@
                 {{ $roleLabel($member->role) }}
                 @if($member->neighbourhood) · {{ $member->neighbourhood }}@endif
                 @if($member->days_on_site) · {{ $member->days_on_site }}@endif
-                @if($member->mobile) · {{ $member->mobile }}@endif
+            </p>
+            <p class="meta">
+                @if($member->mobile)Work mobile {{ $member->mobile }}@endif
+                @if($member->mobile && $member->email) · @endif
+                @if($member->email)Work email {{ $member->email }}@endif
             </p>
             <p>{{ \App\Hr\PeopleCards::note($member) }}</p>
             <div class="actions">

@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Database\Seeders\HrSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
 
@@ -620,5 +622,66 @@ class CasualHrTest extends TestCase
             'video_url' => 'https://youtu.be/abcdefghijk',
         ])->assertRedirect(route('setup.induction.edit', $module))
             ->assertSessionHasErrors('video_url');
+    }
+
+    public function test_a_people_photo_stays_with_the_school_and_whole_school_is_visible(): void
+    {
+        Storage::fake('local');
+        $hr = User::where('email', 'hr@living.school')->first();
+        $sam = User::where('email', 'sam.green@example.com')->first();
+        $conductor = User::where('email', 'conductor@living.school')->first();
+
+        $this->actingAs($hr)->get(route('setup.staff.edit', $conductor))
+            ->assertOk()
+            ->assertSee('Work mobile')
+            ->assertSee('Optional head and shoulders photo');
+
+        $this->actingAs($hr)->put(route('setup.staff.update', $conductor), [
+            'name' => $conductor->name,
+            'email' => $conductor->email,
+            'role' => 'conductor',
+            'neighbourhood' => 'Whole School',
+            'mobile' => '0400 111 222',
+            'on_people_page' => '1',
+            'people_title' => 'Conductor',
+            'days_on_site' => 'Monday to Friday',
+            'people_note' => 'For matters that affect safety.',
+            'photo' => UploadedFile::fake()->createWithContent('head.png', $this->tinyPng()),
+        ])->assertRedirect(route('setup.staff'));
+
+        $conductor->refresh();
+        Storage::disk('local')->assertExists($conductor->photo_path);
+
+        $this->actingAs($sam)->get(route('people'))
+            ->assertOk()
+            ->assertSee('Conductor')
+            ->assertSee('Work mobile 0400 111 222')
+            ->assertSee('call 000')
+            ->assertSee(route('people.photo', $conductor), false);
+
+        $this->actingAs($sam)->get(route('people.photo', $conductor))->assertOk();
+
+        $yirran = User::create([
+            'name' => 'Yirran Only',
+            'email' => 'yirran.only@living.school',
+            'password' => 'living-demo',
+            'school_id' => $hr->school_id,
+            'role' => 'director',
+            'neighbourhood' => 'Yirran',
+            'on_people_page' => true,
+        ]);
+        $yirran->photo_path = UploadedFile::fake()->createWithContent('yirran.png', $this->tinyPng())->store('people', 'local');
+        $yirran->save();
+
+        $this->actingAs($sam)->get(route('people'))->assertDontSee('Yirran Only');
+        $this->actingAs($sam)->get(route('people.photo', $yirran))->assertNotFound();
+
+        Auth::logout();
+        $this->get(route('people.photo', $conductor))->assertRedirect(route('login'));
+    }
+
+    private function tinyPng(): string
+    {
+        return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
     }
 }

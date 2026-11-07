@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Hr\PeopleCards;
 use App\Models\Person;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PeopleController extends Controller
 {
@@ -38,5 +40,13 @@ class PeopleController extends Controller
             'managing' => $managing,
             'person' => $person,
         ]);
+    }
+
+    public function photo(Request $request, User $member)
+    {
+        abort_unless(PeopleCards::viewerCanSee($request->user(), $member), 404);
+        abort_unless(filled($member->photo_path) && Storage::disk('local')->exists($member->photo_path), 404);
+
+        return Storage::disk('local')->response($member->photo_path);
     }
 }

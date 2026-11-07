@@ -2,13 +2,14 @@
 @section('content')
 <p class="muted"><a class="link" href="{{ route('setup.staff') }}">Staff</a></p>
 <h1>{{ $member->name }}</h1>
-<p class="lede">Change the role, the neighbourhood, or the password. Tick the people page when a casual should see this person on the day they attend. Your own role stays as it is.</p>
-<form method="post" action="{{ route('setup.staff.update', $member) }}" class="card">
+<p class="lede">Work mobile and work email only. A photo is optional. Tick the people page when a casual should see this person on the day they attend. Your own role stays as it is.</p>
+<form method="post" action="{{ route('setup.staff.update', $member) }}" class="card" enctype="multipart/form-data">
     @csrf @method('put')
     <label for="name">Name</label>
     <input id="name" name="name" value="{{ old('name', $member->name) }}" required>
-    <label for="email">Email</label>
+    <label for="email">Work email</label>
     <input id="email" name="email" type="email" value="{{ old('email', $member->email) }}" required>
+    <p class="muted">This is also the sign-in address.</p>
     <label for="role">Role</label>
     <select id="role" name="role">
         @foreach(['hr' => 'HR', 'conductor' => 'Conductor', 'director' => 'Director', 'mentor' => 'Mentor', 'office' => 'Office', 'casual' => 'Casual'] as $value => $label)
@@ -16,9 +17,21 @@
         @endforeach
     </select>
     <label for="neighbourhood">Neighbourhood</label>
-    <input id="neighbourhood" name="neighbourhood" value="{{ old('neighbourhood', $member->neighbourhood) }}">
-    <label for="mobile">Mobile</label>
+    <input id="neighbourhood" name="neighbourhood" value="{{ old('neighbourhood', $member->neighbourhood) }}" placeholder="Whole School">
+    <p class="muted">Write Whole School when every casual should see this card. A neighbourhood name limits it to that neighbourhood.</p>
+    <label for="mobile">Work mobile</label>
     <input id="mobile" name="mobile" value="{{ old('mobile', $member->mobile) }}">
+    <p class="muted">School business only, while a casual is signed in. Do not enter a home number.</p>
+    <label for="photo">Photo</label>
+    @if($member->photo_path)
+        <img class="portrait" src="{{ route('people.photo', $member) }}" alt="Photo of {{ $member->name }}">
+        <label for="remove_photo">
+            <input id="remove_photo" name="remove_photo" type="checkbox" value="1" style="width:auto;">
+            Remove photo
+        </label>
+    @endif
+    <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp">
+    <p class="muted">Optional head and shoulders photo, so a casual can recognise this person on site. Shown only to people signed in at this school.</p>
     <label for="on_people_page">
         <input id="on_people_page" name="on_people_page" type="checkbox" value="1" @checked(session()->hasOldInput() ? old('on_people_page') : $member->on_people_page) style="width:auto;">
         Show on the people page

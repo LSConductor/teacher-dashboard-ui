@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Audit;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -39,6 +40,7 @@ class SetupController extends Controller
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
             'people_note' => ['nullable', 'string', 'max:280'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
         $member = User::create([
@@ -54,6 +56,8 @@ class SetupController extends Controller
             'days_on_site' => $data['days_on_site'] ?? null,
             'people_note' => $data['people_note'] ?? null,
         ]);
+        $this->storePhoto($request, $member);
+        $member->save();
         Audit::record('staff.created', $member, ['role' => $member->role]);
 
         return redirect()->route('setup.staff')->with('status', $member->name.' can sign in.');
@@ -78,6 +82,7 @@ class SetupController extends Controller
             'people_title' => ['nullable', 'string', 'max:80'],
             'days_on_site' => ['nullable', 'string', 'max:80'],
             'people_note' => ['nullable', 'string', 'max:280'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -112,6 +117,7 @@ class SetupController extends Controller
         if (! empty($data['password'])) {
             $member->password = $data['password'];
         }
+        $this->storePhoto($request, $member);
         $member->save();
 
         if ($member->person_id) {
@@ -251,6 +257,21 @@ class SetupController extends Controller
         Audit::record('induction.moved', $module, ['direction' => $direction]);
 
         return back();
+    }
+
+    private function storePhoto(Request $request, User $member): void
+    {
+        if ($request->boolean('remove_photo') && filled($member->photo_path)) {
+            Storage::disk('local')->delete($member->photo_path);
+            $member->photo_path = null;
+        }
+        if (! $request->hasFile('photo')) {
+            return;
+        }
+        if (filled($member->photo_path)) {
+            Storage::disk('local')->delete($member->photo_path);
+        }
+        $member->photo_path = $request->file('photo')->store('people', 'local');
     }
 
     private function videoLink(?string $value): ?string

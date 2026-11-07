@@ -15,12 +15,13 @@
 @endforeach
 <div class="card">
     <h2>Add a staff account</h2>
-    <form method="post" action="{{ route('setup.staff.store') }}">
+    <form method="post" action="{{ route('setup.staff.store') }}" enctype="multipart/form-data">
         @csrf
         <label for="name">Name</label>
         <input id="name" name="name" value="{{ old('name') }}" required>
-        <label for="email">Email</label>
+        <label for="email">Work email</label>
         <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+        <p class="muted">This is also the sign-in address.</p>
         <label for="role">Role</label>
         <select id="role" name="role" required>
             @foreach(['hr' => 'HR', 'conductor' => 'Conductor', 'director' => 'Director', 'mentor' => 'Mentor', 'office' => 'Office'] as $value => $label)
@@ -28,9 +29,14 @@
             @endforeach
         </select>
         <label for="neighbourhood">Neighbourhood</label>
-        <input id="neighbourhood" name="neighbourhood" value="{{ old('neighbourhood') }}">
-        <label for="mobile">Mobile</label>
+        <input id="neighbourhood" name="neighbourhood" value="{{ old('neighbourhood') }}" placeholder="Whole School">
+        <p class="muted">Write Whole School when every casual should see this card.</p>
+        <label for="mobile">Work mobile</label>
         <input id="mobile" name="mobile" value="{{ old('mobile') }}">
+        <p class="muted">School business only. Do not enter a home number.</p>
+        <label for="photo">Photo</label>
+        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp">
+        <p class="muted">Optional. A casual sees it only while signed in.</p>
         <label for="on_people_page">
             <input id="on_people_page" name="on_people_page" type="checkbox" value="1" @checked(old('on_people_page')) style="width:auto;">
             Show on the people page

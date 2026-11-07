@@ -40,6 +40,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [SessionController::class, 'destroy'])->name('logout');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
+    Route::get('/people/{member}/photo', [PeopleController::class, 'photo'])->name('people.photo');
     Route::get('/casuals', [CasualController::class, 'index'])->name('casuals.index');
     Route::get('/casuals/new', [CasualController::class, 'create'])->name('casuals.create')->middleware('role:hr,conductor');
     Route::post('/casuals', [CasualController::class, 'store'])->name('casuals.store')->middleware('role:hr,conductor');
