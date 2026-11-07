@@ -662,7 +662,8 @@ class CasualHrTest extends TestCase
 
         $this->actingAs($sam)->get(route('people.photo', $conductor))
             ->assertOk()
-            ->assertHeader('content-type', 'image/png');
+            ->assertHeader('content-type', 'image/png')
+            ->assertHeader('cache-control', 'private');
 
         $yirran = User::create([
             'name' => 'Yirran Only',

@@ -57,7 +57,6 @@ class PeopleController extends Controller
 
         return response()->file(Storage::disk('local')->path($member->photo_path), [
             'Content-Type' => $mime,
-            'Cache-Control' => 'private, max-age=300',
-        ]);
+        ])->setPrivate();
     }
 }
