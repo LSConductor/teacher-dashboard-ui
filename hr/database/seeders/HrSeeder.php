@@ -184,10 +184,14 @@ class HrSeeder extends Seeder
                 'created_by' => $conductor->id,
             ]
         );
-        if (blank($booking->teacher_name)) {
-            $booking->teacher_name = 'Alex Sample';
-            $booking->save();
-        }
+        Booking::query()
+            ->where('person_id', $green->id)
+            ->whereDate('booked_on', now()->toDateString())
+            ->where('class_label', 'S3 sample')
+            ->where(function ($query) {
+                $query->whereNull('teacher_name')->orWhere('teacher_name', '');
+            })
+            ->update(['teacher_name' => 'Alex Sample']);
 
         $this->user('sam.green@example.com', [
             'name' => 'Sam Green',

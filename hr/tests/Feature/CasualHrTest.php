@@ -538,10 +538,22 @@ class CasualHrTest extends TestCase
         Auth::logout();
         $this->get(route('people'))->assertRedirect(route('login'));
 
+        $samPerson = Person::where('email', 'sam.green@example.com')->first();
+        $samPerson->bookings()->create([
+            'school_id' => $samPerson->school_id,
+            'booked_on' => now()->toDateString(),
+            'class_label' => 'S3 sample',
+            'teacher_name' => null,
+            'plan_url' => 'https://portal.living.school/',
+            'program_source' => 'wordpress',
+            'light_at_booking' => 'green',
+        ]);
+
         $this->actingAs($sam)->get(route('people'))
             ->assertOk()
             ->assertSee('Alex Sample')
             ->assertSee('S3 sample')
+            ->assertDontSee('Teacher not named yet')
             ->assertSee('Ngulingah Director')
             ->assertSee('Front office')
             ->assertSee('Collect your lanyard here.')

@@ -52,10 +52,9 @@ class PeopleCards
         $today = now()->toDateString();
         $bookings = $person->bookings->sortBy(fn (Booking $booking) => $booking->booked_on->toDateString().'-'.$booking->id);
         $current = $bookings
-            ->filter(fn (Booking $booking) => $booking->booked_on->toDateString() === $today)
-            ->values();
+            ->filter(fn (Booking $booking) => $booking->booked_on->toDateString() === $today);
         if ($current->isNotEmpty()) {
-            return $current;
+            return self::oneCardPerClass($current);
         }
 
         $next = $bookings->first(fn (Booking $booking) => $booking->booked_on->toDateString() > $today);
@@ -65,8 +64,16 @@ class PeopleCards
 
         $nextDate = $next->booked_on->toDateString();
 
+        return self::oneCardPerClass(
+            $bookings->filter(fn (Booking $booking) => $booking->booked_on->toDateString() === $nextDate)
+        );
+    }
+
+    private static function oneCardPerClass(Collection $bookings): Collection
+    {
         return $bookings
-            ->filter(fn (Booking $booking) => $booking->booked_on->toDateString() === $nextDate)
+            ->groupBy('class_label')
+            ->map(fn (Collection $rows) => $rows->first(fn (Booking $row) => filled($row->teacher_name)) ?? $rows->first())
             ->values();
     }
 
