@@ -68,6 +68,11 @@
     </article>
 
     <article class="guide-job">
+        <h2>A class needs a teacher</h2>
+        <p>Cover lists who is free for that day. Ask them one at a time, or all at once. The first yes is the booking, and the one-day confirmation is filed. Red is not asked. Amber is asked only when the Conductor writes the note on that ask. A person who works across the school appears for every neighbourhood.</p>
+    </article>
+
+    <article class="guide-job">
         <h2>A casual says the screen is wrong</h2>
         <p>On their file, press See what they see. You are looking at their day, their sign-on, and their people page. Nothing you press is saved. Back to your desk returns you. If they have no sign-in yet, send the invite first.</p>
     </article>
@@ -94,18 +99,20 @@
         </article>
         <article class="guide-job">
             <h2>Booking</h2>
-            <p>On the List, green can be booked. Open the person, then The day. Amber can be booked only when the Conductor has written the note. Red is not booked.</p>
+            <p>Cover asks the people who are free, in the order you set. The first yes is the booking. You can still open a green casual and book them from The day. Amber can be booked only when the Conductor has written the note. Red is not booked.</p>
             <p>You can see the light, the phone, and today’s class. A WWCC number stays with HR.</p>
         </article>
     @elseif($kind === 'neighbourhood')
         <p class="lede">You see your neighbourhood. HR keeps the clearances, the contracts, and Setup.</p>
         <article class="guide-job">
-            <h2>Your casuals</h2>
+            <h2>A class needs a teacher</h2>
             <ol>
-                <li>The List shows the casuals in your neighbourhood.</li>
-                <li>Call when the light is green. Book a green casual from their file, on The day.</li>
-                <li>Red is not booked. You do not see a WWCC number or a contract.</li>
+                <li>Open Cover. The day starts on the next school day, and you can change it.</li>
+                <li>Name the class and the teacher who is away. The list is who is free: your neighbourhood, and anyone who works across the school.</li>
+                <li>Tick them in the order to ask. One at a time, the first yes is the booking. Red is not on the list. Amber waits for the Conductor.</li>
+                <li>If the first person says no, the next person is asked. You can also ask the next person yourself, or close the ask.</li>
             </ol>
+            <p>You can still call a green casual, and book them from their file. A WWCC number stays with HR.</p>
         </article>
         <article class="guide-job">
             <h2>Helpers</h2>

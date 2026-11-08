@@ -8,6 +8,7 @@ use App\Http\Controllers\CasualController;
 use App\Http\Controllers\DayController;
 use App\Http\Controllers\WatchController;
 use App\Http\Controllers\ComplianceController;
+use App\Http\Controllers\CoverController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CasualLetterController;
 use App\Http\Controllers\FormController;
@@ -52,6 +53,10 @@ Route::get('/partners/go/{partner:token}/about', [PartnerJoinController::class, 
 Route::post('/partners/go/{partner:token}/about', [PartnerJoinController::class, 'saveAbout'])->name('partners.about.save');
 Route::get('/partners/go/{partner:token}/done', [PartnerJoinController::class, 'done'])->name('partners.done');
 
+Route::get('/cover/reply/{token}', [CoverController::class, 'reply'])->name('cover.reply');
+Route::post('/cover/reply/{token}/accept', [CoverController::class, 'accept'])->name('cover.accept');
+Route::post('/cover/reply/{token}/decline', [CoverController::class, 'decline'])->name('cover.decline');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [SessionController::class, 'create'])->name('login');
     Route::post('/login', [SessionController::class, 'store']);
@@ -67,6 +72,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/help', [HelpController::class, 'show'])->name('help');
     Route::get('/people', [PeopleController::class, 'index'])->name('people');
     Route::get('/today', [DayController::class, 'index'])->name('today');
+    Route::get('/cover', [CoverController::class, 'index'])->name('cover');
+    Route::post('/cover', [CoverController::class, 'store'])->name('cover.store');
+    Route::post('/cover/asks/{ask}/resend', [CoverController::class, 'resend'])->name('cover.resend');
+    Route::post('/cover/asks/{ask}/accept', [CoverController::class, 'acceptOwn'])->name('cover.mine.accept');
+    Route::post('/cover/asks/{ask}/decline', [CoverController::class, 'declineOwn'])->name('cover.mine.decline');
+    Route::post('/cover/{cover}/advance', [CoverController::class, 'advance'])->name('cover.advance');
+    Route::post('/cover/{cover}/close', [CoverController::class, 'close'])->name('cover.close');
     Route::post('/today/{person}/on', [DayController::class, 'arrive'])->name('today.on');
     Route::post('/today/{person}/off', [DayController::class, 'leave'])->name('today.off');
     Route::post('/today/{person}/close', [DayController::class, 'close'])->name('today.close');

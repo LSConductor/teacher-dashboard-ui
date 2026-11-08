@@ -2,6 +2,9 @@
 @section('content')
 <h1>Today</h1>
 <p class="lede">The time is the school clock, Australia/Sydney. The office code is the proof someone was at the school. A phone location is not the record.</p>
+@if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
+    <p><a class="button" href="{{ route('cover') }}">Find cover</a></p>
+@endif
 @unless($holdsCode)
     <p>Ask the office to read today's code, then type it here. It is not your password.</p>
 @endunless

@@ -55,6 +55,26 @@
     $waitingToSign = $today && str_starts_with((string) $rollLabel, 'Not signed');
 @endphp
 <section id="start" class="dayboard">
+    @foreach($coverAsks ?? [] as $ask)
+        <article class="card edge-amber">
+            <h2>{{ $ask->cover->class_label }} on {{ $ask->cover->when() }}</h2>
+            <p>
+                @if($ask->cover->teacher_name) With {{ $ask->cover->teacher_name }}. @endif
+                @if($ask->cover->start_time && $ask->cover->finish_time) {{ $ask->cover->start_time }} to {{ $ask->cover->finish_time }}. @endif
+                Can you teach this class?
+            </p>
+            <div class="actions">
+                <form method="post" action="{{ route('cover.mine.accept', $ask) }}">
+                    @csrf
+                    <button type="submit">Accept</button>
+                </form>
+                <form method="post" action="{{ route('cover.mine.decline', $ask) }}">
+                    @csrf
+                    <button class="ghost" type="submit">Decline</button>
+                </form>
+            </div>
+        </article>
+    @endforeach
     <article class="dayhero">
         @include('partials.place', ['placeName' => $person->neighbourhood])
         <p class="kicker">{{ now()->timezone('Australia/Sydney')->format('l j F') }}</p>

@@ -223,6 +223,12 @@
         .place-name span { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
         .quiet-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
         .quiet-links a { color: var(--navy); font-weight: 600; text-underline-offset: 3px; }
+        .pick { display: grid; grid-template-columns: 28px 5.5rem 1fr; gap: 8px 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--line); }
+        .pick input[type="checkbox"], .pick input[type="radio"] { width: 18px; height: 18px; margin-top: 8px; }
+        .pick label { margin: 2px 0 0; }
+        fieldset.entry { border: 0; padding: 0; }
+        fieldset.entry legend { font-weight: 650; margin: 8px 0; }
+        fieldset.entry label { font-weight: 500; }
         details.done-list summary { cursor: pointer; font-weight: 600; margin: 18px 0 12px; }
         nav a.minor { font-weight: 500; opacity: .8; }
         .view-bar {
@@ -241,7 +247,7 @@
         .view-bar button { background: #fff; color: var(--amber); }
         @media (max-width: 720px) {
             body > header, .view-bar { align-items: flex-start; flex-direction: column; }
-            .person, .grid { grid-template-columns: 1fr; }
+            .person, .grid, .pick { grid-template-columns: 1fr; }
             .wrap { padding: 18px 14px 36px; }
             h1, .dayhero h1 { font-size: 32px; }
             .dayhero, .sheet-body, .sheet-head, .record-head, .record-body { padding-left: 18px; padding-right: 18px; }
@@ -278,6 +284,7 @@
             @else
                 <a href="{{ route('today') }}">Today</a>
                 @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
+                    <a href="{{ route('cover') }}">Cover</a>
                     <a href="{{ route('watch') }}">Watch</a>
                 @endif
                 <a href="{{ route('people') }}">People</a>

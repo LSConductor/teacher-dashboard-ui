@@ -15,6 +15,9 @@
             <p class="meta"><a class="link" href="{{ route('help') }}">How to use this desk</a></p>
         @endif
     </div>
+    @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
+        <a class="button" href="{{ route('cover') }}">Find cover</a>
+    @endif
     @if($sensitive)
         <a class="button ghost" href="{{ route('apply') }}">Application form</a>
         <a class="button" href="{{ route('casuals.create') }}">Add a casual</a>
