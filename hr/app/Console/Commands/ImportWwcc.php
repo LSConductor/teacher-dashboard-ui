@@ -53,7 +53,7 @@ class ImportWwcc extends Command
         if ($result['ignored_sign_in']) {
             $this->line('The Guardian sign-in on Current Staff was ignored.');
         }
-        $this->line('An in-date clearance is marked checked. A date that has passed stays red. Parents and guardians are helpers, not casual teachers.');
+        $this->line('A later date on the register replaces the date on the file. An in-date clearance is marked checked. A date that has passed stays red. Parents and guardians are helpers, not casual teachers.');
 
         return self::SUCCESS;
     }

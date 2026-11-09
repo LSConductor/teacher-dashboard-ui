@@ -157,7 +157,7 @@ class WwccImportTest extends TestCase
         $sam = $sam->fresh('wwcc');
         $this->assertSame('WWC111222E', $sam->wwcc->wwcc_number);
         $this->assertSame($dob, $sam->wwcc->date_of_birth->toDateString());
-        $this->assertSame($future, $sam->wwcc->expires_on->toDateString());
+        $this->assertSame($later, $sam->wwcc->expires_on->toDateString());
         $this->assertSame('cleared', $sam->wwcc->outcome);
         $this->assertNotNull($sam->wwcc->verified_at);
         $this->assertSame('green', app(ClearToTeach::class)->assess($sam)['light']);
@@ -172,6 +172,7 @@ class WwccImportTest extends TestCase
         $riley = $riley->fresh('wwcc');
         $this->assertSame($rileyNumber, $riley->wwcc->wwcc_number);
         $this->assertSame($rileyDob, $riley->wwcc->date_of_birth->toDateString());
+        $this->assertSame($later, $riley->wwcc->expires_on->toDateString());
 
         $casey = $casey->fresh('wwcc');
         $this->assertSame('WWC555666E', $casey->wwcc->wwcc_number);
@@ -224,7 +225,7 @@ class WwccImportTest extends TestCase
         $casey = $casey->fresh('wwcc');
         $this->assertSame('WWC111222E', $sam->wwcc->wwcc_number);
         $this->assertSame($dob, $sam->wwcc->date_of_birth->toDateString());
-        $this->assertSame($future, $sam->wwcc->expires_on->toDateString());
+        $this->assertSame($later, $sam->wwcc->expires_on->toDateString());
         $this->assertSame('WWC555666E', $casey->wwcc->wwcc_number);
         $this->assertSame($later, $casey->wwcc->expires_on->toDateString());
         $this->assertSame('1972-11-04', $casey->wwcc->date_of_birth->toDateString());
@@ -313,6 +314,73 @@ class WwccImportTest extends TestCase
 
         $this->assertSame('WWC424242E', $cindy->fresh()->wwcc->wwcc_number);
         $this->assertSame('cleared', $cindy->fresh()->wwcc->outcome);
+    }
+
+    public function test_a_later_date_on_the_register_replaces_the_date_on_the_file(): void
+    {
+        $school = School::query()->where('slug', 'living-school')->first();
+        $sam = Person::query()->where('email', 'sam.green@example.com')->first();
+        $past = now()->timezone('Australia/Sydney')->subMonth()->toDateString();
+        $sooner = now()->timezone('Australia/Sydney')->addMonths(2)->toDateString();
+        $later = now()->timezone('Australia/Sydney')->addYears(2)->toDateString();
+        $number = $sam->wwcc->wwcc_number;
+        $dob = $sam->wwcc->date_of_birth->toDateString();
+        $sam->wwcc->update([
+            'expires_on' => $past,
+            'outcome' => 'cleared',
+            'verified_at' => now()->subYear(),
+        ]);
+        $ada = Partner::create([
+            'school_id' => $school->id,
+            'token' => 'ada-parent',
+            'preferred_name' => 'Ada Parent',
+            'email' => 'ada.parent@example.com',
+            'relationship' => 'parent',
+            'child_name' => 'Jo Parent',
+            'neighbourhood' => 'Ngulingah',
+            'volunteer_number' => 'WWC777888E',
+            'volunteer_status' => 'cleared',
+            'volunteer_expires_on' => $past,
+            'volunteer_verified_on' => $past,
+        ]);
+        $headers = ['Full name', 'Position or role', 'Date of birth', 'WWCC number', 'Start date', 'Verification date', 'Result', 'Expiry', 'Paid or volunteer', 'New expiry', 'Latest check', 'Notes'];
+        $file = $this->workbook([
+            'Current Staff' => [
+                $headers,
+                $this->row('Sam Green', ['number' => 'WWCCHANGED', 'expiry' => $past, 'new' => $later, 'dob' => '1980-01-01', 'result' => 'Cleared']),
+            ],
+            'ParentsVolunteers' => [
+                $headers,
+                $this->row('Ada Parent', ['number' => 'WWCOTHER01', 'expiry' => $later, 'paid' => 'Volunteer']),
+            ],
+        ]);
+
+        $this->artisan('hr:import-wwcc', ['path' => $file])
+            ->assertSuccessful()
+            ->expectsOutputToContain('A later date on the register replaces the date on the file.');
+
+        $sam = $sam->fresh('wwcc');
+        $this->assertSame($later, $sam->wwcc->expires_on->toDateString());
+        $this->assertSame($number, $sam->wwcc->wwcc_number);
+        $this->assertSame($dob, $sam->wwcc->date_of_birth->toDateString());
+        $this->assertSame('cleared', $sam->wwcc->outcome);
+        $this->assertSame('green', app(ClearToTeach::class)->assess($sam)['light']);
+        $this->assertSame($later, $ada->fresh()->volunteer_expires_on->toDateString());
+        $this->assertSame('WWC777888E', $ada->fresh()->volunteer_number);
+
+        $shorter = $this->workbook([
+            'Current Staff' => [
+                $headers,
+                $this->row('Sam Green', ['number' => $number, 'expiry' => $sooner, 'dob' => $dob]),
+            ],
+            'ParentsVolunteers' => [
+                $headers,
+                $this->row('Ada Parent', ['number' => 'WWC777888E', 'expiry' => $sooner, 'paid' => 'Volunteer']),
+            ],
+        ]);
+        $this->artisan('hr:import-wwcc', ['path' => $shorter])->assertSuccessful();
+        $this->assertSame($later, $sam->fresh()->wwcc->expires_on->toDateString());
+        $this->assertSame($later, $ada->fresh()->volunteer_expires_on->toDateString());
     }
 
     /**

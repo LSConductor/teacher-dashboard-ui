@@ -151,7 +151,7 @@ class WwccImport
         if (filled($row['dob'] ?? null) && blank($current['date_of_birth'])) {
             $changes['date_of_birth'] = $row['dob'];
         }
-        if (filled($row['expiry'] ?? null) && blank($current['expires_on'])) {
+        if ($this->laterDate($row['expiry'] ?? null, $current['expires_on'])) {
             $changes['expires_on'] = $row['expiry'];
         }
         $keptNumber = $changes['wwcc_number'] ?? $current['wwcc_number'];
@@ -211,7 +211,7 @@ class WwccImport
         if (is_string($number) && $number !== '' && ! WwccCheck::looksLikeApplicationNumber($number) && blank($current['volunteer_number'])) {
             $changes['volunteer_number'] = $number;
         }
-        if (filled($row['expiry'] ?? null) && blank($current['volunteer_expires_on'])) {
+        if ($this->laterDate($row['expiry'] ?? null, $current['volunteer_expires_on'])) {
             $changes['volunteer_expires_on'] = $row['expiry'];
         }
         $keptNumber = $changes['volunteer_number'] ?? $current['volunteer_number'];
@@ -242,6 +242,18 @@ class WwccImport
         $partner->save();
 
         return true;
+    }
+
+    private function laterDate(mixed $incoming, mixed $stored): bool
+    {
+        if (! is_string($incoming) || $incoming === '') {
+            return false;
+        }
+        if (blank($stored)) {
+            return true;
+        }
+
+        return $incoming > (string) $stored;
     }
 
     private function affirmative(?string $result): bool
