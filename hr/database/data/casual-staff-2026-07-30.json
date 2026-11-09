@@ -1,0 +1,1838 @@
+{
+  "source": "Casual Teaching and TA Staff, updated 30 July 2026",
+  "left_out": [
+    "Daily and half-day rates. Pay is not stored in this desk.",
+    "WWCC clearance numbers. The sheet has expiry dates only, so nobody is marked verified."
+  ],
+  "people": [
+    {
+      "email": "aaronhenryrich@gmail.com",
+      "legal_name": "Aaron Rich",
+      "preferred_name": "Aaron Rich",
+      "mobile": "0481 272 449",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle"
+      ],
+      "stages": [
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "973098",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2027-03-18",
+      "sheet_notes": [
+        "Emma has not contacted for years."
+      ]
+    },
+    {
+      "email": "abigail.browne2@det.nsw.edu.au",
+      "legal_name": "Abigail Browne",
+      "preferred_name": "Abigail Browne",
+      "mobile": "0449 200 816",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 2",
+      "ta_level": null,
+      "subjects": "PDHPE/K-6",
+      "previously": "Yes",
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": "2022-05-05",
+      "nesa_number": "953930",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2027-04-24",
+      "sheet_notes": [
+        "Teaching Friday's with Middle School."
+      ]
+    },
+    {
+      "email": "adencorbett1@gmail.com",
+      "legal_name": "Aden Corbett",
+      "preferred_name": "Aden Corbett",
+      "mobile": "0412 505 866",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": "TA2",
+      "subjects": "K-6 / Science & Tech",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "963264",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2030-03-09",
+      "sheet_notes": [
+        "Going overseas for 2 terms as at May 2026 per AR."
+      ]
+    },
+    {
+      "email": "ahmed@living.school",
+      "legal_name": "Ahmed Mulla",
+      "preferred_name": "Ahmed Mulla",
+      "mobile": "0408 095 759",
+      "neighbourhood": "Academy",
+      "neighbourhoods": [
+        "Academy"
+      ],
+      "stages": [
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "Physics",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2022-12-01",
+      "nesa_number": "942724",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2027-10-29",
+      "sheet_notes": [
+        "Departed 2025"
+      ]
+    },
+    {
+      "email": "aeranthomas18@gmail.com>",
+      "legal_name": "Aeran Thomas",
+      "preferred_name": "Aeran Thomas",
+      "mobile": "0429 336 713",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "946939",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2031-06-26",
+      "sheet_notes": [
+        "has a block of teaching unavailable"
+      ]
+    },
+    {
+      "email": "alexandra.mann4@det.nsw.edu.au",
+      "legal_name": "Alexandra Mann",
+      "preferred_name": "Alexandra Mann",
+      "mobile": "0431 524 045",
+      "neighbourhood": "Secondary",
+      "neighbourhoods": [
+        "Secondary"
+      ],
+      "stages": [
+        "Secondary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 2",
+      "ta_level": null,
+      "subjects": "Visual/Creative Arts",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2023-12-14",
+      "nesa_number": "920768",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2029-02-05",
+      "sheet_notes": [
+        "Needs induction."
+      ]
+    },
+    {
+      "email": "thea@living.school",
+      "legal_name": "Althea Aquilina",
+      "preferred_name": "Thea Aquilina",
+      "mobile": "0400 499 532",
+      "neighbourhood": "Academy",
+      "neighbourhoods": [
+        "Academy"
+      ],
+      "stages": [
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "TOK /. Drama/Crt Arts",
+      "previously": "As Counsellor",
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": "2021-04-30",
+      "nesa_number": "938934",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2030-10-13",
+      "sheet_notes": [
+        "Casual teaching contract with LS. Counsellor: Tues & Wed."
+      ]
+    },
+    {
+      "email": "amelia.donnelly@gmail.com",
+      "legal_name": "Amelia Donnelly",
+      "preferred_name": "Amelia Donnelly",
+      "mobile": "0402 761 844",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 2",
+      "ta_level": null,
+      "subjects": "Generalist primary K-6",
+      "previously": "No",
+      "child_safety": "Completed DOE",
+      "child_safety_due": null,
+      "proficient_on": "2023-05-19",
+      "nesa_number": null,
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2028-03-03",
+      "sheet_notes": [
+        "Needs induction.- can be video call if engaging. Monday - Friday"
+      ]
+    },
+    {
+      "email": "amybeacock@gmail.com",
+      "legal_name": "Amy Beacock",
+      "preferred_name": "Amy Beacock",
+      "mobile": "0423 936 039",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle",
+        "Secondary"
+      ],
+      "stages": [
+        "Middle",
+        "Secondary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "Science / IB",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "329344",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2030-05-29",
+      "sheet_notes": [
+        "Fixed-term Middle School until end term 4 2026 (4 days per week)."
+      ]
+    },
+    {
+      "email": "arlselbie@gmail.com",
+      "legal_name": "Andrew Selbie",
+      "preferred_name": "Andrew Selbie",
+      "mobile": "0424 713 068",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "K-6",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "971402",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2028-10-16",
+      "sheet_notes": []
+    },
+    {
+      "email": "asherglass@hotmail.com",
+      "legal_name": "Asher Glass",
+      "preferred_name": "Asher Glass",
+      "mobile": "0401 177 389",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "Teaching & TA",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "981419",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2031-07-02",
+      "sheet_notes": [
+        "available as TA and teacher Wednesdays and Fridays"
+      ]
+    },
+    {
+      "email": "bridget.baker3@det.nsw.edu.au",
+      "legal_name": "Bridget Baker",
+      "preferred_name": "Bridget Baker",
+      "mobile": "0478 151 690",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "K-6",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2020-07-23",
+      "nesa_number": "321872",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2029-11-03",
+      "sheet_notes": [
+        "Last worked at LS in May 2024"
+      ]
+    },
+    {
+      "email": "callumjones46@icloud.com",
+      "legal_name": "Callum Jones",
+      "preferred_name": "Callum Jones",
+      "mobile": "0466 564 302",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "K-5",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "339658",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2031-03-01",
+      "sheet_notes": [
+        "currently available for primary and MS"
+      ]
+    },
+    {
+      "email": "catherine.renee@scu.edu.au",
+      "legal_name": "Catherine Renee",
+      "preferred_name": "Catherine Renee",
+      "mobile": "0455 039 121",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Secondary"
+      ],
+      "stages": [
+        "Primary",
+        "Secondary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "929351",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2028-12-20",
+      "sheet_notes": [
+        "Inducted 29Apr25. Alternative email: oceanearth2love@icloud.com. Has reconfirmed interest Nov."
+      ]
+    },
+    {
+      "email": "eben@timelessbody.com.au",
+      "legal_name": "Eben Rauch",
+      "preferred_name": "Eben Rauch",
+      "mobile": "0491 091 088",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": "TA1 / TA4",
+      "subjects": "K-6",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "315955",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2028-01-17",
+      "sheet_notes": [
+        "Has other role per EW."
+      ]
+    },
+    {
+      "email": "emmacram21@gmail.com",
+      "legal_name": "Emma Cram",
+      "preferred_name": "Emma Cram",
+      "mobile": "0431 274 150",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "K-6",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "976705",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2027-06-28",
+      "sheet_notes": [
+        "working elsewhere unavailable"
+      ]
+    },
+    {
+      "email": "emman@living.school",
+      "legal_name": "Emma Nichols",
+      "preferred_name": "Emma Nichols",
+      "mobile": "0418 616 730",
+      "neighbourhood": "Secondary",
+      "neighbourhoods": [
+        "Secondary"
+      ],
+      "stages": [
+        "Secondary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "960636",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2031-07-28",
+      "sheet_notes": [
+        "Working IN ACADEMY"
+      ]
+    },
+    {
+      "email": "genevieve.maguire@lism.catholic.edu.au",
+      "legal_name": "Genevieve Maguire",
+      "preferred_name": "Genevieve Maguire",
+      "mobile": "0411 697 423",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle",
+        "Academy"
+      ],
+      "stages": [
+        "Middle",
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "Geography and History",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2019-10-18",
+      "nesa_number": "291932",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2030-01-23",
+      "sheet_notes": [
+        "Inducted 29Apr25. Assisted Emma W with event day. Block at Trinity"
+      ]
+    },
+    {
+      "email": "georgia.laddin1@det.nsw.edu.au",
+      "legal_name": "Georgia Laddin",
+      "preferred_name": "Georgia Laddin",
+      "mobile": "0421 640 034",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle"
+      ],
+      "stages": [
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2016-12-01",
+      "nesa_number": "277823",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2029-05-01",
+      "sheet_notes": []
+    },
+    {
+      "email": "jo@living.school",
+      "legal_name": "Jo Hoy",
+      "preferred_name": "Jo Hoy",
+      "mobile": "0482 061 816",
+      "neighbourhood": "Academy",
+      "neighbourhoods": [
+        "Academy"
+      ],
+      "stages": [
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "258746",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2029-01-12",
+      "sheet_notes": []
+    },
+    {
+      "email": "justine.bristow@icloud.com",
+      "legal_name": "Justine Bristow",
+      "preferred_name": "Justine Bristow",
+      "mobile": "0429 357 197",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Secondary"
+      ],
+      "stages": [
+        "Primary",
+        "Secondary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": "TA2",
+      "subjects": "Music",
+      "previously": "Yes",
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "968379",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2027-03-14",
+      "sheet_notes": [
+        "Commencing (Mon&Tues) music teaching role in 2026. Available Wed-Fri."
+      ]
+    },
+    {
+      "email": "nobel_laura@yahoo.com.au",
+      "legal_name": "Laura Nobel",
+      "preferred_name": "Laura Nobel",
+      "mobile": "0450 694 737",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Secondary"
+      ],
+      "stages": [
+        "Primary",
+        "Secondary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "Any Year & Subject",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2011-11-14",
+      "nesa_number": null,
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2031-07-19",
+      "sheet_notes": [
+        "Mondays and Fridays., and am happy to take any Year group and subject."
+      ]
+    },
+    {
+      "email": "liamsfort@gmail.com",
+      "legal_name": "Liam Stephenson",
+      "preferred_name": "Liam Stephenson",
+      "mobile": "0422 805 093",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "K-6",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2020-11-23",
+      "nesa_number": "264364",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2029-02-06",
+      "sheet_notes": [
+        "available"
+      ]
+    },
+    {
+      "email": "malcolmstekhovensmith@gmail.com",
+      "legal_name": "Mal Stekhoven-Smith",
+      "preferred_name": "Mal Stekhoven-Smith",
+      "mobile": "0419 698 170",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle",
+        "Academy"
+      ],
+      "stages": [
+        "Middle",
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2013-02-08",
+      "nesa_number": "245208",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2030-12-09",
+      "sheet_notes": [
+        "Finished with teaching and moving to Newcastle for awhile."
+      ]
+    },
+    {
+      "email": "naomi.sherlock@hotmail.com",
+      "legal_name": "Naomi Sherlock",
+      "preferred_name": "Naomi Sherlock",
+      "mobile": "0490 063 661",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "K-6",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2012-03-19",
+      "nesa_number": "179345",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2027-12-20",
+      "sheet_notes": [
+        "taking on Yr 4 role for Terms 5 and 6 - 2026"
+      ]
+    },
+    {
+      "email": "natasha@natasha.net.au",
+      "legal_name": "Natasha Welsh",
+      "preferred_name": "Natasha Welsh",
+      "mobile": "0406 190 718",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle",
+        "Academy"
+      ],
+      "stages": [
+        "Middle",
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 2",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2025-07-11",
+      "nesa_number": "911365",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2028-07-30",
+      "sheet_notes": [
+        "available"
+      ]
+    },
+    {
+      "email": "ruby.voyzey@gmail.com",
+      "legal_name": "Ruby Voyzey",
+      "preferred_name": "Ruby Voyzey",
+      "mobile": "0478 224 502",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": "TA2 or TA4",
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "331842",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2030-01-10",
+      "sheet_notes": [
+        "Going overseas for term 4 & 5."
+      ]
+    },
+    {
+      "email": "sarah.meehan100@gmail.com",
+      "legal_name": "Sarah Meehan",
+      "preferred_name": "Sarah Meehan",
+      "mobile": "0490 198 145",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "973604",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2030-03-06",
+      "sheet_notes": [
+        "has a block unavailable"
+      ]
+    },
+    {
+      "email": "sarahjross_2019@hotmail.com",
+      "legal_name": "Sarah Ross",
+      "preferred_name": "Sarah Ross",
+      "mobile": "0422 278 314",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary",
+        "Middle"
+      ],
+      "stages": [
+        "Primary",
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 2",
+      "ta_level": "TA2",
+      "subjects": "K=6",
+      "previously": "Yes",
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": "2022-11-25",
+      "nesa_number": "928033",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2028-01-20",
+      "sheet_notes": [
+        "Will be teaching Wed-Fri in Primary from 2026.",
+        "Will be teaching Wed-Fri in primary."
+      ]
+    },
+    {
+      "email": "sien@living.school",
+      "legal_name": "Sien Tips",
+      "preferred_name": "Sien Tips",
+      "mobile": "0426 414 879",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle",
+        "Academy"
+      ],
+      "stages": [
+        "Middle",
+        "Academy"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "961631",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2027-08-01",
+      "sheet_notes": [
+        "Departed:  speak to John before offering casual work."
+      ]
+    },
+    {
+      "email": "skylaraynerr@gmail.com",
+      "legal_name": "Skyla Raynor",
+      "preferred_name": "Skyla Raynor",
+      "mobile": "0414 310 514",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "959708",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2027-02-09",
+      "sheet_notes": []
+    },
+    {
+      "email": "sophiabaird2@gmail.com",
+      "legal_name": "Sophia Luck-Baird",
+      "preferred_name": "Sophia Luck-Baird",
+      "mobile": "0431 099 846",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher",
+        "ta"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": "TA2",
+      "subjects": "NOTE: Parental Leave",
+      "previously": "yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2029-12-30",
+      "sheet_notes": [
+        "Parental leave as at end of May 2025. AR to confirm when available for 2026.",
+        "Casual role until end of May 2025, departed for parental leave."
+      ]
+    },
+    {
+      "email": "thomas.pryor@det.nsw.edu.au",
+      "legal_name": "Thomas Pryor",
+      "preferred_name": "Thomas Pryor",
+      "mobile": "0416 925 300",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3 (marked uncertain on the sheet)",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2021-03-02",
+      "nesa_number": "311867",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2027-03-22",
+      "sheet_notes": [
+        "Lives in Sydney now?"
+      ]
+    },
+    {
+      "email": "tessjohnsonkelly@gmail.com",
+      "legal_name": "Tess Johnson-Kelly",
+      "preferred_name": "Tess Johnson-Kelly",
+      "mobile": "0421 008 386",
+      "neighbourhood": "K-12",
+      "neighbourhoods": [
+        "K-12"
+      ],
+      "stages": [
+        "K-12"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "Specialise Middle years",
+      "previously": "no",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "954689",
+      "accreditation_level": "provisional",
+      "wwcc_expires_on": "2027-06-10",
+      "sheet_notes": [
+        "Has met with Emma. Needs induction."
+      ]
+    },
+    {
+      "email": "toby.creagh@outlook.com",
+      "legal_name": "Toby Creagh",
+      "preferred_name": "Toby Creagh",
+      "mobile": "0412 239 565",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 1",
+      "ta_level": null,
+      "subjects": "Ngulingah & Surf",
+      "previously": "no",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "967311",
+      "accreditation_level": "conditional",
+      "wwcc_expires_on": "2027-11-15",
+      "sheet_notes": []
+    },
+    {
+      "email": "webbxanthe@gmail.com",
+      "legal_name": "Xanthe Webb",
+      "preferred_name": "Xanthe Webb",
+      "mobile": "0431 155 907",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": "Casual Teacher 3",
+      "ta_level": null,
+      "subjects": "",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2021-04-19",
+      "nesa_number": "316479",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2029-01-29",
+      "sheet_notes": [
+        "Inducted August 2024. Not taught at LS."
+      ]
+    },
+    {
+      "email": "badseedacb@yahoo.com",
+      "legal_name": "Amanda Mealing",
+      "preferred_name": "Amanda Mealing",
+      "mobile": "0493 033 551",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA1",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2028-04-13",
+      "sheet_notes": []
+    },
+    {
+      "email": "arabellaroberts2302@gmail.com",
+      "legal_name": "Arabella Roberts",
+      "preferred_name": "Arabella Roberts",
+      "mobile": "0406 784 677",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "",
+      "previously": "Yes",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-09-15",
+      "sheet_notes": [
+        "Days of week TBC"
+      ]
+    },
+    {
+      "email": "cindynhill@protonmail.com",
+      "legal_name": "Cindy Hill",
+      "preferred_name": "Cindy Hill",
+      "mobile": "0411 307 219",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2026-08-06",
+      "sheet_notes": []
+    },
+    {
+      "email": "ellarose0650@hotmail.com",
+      "legal_name": "Ella Cameron",
+      "preferred_name": "Ella Cameron",
+      "mobile": "0473 459 245",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA1",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2029-03-08",
+      "sheet_notes": []
+    },
+    {
+      "email": "germantrip77@gmail.com",
+      "legal_name": "German Cerezo-Alonso",
+      "preferred_name": "German Cerezo-Alonso",
+      "mobile": "0466 892 981",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-01-30",
+      "sheet_notes": []
+    },
+    {
+      "email": "obrienh620@gmail.com",
+      "legal_name": "Harry O'Brien",
+      "preferred_name": "Harry O'Brien",
+      "mobile": "0491 609 665",
+      "neighbourhood": "SotOS",
+      "neighbourhoods": [
+        "SotOS"
+      ],
+      "stages": [
+        "SotOS"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-09-23",
+      "sheet_notes": [
+        "SotOS - Surf TA"
+      ]
+    },
+    {
+      "email": "jayden.thomson001@gmail.com",
+      "legal_name": "Jayden Thomson",
+      "preferred_name": "Jayden Thomson",
+      "mobile": "0455 782 552",
+      "neighbourhood": "K-12",
+      "neighbourhoods": [
+        "K-12"
+      ],
+      "stages": [
+        "K-12"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2 / TA4",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-01-28",
+      "sheet_notes": []
+    },
+    {
+      "email": "jormogal@gmail.com",
+      "legal_name": "Jorge Galdon",
+      "preferred_name": "Jordy Galdon",
+      "mobile": "0421 480 094",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2029-10-15",
+      "sheet_notes": [
+        "Departed"
+      ]
+    },
+    {
+      "email": "jubop05@gmail.com",
+      "legal_name": "Juniper Harper",
+      "preferred_name": "Juniper Harper",
+      "mobile": "0490 484 336",
+      "neighbourhood": "SotOS",
+      "neighbourhoods": [
+        "SotOS"
+      ],
+      "stages": [
+        "SotOS"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-07-18",
+      "sheet_notes": []
+    },
+    {
+      "email": "katiebarbarie95@gmail.com",
+      "legal_name": "Katie Stewart",
+      "preferred_name": "Katie Stewart",
+      "mobile": "0417 832 599",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA1/TA2/TA4",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2029-11-20",
+      "sheet_notes": []
+    },
+    {
+      "email": "laurapazalba@gmail.com",
+      "legal_name": "Laura Paz Alba",
+      "preferred_name": "Laura Paz Alba",
+      "mobile": "0432 396 198",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA1",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2028-02-27",
+      "sheet_notes": []
+    },
+    {
+      "email": "manonpouget70@gmail.com",
+      "legal_name": "Manon Pouget",
+      "preferred_name": "Manon Pouget",
+      "mobile": "0472 665 039",
+      "neighbourhood": "SotOS",
+      "neighbourhoods": [
+        "SotOS"
+      ],
+      "stages": [
+        "SotOS"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2031-03-28",
+      "sheet_notes": []
+    },
+    {
+      "email": "jaggmaur@gmail.com",
+      "legal_name": "Maureen Jaggle",
+      "preferred_name": "Maureen Jaggle",
+      "mobile": "0423 703 402",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA1",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-01-07",
+      "sheet_notes": [
+        "Would need to confirm new WWCC if engaged."
+      ]
+    },
+    {
+      "email": "mimistewart03@gmail.com",
+      "legal_name": "Mimi Stewart",
+      "preferred_name": "Mimi Stewart",
+      "mobile": "0432 125 003",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA1",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2026-09-06",
+      "sheet_notes": []
+    },
+    {
+      "email": "mykajb0810@gmail.com",
+      "legal_name": "Myka Black",
+      "preferred_name": "Myka Black",
+      "mobile": "0494 186 703",
+      "neighbourhood": "SotOS",
+      "neighbourhoods": [
+        "SotOS"
+      ],
+      "stages": [
+        "SotOS"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2031-02-24",
+      "sheet_notes": [
+        "SotOS - surf cover - completing new starter paperwork"
+      ]
+    },
+    {
+      "email": "peterthane@gmail.com",
+      "legal_name": "Peter Thane",
+      "preferred_name": "Peter Thane",
+      "mobile": "0417 054 443",
+      "neighbourhood": "The Farm",
+      "neighbourhoods": [
+        "The Farm"
+      ],
+      "stages": [
+        "The Farm"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-05-09",
+      "sheet_notes": [
+        "Landscaper (aquaponics). Speak to John re: other TA work. Needs induction."
+      ]
+    },
+    {
+      "email": "rachheaton@gmail.com",
+      "legal_name": "Rachel Heaton",
+      "preferred_name": "Rachel Heaton",
+      "mobile": "0493 407 260",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": null,
+      "sheet_notes": [
+        "K–10. Tuesdays, Wednesdays and Thursdays, starting from Tuesday 15 September. I'm not available Mondays at this stage, though that may change."
+      ]
+    },
+    {
+      "email": "becfitz615@gmail.com",
+      "legal_name": "Rebecca Fitzpatrick",
+      "preferred_name": "Rebecca Fitzpatrick",
+      "mobile": "0431 539 659",
+      "neighbourhood": "Primary",
+      "neighbourhoods": [
+        "Primary"
+      ],
+      "stages": [
+        "Primary"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2029-06-19",
+      "sheet_notes": []
+    },
+    {
+      "email": "rinolindsay@icloud.com",
+      "legal_name": "Rino Lindsay",
+      "preferred_name": "Rino Lindsay",
+      "mobile": "0435 330 818",
+      "neighbourhood": "SotOS",
+      "neighbourhoods": [
+        "SotOS"
+      ],
+      "stages": [
+        "SotOS"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA2",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "Completed",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2030-01-30",
+      "sheet_notes": [
+        "Surf TA / Previous Teacher's Hub"
+      ]
+    },
+    {
+      "email": "taariq.bousaleh@gmail.com",
+      "legal_name": "Taariq Bousaleh",
+      "preferred_name": "Taz Bousaleh",
+      "mobile": "0413 669 516",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle"
+      ],
+      "stages": [
+        "Middle"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": "TA4",
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": "2028-02-02",
+      "sheet_notes": [
+        "Travelling early 2025"
+      ]
+    },
+    {
+      "email": "poppyrobinson@gmail.com",
+      "legal_name": "Poppy Robinson",
+      "preferred_name": "Poppy Robinson",
+      "mobile": "",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "applicant",
+      "kinds": [
+        "pipeline",
+        "ta"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": null,
+      "sheet_notes": [
+        "John has met and confiriming if budget to add for swimming etc. Needs induction."
+      ]
+    },
+    {
+      "email": "sophiachapman2811@gmail.com",
+      "legal_name": "Sophia Chapman",
+      "preferred_name": "Sophia Chapman",
+      "mobile": "",
+      "neighbourhood": "",
+      "neighbourhoods": [],
+      "stages": [],
+      "status": "applicant",
+      "kinds": [
+        "pipeline",
+        "teacher"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": null,
+      "accreditation_level": null,
+      "wwcc_expires_on": null,
+      "sheet_notes": [
+        "CV via Brendan re: casual SOTOS teaching"
+      ]
+    },
+    {
+      "email": "ellie.r@living.school",
+      "legal_name": "Ellie Ryan",
+      "preferred_name": "Ellie Ryan",
+      "mobile": "",
+      "neighbourhood": "Middle",
+      "neighbourhoods": [
+        "Middle"
+      ],
+      "stages": [
+        "S3",
+        "S4"
+      ],
+      "available_days": [
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "Year 8 HSIE and Onland",
+      "previously": "No",
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": "2022-01-19",
+      "nesa_number": null,
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": "2030-01-29",
+      "date_of_birth": null,
+      "sheet_notes": [
+        "Fixed-term part-time teacher, 0.6, Wednesday 28 October 2026 to Friday 11 December 2026. Works Wednesdays to Fridays at Middle School. Stage 3/4, primarily Year 8 HSIE and Onland. Classification on the letter: Step 2.4. School service date on the letter: 27 January 2026."
+      ]
+    },
+    {
+      "email": "sam@living.school",
+      "legal_name": "Samuel Buckley",
+      "preferred_name": "Sam Buckley",
+      "mobile": "0407 906 389",
+      "neighbourhood": "K-12",
+      "neighbourhoods": [
+        "K-12"
+      ],
+      "stages": [
+        "K-12"
+      ],
+      "status": "casual_pool",
+      "kinds": [
+        "teacher"
+      ],
+      "casual_level": null,
+      "ta_level": null,
+      "subjects": "Music",
+      "previously": null,
+      "child_safety": "",
+      "child_safety_due": null,
+      "proficient_on": null,
+      "nesa_number": "256030",
+      "accreditation_level": "proficient",
+      "wwcc_expires_on": null,
+      "date_of_birth": "1980-08-18",
+      "sheet_notes": [
+        "Personal email on the CV: samuelbuckley.31svb@gmail.com. Phone and NESA number taken from the CV."
+      ]
+    }
+  ],
+  "needs_email": [
+    {
+      "legal_name": "Camilla Flook",
+      "mobile": "",
+      "list": "Casual teachers",
+      "why": "No email on the sheet"
+    },
+    {
+      "legal_name": "David Frazer",
+      "mobile": "",
+      "list": "Casual teachers",
+      "why": "No email on the sheet"
+    },
+    {
+      "legal_name": "Kel Sheather",
+      "mobile": "",
+      "list": "Casual teachers",
+      "why": "No email on the sheet"
+    },
+    {
+      "legal_name": "Mark Loiterton",
+      "mobile": "",
+      "list": "Casual teachers",
+      "why": "No email on the sheet"
+    },
+    {
+      "legal_name": "Rebecka Harwood",
+      "mobile": "",
+      "list": "Casual teachers",
+      "why": "No email on the sheet"
+    },
+    {
+      "legal_name": "Katharine Semovskih",
+      "mobile": "",
+      "list": "Pipeline",
+      "why": "No email on the sheet. WWCC was not verified."
+    },
+    {
+      "legal_name": "Trixie Miller",
+      "mobile": "",
+      "list": "Pipeline",
+      "why": "No email on the sheet. WWCC was not verified."
+    },
+    {
+      "legal_name": "Rachel Heaton",
+      "mobile": "",
+      "list": "Pipeline",
+      "why": "No email on the sheet. WWCC was not verified."
+    }
+  ]
+}

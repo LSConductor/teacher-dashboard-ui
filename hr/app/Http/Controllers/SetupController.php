@@ -1,0 +1,423 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Hr\Roles;
+use App\Hr\StaffPhoto;
+use App\Models\InductionModule;
+use App\Models\Person;
+use App\Models\School;
+use App\Models\User;
+use App\Services\Audit;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+
+class SetupController extends Controller
+{
+    public function index(Request $request)
+    {
+        return view('setup.index', [
+            'incidentDesk' => School::query()->whereKey($request->user()->school_id)->value('incident_desk_url'),
+        ]);
+    }
+
+    public function desk(Request $request)
+    {
+        $data = $request->validate([
+            'incident_desk_url' => ['nullable', 'string', 'max:500'],
+        ]);
+        $url = trim((string) ($data['incident_desk_url'] ?? ''));
+        if ($url === '') {
+            $url = null;
+        } elseif (! str_starts_with($url, 'https://') || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw ValidationException::withMessages([
+                'incident_desk_url' => 'Paste the full incident desk link, starting with https://.',
+            ]);
+        }
+        School::query()->whereKey($request->user()->school_id)->update(['incident_desk_url' => $url]);
+        Audit::record('school.desk', $request->user(), ['set' => $url !== null]);
+
+        return back()->with('status', $url ? 'The incident desk link is saved.' : 'The incident desk link is cleared.');
+    }
+
+    public function staff(Request $request)
+    {
+        $staff = User::query()
+            ->where('school_id', $request->user()->school_id)
+            ->orderBy('name')
+            ->get();
+
+        return view('setup.staff', [
+            'staff' => $staff,
+            'roles' => Roles::choices((int) $request->user()->school_id),
+        ]);
+    }
+
+    public function storeStaff(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:160'],
+            'email' => ['required', 'email', 'max:160', 'unique:users,email'],
+            'role' => ['required', Rule::in(Roles::choices((int) $request->user()->school_id)->pluck('slug')->all())],
+            'neighbourhood' => ['nullable', 'string', 'max:80'],
+            'mobile' => ['nullable', 'string', 'max:40'],
+            'people_title' => ['nullable', 'string', 'max:80'],
+            'days_on_site' => ['nullable', 'string', 'max:80'],
+            'people_note' => ['nullable', 'string', 'max:280'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+        $this->requireNeighbourhood((int) $request->user()->school_id, $data['role'], $data['neighbourhood'] ?? null);
+        $member = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'school_id' => $request->user()->school_id,
+            'role' => $data['role'],
+            'neighbourhood' => $data['neighbourhood'] ?? null,
+            'mobile' => $data['mobile'] ?? null,
+            'on_people_page' => $request->boolean('on_people_page'),
+            'people_title' => $data['people_title'] ?? null,
+            'days_on_site' => $data['days_on_site'] ?? null,
+            'people_note' => $data['people_note'] ?? null,
+        ]);
+        $photoNote = $this->storePhoto($request, $member);
+        $max = (int) User::query()->where('school_id', $member->school_id)->max('people_sort');
+        if ($max > 0) {
+            $member->people_sort = $max + 1;
+        }
+        $member->save();
+        Audit::record('staff.created', $member, ['role' => $member->role]);
+
+        return redirect()->route('setup.staff')->with('status', $this->staffStatus($member->name.' can sign in.', $photoNote));
+    }
+
+    public function editStaff(Request $request, User $member)
+    {
+        abort_unless((int) $member->school_id === (int) $request->user()->school_id, 404);
+
+        return view('setup.staff-edit', [
+            'member' => $member,
+            'roles' => Roles::choices((int) $request->user()->school_id, Roles::isCasual($member)),
+        ]);
+    }
+
+    public function updateStaff(Request $request, User $member)
+    {
+        abort_unless((int) $member->school_id === (int) $request->user()->school_id, 404);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:160'],
+            'email' => ['required', 'email', 'max:160', Rule::unique('users', 'email')->ignore($member->id)],
+            'role' => ['required', Rule::in(Roles::choices((int) $request->user()->school_id, Roles::isCasual($member))->pluck('slug')->all())],
+            'neighbourhood' => ['nullable', 'string', 'max:80'],
+            'mobile' => ['nullable', 'string', 'max:40'],
+            'people_title' => ['nullable', 'string', 'max:80'],
+            'days_on_site' => ['nullable', 'string', 'max:80'],
+            'people_note' => ['nullable', 'string', 'max:280'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+        $this->requireNeighbourhood((int) $member->school_id, $data['role'], $data['neighbourhood'] ?? null);
+
+        if ((int) $member->id === (int) $request->user()->id && $data['role'] !== $member->role) {
+            return back()->withErrors(['role' => 'You cannot change your own role.'])->withInput();
+        }
+        if ($data['role'] === 'casual' && ! $member->person_id) {
+            return back()->withErrors(['role' => 'A casual account is opened with an invite, not from this form.'])->withInput();
+        }
+        $stillAdmin = Roles::kindOf((int) $member->school_id, $data['role']) === 'manage';
+        $wasAdmin = Roles::kindOf((int) $member->school_id, $member->role) === 'manage';
+        $otherAdmin = User::query()
+            ->where('school_id', $member->school_id)
+            ->where('id', '!=', $member->id)
+            ->whereIn('role', Roles::slugsOfKind((int) $member->school_id, 'manage'))
+            ->exists();
+        if ($wasAdmin && ! $stillAdmin && ! $otherAdmin) {
+            return back()->withErrors(['role' => 'The school needs one person who can manage setup.'])->withInput();
+        }
+
+        $member->fill([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'role' => $data['role'],
+            'neighbourhood' => $data['neighbourhood'] ?? null,
+            'mobile' => $data['mobile'] ?? null,
+            'on_people_page' => $request->boolean('on_people_page'),
+            'people_title' => $data['people_title'] ?? null,
+            'days_on_site' => $data['days_on_site'] ?? null,
+            'people_note' => $data['people_note'] ?? null,
+        ]);
+        if (! empty($data['password'])) {
+            $member->password = $data['password'];
+        }
+        $photoNote = $this->storePhoto($request, $member);
+        $member->save();
+
+        if ($member->person_id) {
+            $person = Person::query()->where('school_id', $member->school_id)->find($member->person_id);
+            if ($person) {
+                $person->update([
+                    'email' => $member->email,
+                    'neighbourhood' => $member->neighbourhood ?: $person->neighbourhood,
+                ]);
+            }
+        }
+        Audit::record('staff.updated', $member, ['role' => $member->role]);
+
+        return redirect()->route('setup.staff')->with('status', $this->staffStatus($member->name.' is updated.', $photoNote));
+    }
+
+    private function staffStatus(string $saved, ?string $photoNote): string
+    {
+        if (! $photoNote) {
+            return $saved;
+        }
+
+        return $saved.' '.$photoNote;
+    }
+
+    private function requireNeighbourhood(int $schoolId, string $role, ?string $neighbourhood): void
+    {
+        if (Roles::kindOf($schoolId, $role) === 'neighbourhood' && blank($neighbourhood)) {
+            throw ValidationException::withMessages([
+                'neighbourhood' => 'This role needs a neighbourhood. Write Whole School when they cover every casual.',
+            ]);
+        }
+    }
+
+    public function induction(Request $request)
+    {
+        $modules = InductionModule::query()
+            ->where('school_id', $request->user()->school_id)
+            ->orderByRaw("case phase when 'day_one' then 0 when 'later' then 1 else 2 end")
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->get();
+
+        return view('setup.induction', ['modules' => $modules]);
+    }
+
+    public function storeInduction(Request $request)
+    {
+        $data = $this->questData($request);
+        $sort = (int) InductionModule::query()
+            ->where('school_id', $request->user()->school_id)
+            ->where('phase', $data['phase'])
+            ->max('sort');
+        $module = InductionModule::create([
+            'school_id' => $request->user()->school_id,
+            'title' => $data['title'],
+            'body' => $data['body'],
+            'phase' => $data['phase'],
+            'version' => 1,
+            'sort' => $sort + 1,
+        ]);
+        Audit::record('induction.created', $module, ['phase' => $module->phase]);
+
+        return redirect()->route('setup.induction')->with('status', 'Quest added.');
+    }
+
+    public function editInduction(Request $request, InductionModule $module)
+    {
+        abort_unless((int) $module->school_id === (int) $request->user()->school_id, 404);
+
+        return view('setup.induction-edit', ['module' => $module]);
+    }
+
+    public function updateInduction(Request $request, InductionModule $module)
+    {
+        abort_unless((int) $module->school_id === (int) $request->user()->school_id, 404);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:180'],
+            'body' => ['required', 'string'],
+            'video_url' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $data['body'] = preg_replace("~\r\n?~", "\n", $data['body']);
+        if ($request->exists('video_url')) {
+            $data['video_url'] = $this->videoLink($data['video_url'] ?? null);
+        }
+        $currentBody = preg_replace("~\r\n?~", "\n", (string) $module->body);
+        $changed = $data['title'] !== $module->title || $data['body'] !== $currentBody;
+        $acknowledged = $module->acknowledgements()->where('module_version', $module->version)->exists();
+        if ($changed && $acknowledged) {
+            $data['version'] = $module->version + 1;
+        }
+        try {
+            $module->update($data);
+        } catch (QueryException $exception) {
+            if (! $this->videoColumnRejected($exception)) {
+                throw $exception;
+            }
+            report($exception);
+
+            return back()->withErrors([
+                'video_url' => 'The video could not be stored. Run the latest database update on the server, then save the link again.',
+            ])->withInput();
+        }
+        Audit::record('induction.updated', $module, ['version' => $module->version]);
+        $status = isset($data['version'])
+            ? 'Saved as version '.$module->version.'. Earlier acknowledgements do not cover the new wording.'
+            : 'Quest saved.';
+
+        return redirect()->route('setup.induction')->with('status', $status);
+    }
+
+    public function updateCheck(Request $request, InductionModule $module)
+    {
+        abort_unless((int) $module->school_id === (int) $request->user()->school_id, 404);
+        $quiz = [];
+        foreach ($request->input('prompt', []) as $index => $prompt) {
+            $prompt = trim((string) $prompt);
+            if ($prompt === '') {
+                continue;
+            }
+            $kept = [];
+            foreach ($request->input('choice.'.$index, []) as $choice) {
+                $choice = trim((string) $choice);
+                if ($choice !== '') {
+                    $kept[] = $choice;
+                }
+            }
+            if (count($kept) < 2) {
+                throw ValidationException::withMessages([
+                    'prompt' => 'Each question needs two answers.',
+                ]);
+            }
+            $marked = $request->input('choice.'.$index.'.'.$request->input('answer.'.$index));
+            $answer = array_search($marked, $kept, true);
+            if ($answer === false) {
+                throw ValidationException::withMessages([
+                    'answer' => 'Mark the answer that matches the page.',
+                ]);
+            }
+            $quiz[] = ['prompt' => $prompt, 'choices' => $kept, 'answer' => $answer];
+        }
+        $changed = json_encode($quiz) !== json_encode($module->quiz ?? []);
+        $data = ['quiz' => $quiz];
+        if ($changed && $module->acknowledgements()->where('module_version', $module->version)->exists()) {
+            $data['version'] = $module->version + 1;
+        }
+        $module->update($data);
+        Audit::record('induction.check', $module, ['version' => $module->version]);
+        $status = isset($data['version'])
+            ? 'Saved as version '.$module->version.'. Earlier acknowledgements do not cover the new check.'
+            : 'Check saved.';
+
+        return back()->with('status', $status);
+    }
+
+    public function moveInduction(Request $request, InductionModule $module)
+    {
+        abort_unless((int) $module->school_id === (int) $request->user()->school_id, 404);
+        $data = $request->validate([
+            'direction' => ['nullable', Rule::in(['up', 'down'])],
+            'phase' => ['nullable', Rule::in(['day_one', 'later', 'retired'])],
+        ]);
+
+        if (! empty($data['phase']) && $data['phase'] !== $module->phase) {
+            $sort = (int) InductionModule::query()
+                ->where('school_id', $module->school_id)
+                ->where('phase', $data['phase'])
+                ->max('sort');
+            $module->update(['phase' => $data['phase'], 'sort' => $sort + 1]);
+            Audit::record('induction.moved', $module, ['phase' => $module->phase]);
+
+            return back()->with('status', 'Quest moved.');
+        }
+
+        $direction = $data['direction'] ?? null;
+        if (! $direction) {
+            return back();
+        }
+        $siblings = InductionModule::query()
+            ->where('school_id', $module->school_id)
+            ->where('phase', $module->phase)
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->get();
+        $index = $siblings->search(fn ($row) => (int) $row->id === (int) $module->id);
+        $swap = $direction === 'up' ? $index - 1 : $index + 1;
+        if ($index === false || $swap < 0 || $swap >= $siblings->count()) {
+            return back();
+        }
+        $other = $siblings[$swap];
+        $first = (int) $module->sort;
+        $second = (int) $other->sort;
+        if ($first === $second) {
+            $first = $index + 1;
+            $second = $swap + 1;
+        }
+        $module->update(['sort' => $second]);
+        $other->update(['sort' => $first]);
+        Audit::record('induction.moved', $module, ['direction' => $direction]);
+
+        return back();
+    }
+
+    private function storePhoto(Request $request, User $member): ?string
+    {
+        if ($request->boolean('remove_photo') && filled($member->photo_path)) {
+            Storage::disk('local')->delete($member->photo_path);
+            $member->photo_path = null;
+        }
+        if (! $request->hasFile('photo')) {
+            return null;
+        }
+        $file = $request->file('photo');
+        if (! $file->isValid()) {
+            return 'The photo was not added, and the card was saved.';
+        }
+        try {
+            $path = StaffPhoto::store($file);
+        } catch (ValidationException $exception) {
+            $reason = $exception->errors()['photo'][0] ?? 'Choose a JPEG or PNG photo.';
+
+            return 'The photo was not added, and the card was saved. '.$reason;
+        }
+        if (filled($member->photo_path) && $member->photo_path !== $path) {
+            Storage::disk('local')->delete($member->photo_path);
+        }
+        $member->photo_path = $path;
+
+        return null;
+    }
+
+    private function videoLink(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+        if (! preg_match('~^https?://~i', $value)) {
+            $value = 'https://'.ltrim($value, '/');
+        }
+        if (filter_var($value, FILTER_VALIDATE_URL) === false) {
+            throw ValidationException::withMessages([
+                'video_url' => 'Paste a full video link, starting with https://.',
+            ]);
+        }
+
+        return $value;
+    }
+
+    private function videoColumnRejected(QueryException $exception): bool
+    {
+        $message = $exception->getMessage();
+
+        return str_contains($message, 'video_url')
+            || str_contains($message, 'Unknown column')
+            || str_contains($message, 'no such column')
+            || str_contains($message, 'Data too long')
+            || str_contains($message, 'too long');
+    }
+
+    private function questData(Request $request): array
+    {
+        return $request->validate([
+            'title' => ['required', 'string', 'max:180'],
+            'body' => ['required', 'string'],
+            'phase' => ['required', Rule::in(['day_one', 'later'])],
+        ]);
+    }
+}
