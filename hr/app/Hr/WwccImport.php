@@ -30,6 +30,7 @@ class WwccImport
             'updated' => 0,
             'unchanged' => 0,
             'reported' => [],
+            'sheets' => $register['sheets'] ?? [],
             'ignored_sign_in' => (bool) ($register['ignored_sign_in'] ?? false),
             'skipped' => $register['skipped'] ?? [],
         ];
@@ -47,7 +48,7 @@ class WwccImport
 
         foreach ($rows as $row) {
             if (($row['kind'] ?? '') === 'helper') {
-                $this->helper($author, $row, $partners, $partnersByName, $peopleByName, $partnerState, $dry, $result);
+                $this->helper($school, $author, $row, $people, $partners, $partnersByName, $peopleByName, $personState, $partnerState, $dry, $result);
 
                 continue;
             }
@@ -98,8 +99,17 @@ class WwccImport
      * @param  array<int, array<string, mixed>>  $state
      * @param  array{updated: int, unchanged: int, reported: array<int, array{name: string, sheet: string, why: string}>}  $result
      */
-    private function helper(?User $author, array $row, $partners, array $partnersByName, array $peopleByName, array &$state, bool $dry, array &$result): void
+    private function helper(School $school, ?User $author, array $row, $people, $partners, array $partnersByName, array $peopleByName, array &$personState, array &$state, bool $dry, array &$result): void
     {
+        $staff = $this->matches($row['name'], $peopleByName);
+        if (count($staff) === 1) {
+            $person = $people->firstWhere('id', $staff[0]);
+            $changed = $this->fillPerson($school, $author, $person, $row, $personState, $dry);
+            $result[$changed ? 'updated' : 'unchanged']++;
+        } elseif (count($staff) > 1) {
+            $this->report($result, $row, 'More than one file has this name. Nothing was written.');
+        }
+
         $found = $this->matches($row['name'], $partnersByName);
         if (count($found) > 1) {
             $this->report($result, $row, 'More than one helper file has this name. Nothing was written.');
@@ -107,10 +117,9 @@ class WwccImport
             return;
         }
         if ($found === []) {
-            $why = $this->matches($row['name'], $peopleByName) !== []
-                ? 'Already on the staff file. Not added again.'
-                : 'A helper, not a casual teacher. No email, so they are not added.';
-            $this->report($result, $row, $why);
+            if ($staff === []) {
+                $this->report($result, $row, 'A helper, not a casual teacher. No email, so they are not added.');
+            }
 
             return;
         }
@@ -293,7 +302,9 @@ class WwccImport
      */
     private function keys(string $name): array
     {
+        $name = str_replace(["\u{00A0}", "\u{2007}", "\u{202F}", "\u{200B}"], ' ', $name);
         $name = trim((string) preg_replace('/\s+/', ' ', $name));
+        $name = (string) preg_replace('/^(mr|mrs|ms|miss|dr)\.?\s+/i', '', $name);
         if ($name === '') {
             return [];
         }

@@ -102,7 +102,7 @@ class WwccImportTest extends TestCase
                 ['Username', 'ocg.login@example.com'],
                 ['Password', 'SecretLogin99'],
                 $headers,
-                $this->row('Sam Green', ['number' => 'WWC111222E', 'expiry' => $future, 'dob' => $dob, 'verified' => $future, 'notes' => 'SecretLogin99']),
+                $this->row('Sam Green', ['number' => 'WWC111222E', 'expiry' => $future, 'dob' => $dob, 'verified' => $future, 'notes' => 'Checked with the Office of the Children\'s Guardian']),
                 $this->row('Green, Samantha', ['number' => 'WWCCHANGED', 'expiry' => $later, 'dob' => '1980-01-01']),
                 $this->row('Brand New Person', ['number' => 'WWC333444E', 'expiry' => $future, 'dob' => $dob]),
                 $this->row('Pat Red', ['number' => 'WWC444555E', 'expiry' => $past, 'dob' => $dob, 'result' => 'Cleared']),
@@ -139,7 +139,7 @@ class WwccImportTest extends TestCase
             ->expectsOutputToContain('Brand New Person · Current Staff · No email on the register, so this name stays off the list.')
             ->expectsOutputToContain('No Email Parent · ParentsVolunteers · A helper, not a casual teacher. No email, so they are not added.')
             ->expectsOutputToContain('Ned Guardian · Guardians (Board) · A helper, not a casual teacher. No email, so they are not added.')
-            ->expectsOutputToContain('Sam Green · ParentsVolunteers · Already on the staff file. Not added again.')
+            ->expectsOutputToContain('Current Staff:')
             ->expectsOutputToContain('Skipped')
             ->doesntExpectOutputToContain('SecretLogin99')
             ->doesntExpectOutputToContain('ocg.login@example.com')
@@ -229,6 +229,60 @@ class WwccImportTest extends TestCase
         $this->assertSame($later, $casey->wwcc->expires_on->toDateString());
         $this->assertSame('1972-11-04', $casey->wwcc->date_of_birth->toDateString());
         $this->assertNotNull($casey->wwcc->verified_at);
+    }
+
+    public function test_a_split_name_and_a_helper_row_fill_the_existing_file(): void
+    {
+        $school = School::query()->where('slug', 'living-school')->first();
+        $cindy = Person::create([
+            'school_id' => $school->id,
+            'legal_name' => 'Cindy Hill',
+            'preferred_name' => 'Cindy Hill',
+            'email' => 'cindy.hill@example.com',
+            'neighbourhood' => 'Primary',
+            'status' => 'casual_pool',
+        ]);
+        $cindy->wwcc()->create(['school_id' => $school->id, 'outcome' => 'pending']);
+        $pat = Person::query()->where('email', 'pat.red@example.com')->first();
+        $pat->wwcc->update([
+            'wwcc_number' => null,
+            'date_of_birth' => null,
+            'verified_at' => null,
+            'expires_on' => null,
+            'outcome' => 'pending',
+        ]);
+        $future = now()->timezone('Australia/Sydney')->addYear()->toDateString();
+        $dob = WwccRegister::serialFromDate('1975-03-09');
+        $expiry = WwccRegister::serialFromDate($future);
+        $file = $this->workbook([
+            'Current Staff' => [
+                ['Office of the Children\'s Guardian'],
+                ['Username', 'ocg.login@example.com'],
+                ['Password', 'SecretLogin99'],
+                ['Surname', 'Given name', 'Date of birth', 'WWCC number', 'Expiry', 'Notes'],
+                ['Hill', 'Cindy', $dob, 'WWC5551212E', $expiry, 'Checked with the Office of the Children\'s Guardian'],
+            ],
+            'ParentsVolunteers' => [
+                ['Full name', 'Position or role', 'WWCC number', 'Expiry'],
+                ['Pat Red', 'Parent', 'WWC888999E', $expiry],
+                ['No Match Parent', 'Parent', 'WWC121212E', $expiry],
+            ],
+        ]);
+
+        $this->artisan('hr:import-wwcc', ['path' => $file])
+            ->assertSuccessful()
+            ->expectsOutputToContain('Current Staff: 1 name.')
+            ->expectsOutputToContain('ParentsVolunteers: 2 names.')
+            ->expectsOutputToContain('No Match Parent · ParentsVolunteers · A helper, not a casual teacher. No email, so they are not added.')
+            ->doesntExpectOutputToContain('SecretLogin99');
+
+        $cindy = $cindy->fresh('wwcc');
+        $this->assertSame('WWC5551212E', $cindy->wwcc->wwcc_number);
+        $this->assertSame('1975-03-09', $cindy->wwcc->date_of_birth->toDateString());
+        $this->assertSame('cleared', $cindy->wwcc->outcome);
+        $this->assertSame('WWC888999E', $pat->fresh()->wwcc->wwcc_number);
+        $this->assertNull(Person::query()->where('preferred_name', 'No Match Parent')->first());
+        $this->assertStringNotContainsString('SecretLogin99', (string) json_encode($cindy->wwcc->toArray()));
     }
 
     /**

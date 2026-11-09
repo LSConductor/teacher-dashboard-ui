@@ -36,6 +36,9 @@ class ImportWwcc extends Command
             return self::FAILURE;
         }
         $result = $import->load($school, $book, (bool) $this->option('dry-run'));
+        foreach ($result['sheets'] ?? [] as $sheet) {
+            $this->line($sheet['sheet'].': '.$sheet['count'].' '.($sheet['count'] === 1 ? 'name' : 'names').'.');
+        }
         $verb = $this->option('dry-run') ? 'Would update' : 'Updated';
         $this->info($verb.' '.$result['updated'].' clearances. Already complete '.$result['unchanged'].'.');
         $waiting = count($result['reported']);

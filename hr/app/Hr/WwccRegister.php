@@ -9,12 +9,13 @@ class WwccRegister
     public function __construct(private XlsxBook $book) {}
 
     /**
-     * @return array{rows: array<int, array<string, mixed>>, ignored_sign_in: bool, skipped: array<int, string>}
+     * @return array{rows: array<int, array<string, mixed>>, sheets: array<int, array{sheet: string, count: int}>, ignored_sign_in: bool, skipped: array<int, string>}
      */
     public function read(string $path): array
     {
         $sheets = $this->book->sheets($path);
         $rows = [];
+        $loaded = [];
         $ignored = false;
         $skipped = [];
         foreach ($sheets as $name => $grid) {
@@ -26,12 +27,13 @@ class WwccRegister
             }
             $parsed = $this->sheet($name, $grid, $kind);
             $ignored = $ignored || $parsed['ignored_sign_in'];
+            $loaded[] = ['sheet' => $name, 'count' => count($parsed['rows'])];
             foreach ($parsed['rows'] as $row) {
                 $rows[] = $row;
             }
         }
 
-        return ['rows' => $rows, 'ignored_sign_in' => $ignored, 'skipped' => $skipped];
+        return ['rows' => $rows, 'sheets' => $loaded, 'ignored_sign_in' => $ignored, 'skipped' => $skipped];
     }
 
     public static function dateFromSerial(int|float|string $serial): ?string
@@ -91,6 +93,12 @@ class WwccRegister
         $header = null;
         $headerAt = null;
         foreach ($grid as $index => $line) {
+            $found = $this->headerMap($line);
+            if ($found !== null) {
+                $header = $found;
+                $headerAt = $index;
+                break;
+            }
             if ($this->credentialRow($line)) {
                 $ignored = true;
                 foreach ($line as $cell) {
@@ -98,14 +106,6 @@ class WwccRegister
                         $secrets[] = $secret;
                     }
                 }
-
-                continue;
-            }
-            $found = $this->headerMap($line);
-            if ($found !== null) {
-                $header = $found;
-                $headerAt = $index;
-                break;
             }
         }
         if ($header === null || $headerAt === null) {
@@ -113,11 +113,6 @@ class WwccRegister
         }
         $rows = [];
         foreach (array_slice($grid, $headerAt + 1) as $line) {
-            if ($this->credentialRow($line)) {
-                $ignored = true;
-
-                continue;
-            }
             $row = $this->record($name, $kind, $line, $header, $secrets);
             if ($row !== null) {
                 $rows[] = $row;
@@ -132,17 +127,20 @@ class WwccRegister
      */
     private function credentialRow(array $line): bool
     {
+        $filled = 0;
+        $hit = false;
         foreach ($line as $cell) {
             $text = strtolower(trim($cell));
             if ($text === '') {
                 continue;
             }
+            $filled++;
             if (preg_match('/password|user\s*name|user\s*id|^login$|children.?s guardian|office of the children/', $text) === 1) {
-                return true;
+                $hit = true;
             }
         }
 
-        return false;
+        return $hit && $filled <= 3;
     }
 
     /**
@@ -183,7 +181,9 @@ class WwccRegister
     private function headerMap(array $line): ?array
     {
         $aliases = [
-            'name' => ['fullname', 'name', 'staffname', 'legalname'],
+            'name' => ['fullname', 'name', 'staffname', 'legalname', 'employeename'],
+            'surname' => ['surname', 'lastname', 'familyname'],
+            'given' => ['givenname', 'givennames', 'firstname', 'forename'],
             'role' => ['positionorrole', 'positionrole', 'position', 'role'],
             'dob' => ['dateofbirth', 'dob', 'birthdate'],
             'number' => ['wwccnumber', 'wwccno', 'wwcc', 'clearancenumber', 'workingwithchildrennumber'],
@@ -205,7 +205,8 @@ class WwccRegister
                 }
             }
         }
-        if (! isset($map['name']) || (! isset($map['number']) && ! isset($map['expiry']) && ! isset($map['dob']))) {
+        $named = isset($map['name']) || (isset($map['given']) && isset($map['surname']));
+        if (! $named || (! isset($map['number']) && ! isset($map['expiry']) && ! isset($map['dob']))) {
             return null;
         }
 
@@ -220,7 +221,7 @@ class WwccRegister
      */
     private function record(string $sheet, string $kind, array $line, array $header, array $secrets): ?array
     {
-        $name = $this->clean($this->cell($line, $header, 'name'), $secrets);
+        $name = $this->personName($line, $header, $secrets);
         if ($name === null || $this->headerMap([$name]) !== null) {
             return null;
         }
@@ -246,6 +247,24 @@ class WwccRegister
             'result' => $this->clean($this->cell($line, $header, 'result'), $secrets),
             'expiry' => $expiry,
         ];
+    }
+
+    /**
+     * @param  array<int, string>  $line
+     * @param  array<string, int>  $header
+     * @param  array<int, string>  $secrets
+     */
+    private function personName(array $line, array $header, array $secrets): ?string
+    {
+        $full = $this->clean($this->cell($line, $header, 'name'), $secrets);
+        if ($full !== null) {
+            return $full;
+        }
+        $given = $this->clean($this->cell($line, $header, 'given'), $secrets);
+        $surname = $this->clean($this->cell($line, $header, 'surname'), $secrets);
+        $joined = trim((string) $given.' '.(string) $surname);
+
+        return $joined === '' ? null : $joined;
     }
 
     /**
