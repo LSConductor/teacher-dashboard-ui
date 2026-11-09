@@ -285,6 +285,36 @@ class WwccImportTest extends TestCase
         $this->assertStringNotContainsString('SecretLogin99', (string) json_encode($cindy->wwcc->toArray()));
     }
 
+    public function test_a_short_label_row_does_not_hide_the_staff_header(): void
+    {
+        $school = School::query()->where('slug', 'living-school')->first();
+        $cindy = Person::create([
+            'school_id' => $school->id,
+            'legal_name' => 'Cindy Hill',
+            'preferred_name' => 'Cindy Hill',
+            'email' => 'cindy.header@example.com',
+            'neighbourhood' => 'Primary',
+            'status' => 'casual_pool',
+        ]);
+        $cindy->wwcc()->create(['school_id' => $school->id, 'outcome' => 'pending']);
+        $future = now()->timezone('Australia/Sydney')->addYear()->toDateString();
+        $file = $this->workbook([
+            'Current Staff' => [
+                ['Office of the Children\'s Guardian'],
+                ['Name', 'Expiry'],
+                ['Staff member', 'Working with Children Check Number', 'Date of birth', 'Expiry date', 'Result', 'Notes'],
+                ['Cindy Hill', 'WWC424242E', WwccRegister::serialFromDate('1975-03-09'), WwccRegister::serialFromDate($future), 'Cleared', 'Checked with the Office of the Children\'s Guardian'],
+            ],
+        ]);
+
+        $this->artisan('hr:import-wwcc', ['path' => $file])
+            ->assertSuccessful()
+            ->expectsOutputToContain('Current Staff: 1 name.');
+
+        $this->assertSame('WWC424242E', $cindy->fresh()->wwcc->wwcc_number);
+        $this->assertSame('cleared', $cindy->fresh()->wwcc->outcome);
+    }
+
     /**
      * @param  array<string, array<int, array<int, string|int|null>>>  $sheets
      */

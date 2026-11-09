@@ -37,7 +37,8 @@ class ImportWwcc extends Command
         }
         $result = $import->load($school, $book, (bool) $this->option('dry-run'));
         foreach ($result['sheets'] ?? [] as $sheet) {
-            $this->line($sheet['sheet'].': '.$sheet['count'].' '.($sheet['count'] === 1 ? 'name' : 'names').'.');
+            $note = ($sheet['header'] ?? true) ? '' : ', no header row';
+            $this->line($sheet['sheet'].': '.$sheet['count'].' '.($sheet['count'] === 1 ? 'name' : 'names').$note.'.');
         }
         $verb = $this->option('dry-run') ? 'Would update' : 'Updated';
         $this->info($verb.' '.$result['updated'].' clearances. Already complete '.$result['unchanged'].'.');

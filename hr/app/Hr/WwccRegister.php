@@ -27,7 +27,11 @@ class WwccRegister
             }
             $parsed = $this->sheet($name, $grid, $kind);
             $ignored = $ignored || $parsed['ignored_sign_in'];
-            $loaded[] = ['sheet' => $name, 'count' => count($parsed['rows'])];
+            $loaded[] = [
+                'sheet' => $name,
+                'count' => count($parsed['rows']),
+                'header' => $parsed['header'],
+            ];
             foreach ($parsed['rows'] as $row) {
                 $rows[] = $row;
             }
@@ -84,7 +88,7 @@ class WwccRegister
 
     /**
      * @param  array<int, array<int, string>>  $grid
-     * @return array{rows: array<int, array<string, mixed>>, ignored_sign_in: bool}
+     * @return array{rows: array<int, array<string, mixed>>, ignored_sign_in: bool, header: bool}
      */
     private function sheet(string $name, array $grid, string $kind): array
     {
@@ -92,13 +96,9 @@ class WwccRegister
         $ignored = false;
         $header = null;
         $headerAt = null;
+        $bestScore = 0;
+        $bestWidth = 0;
         foreach ($grid as $index => $line) {
-            $found = $this->headerMap($line);
-            if ($found !== null) {
-                $header = $found;
-                $headerAt = $index;
-                break;
-            }
             if ($this->credentialRow($line)) {
                 $ignored = true;
                 foreach ($line as $cell) {
@@ -106,10 +106,24 @@ class WwccRegister
                         $secrets[] = $secret;
                     }
                 }
+
+                continue;
+            }
+            $found = $this->headerMap($line);
+            if ($found === null) {
+                continue;
+            }
+            $score = count($found);
+            $width = count(array_filter($line, fn ($cell) => trim((string) $cell) !== ''));
+            if ($score > $bestScore || ($score === $bestScore && $width > $bestWidth)) {
+                $header = $found;
+                $headerAt = $index;
+                $bestScore = $score;
+                $bestWidth = $width;
             }
         }
         if ($header === null || $headerAt === null) {
-            return ['rows' => [], 'ignored_sign_in' => $ignored];
+            return ['rows' => [], 'ignored_sign_in' => $ignored, 'header' => false];
         }
         $rows = [];
         foreach (array_slice($grid, $headerAt + 1) as $line) {
@@ -119,7 +133,7 @@ class WwccRegister
             }
         }
 
-        return ['rows' => $rows, 'ignored_sign_in' => $ignored];
+        return ['rows' => $rows, 'ignored_sign_in' => $ignored, 'header' => true];
     }
 
     /**
@@ -180,12 +194,42 @@ class WwccRegister
      */
     private function headerMap(array $line): ?array
     {
-        $aliases = [
-            'name' => ['fullname', 'name', 'staffname', 'legalname', 'employeename'],
+        $filled = 0;
+        foreach ($line as $cell) {
+            if (trim($cell) !== '') {
+                $filled++;
+            }
+        }
+        if ($filled < 4) {
+            return null;
+        }
+        $map = [];
+        foreach ($line as $index => $cell) {
+            $key = (string) preg_replace('/[^a-z0-9]/', '', strtolower($cell));
+            $field = $this->fieldFor($key);
+            if ($field !== null && ! isset($map[$field])) {
+                $map[$field] = $index;
+            }
+        }
+        $named = isset($map['name']) || (isset($map['given']) && isset($map['surname']));
+        if (! $named || (! isset($map['number']) && ! isset($map['expiry']) && ! isset($map['dob']))) {
+            return null;
+        }
+
+        return $map;
+    }
+
+    private function fieldFor(string $key): ?string
+    {
+        if ($key === '' || str_contains($key, 'password') || str_contains($key, 'username') || str_contains($key, 'userid')) {
+            return null;
+        }
+        $exact = [
+            'name' => ['fullname', 'name', 'staffname', 'legalname', 'employeename', 'staffmember', 'employee', 'person'],
             'surname' => ['surname', 'lastname', 'familyname'],
             'given' => ['givenname', 'givennames', 'firstname', 'forename'],
             'role' => ['positionorrole', 'positionrole', 'position', 'role'],
-            'dob' => ['dateofbirth', 'dob', 'birthdate'],
+            'dob' => ['dateofbirth', 'dob', 'birthdate', 'born'],
             'number' => ['wwccnumber', 'wwccno', 'wwcc', 'clearancenumber', 'workingwithchildrennumber'],
             'start' => ['startdate', 'start'],
             'verified' => ['verificationdate', 'dateverified', 'verified'],
@@ -196,21 +240,40 @@ class WwccRegister
             'latest' => ['latestcheck', 'lastcheck', 'latestverification'],
             'notes' => ['notes', 'note', 'comments'],
         ];
-        $map = [];
-        foreach ($line as $index => $cell) {
-            $key = (string) preg_replace('/[^a-z0-9]/', '', strtolower($cell));
-            foreach ($aliases as $field => $names) {
-                if (in_array($key, $names, true) && ! isset($map[$field])) {
-                    $map[$field] = $index;
-                }
+        foreach ($exact as $field => $names) {
+            if (in_array($key, $names, true)) {
+                return $field;
             }
         }
-        $named = isset($map['name']) || (isset($map['given']) && isset($map['surname']));
-        if (! $named || (! isset($map['number']) && ! isset($map['expiry']) && ! isset($map['dob']))) {
-            return null;
+        if (str_contains($key, 'surname') || str_contains($key, 'lastname') || str_contains($key, 'familyname')) {
+            return 'surname';
+        }
+        if (str_contains($key, 'givenname') || str_contains($key, 'firstname') || str_contains($key, 'forename')) {
+            return 'given';
+        }
+        if (str_contains($key, 'newexpir')) {
+            return 'new_expiry';
+        }
+        if (str_contains($key, 'fullname') || str_contains($key, 'staffmember') || str_ends_with($key, 'name')) {
+            return 'name';
+        }
+        if (str_contains($key, 'wwcc') || str_contains($key, 'workingwithchildren') || str_contains($key, 'clearancenumber')) {
+            return 'number';
+        }
+        if (str_contains($key, 'birth') || str_contains($key, 'born')) {
+            return 'dob';
+        }
+        if (str_contains($key, 'expir')) {
+            return 'expiry';
+        }
+        if (str_contains($key, 'position') || str_contains($key, 'role')) {
+            return 'role';
+        }
+        if (str_contains($key, 'note') || str_contains($key, 'comment')) {
+            return 'notes';
         }
 
-        return $map;
+        return null;
     }
 
     /**
