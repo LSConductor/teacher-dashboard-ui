@@ -2,6 +2,28 @@
 @section('content')
 <h1>Today</h1>
 <p class="lede">The time is the school clock, Australia/Sydney. The office code is the proof someone was at the school. A phone location is not the record.</p>
+@if($waiting->isNotEmpty())
+    <article class="card edge-amber">
+        <h2>Cover still waiting</h2>
+        <p class="lede">The first yes books it.</p>
+        @foreach($waiting as $cover)
+            <p><strong>{{ $cover->class_label }}</strong> · {{ $cover->when() }}@if($cover->teacher_name) · with {{ $cover->teacher_name }}@endif @if($cover->neighbourhood) · {{ $cover->neighbourhood }}@endif</p>
+            @foreach($cover->asks as $ask)
+                <p class="meta">{{ $ask->person->preferred_name }} ·
+                    @switch($ask->status)
+                        @case('sent') Asked, waiting @break
+                        @case('queued') Next @break
+                        @case('accepted') Yes, booked @break
+                        @case('declined') Said no @break
+                        @case('passed') Moved on @break
+                        @default Closed
+                    @endswitch
+                </p>
+            @endforeach
+        @endforeach
+        <p><a class="button ghost" href="{{ route('cover') }}">Open cover</a></p>
+    </article>
+@endif
 @if(in_array(\App\Hr\Roles::kind(auth()->user()), ['manage', 'front_desk', 'neighbourhood'], true))
     <p><a class="button" href="{{ route('cover') }}">Find cover</a></p>
 @endif

@@ -219,7 +219,7 @@ class CasualHrTest extends TestCase
         $this->post('/login', [
             'email' => 'hr@living.school',
             'password' => 'living-demo',
-        ])->assertRedirect(route('casuals.index'));
+        ])->assertRedirect(route('today'));
     }
 
     public function test_director_list_has_contact_actions_and_hides_wwcc(): void
@@ -387,6 +387,7 @@ class CasualHrTest extends TestCase
             ->assertOk()
             ->assertSee('Pat Red')
             ->assertSee('Open my induction')
+            ->assertSee('Pay details stay in payroll.')
             ->assertSee('invite codes stay on the link')
             ->assertDontSee($pat->wwcc->wwcc_number);
 
@@ -432,7 +433,7 @@ class CasualHrTest extends TestCase
         $this->actingAs($director)
             ->get('/start')
             ->assertOk()
-            ->assertSee('Casual list')
+            ->assertSee('Your work for the day is Today')
             ->assertSee('Casual teachers')
             ->assertDontSee('class="place"', false)
             ->assertDontSee($sam->wwcc->wwcc_number);
@@ -1097,7 +1098,7 @@ class CasualHrTest extends TestCase
         $this->post('/login', [
             'email' => 'hr@living.school',
             'password' => 'living-demo',
-        ])->assertRedirect(route('casuals.index'));
+        ])->assertRedirect(route('today'));
         Auth::logout();
         $this->flushSession();
 
@@ -1132,7 +1133,7 @@ class CasualHrTest extends TestCase
 
         $this->withSession(['google_oauth_state' => 'state-token'])
             ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
-            ->assertRedirect(route('casuals.index'));
+            ->assertRedirect(route('start'));
         $this->assertAuthenticatedAs($casual);
         $this->assertSame('google-sub-sam', $casual->fresh()->google_sub);
 
@@ -1157,7 +1158,7 @@ class CasualHrTest extends TestCase
         $this->post('/login', [
             'email' => 'hr@living.school',
             'password' => 'living-demo',
-        ])->assertRedirect(route('casuals.index'));
+        ])->assertRedirect(route('today'));
     }
 
     public function test_google_sign_in_accepts_a_saved_nsw_school_email(): void
@@ -1188,7 +1189,7 @@ class CasualHrTest extends TestCase
 
         $this->withSession(['google_oauth_state' => 'state-token'])
             ->get(route('auth.google.callback', ['state' => 'state-token', 'code' => 'auth-code']))
-            ->assertRedirect(route('casuals.index'));
+            ->assertRedirect(route('today'));
         $this->assertAuthenticatedAs($conductor);
         $this->assertSame(1, User::where('email', 'john@livingschool.nsw.edu.au')->count());
 
@@ -1931,6 +1932,7 @@ class CasualHrTest extends TestCase
 
         $this->actingAs($hr)->get(route('help'))
             ->assertOk()
+            ->assertSee('Pay details stay in payroll.')
             ->assertSee('How this desk works')
             ->assertSee('A teacher wants to join')
             ->assertSee('Someone is teaching today')

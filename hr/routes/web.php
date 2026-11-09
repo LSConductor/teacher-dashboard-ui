@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check() && ! Roles::isCasual(auth()->user())) {
-        return redirect()->route('casuals.index');
+        return redirect()->route('today');
     }
 
     return app(StartController::class)->show(request(), app(\App\Services\ClearToTeach::class));

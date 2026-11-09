@@ -11,6 +11,7 @@
     @if($inviteState === 'valid')
         <h2>{{ $invite->person->preferred_name }}</h2>
         <p class="lede">This link is your invite. Set a password once. It opens only your induction, your forms, and your contract.</p>
+        <p>Pay details stay in payroll.</p>
         <form method="post" action="{{ route('invites.accept', ['token' => $code]) }}">
             @csrf
             <label for="password">Password</label>
@@ -44,8 +45,8 @@
 <section id="start" class="card">
     <p class="muted" style="letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#14324a;">Casual Induction</p>
     <h1>Start</h1>
-    <p class="lede">This is the desk a casual opens from their invite. After they sign in they return here, and the code stays on the link. Your work is the casual list.</p>
-    <p><a class="button" href="{{ route('casuals.index') }}">Casual list</a></p>
+    <p class="lede">This is the desk a casual opens from their invite. After they sign in they return here, and the code stays on the link. Your work for the day is Today.</p>
+    <p><a class="button" href="{{ route('today') }}">Today</a></p>
 </section>
 @else
 @php

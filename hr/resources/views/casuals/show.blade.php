@@ -192,7 +192,7 @@
     <p>WWCC @if($person->wwcc?->expires_on){{ $person->wwcc->expires_on->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $wwccWatch }}</p>
     <p>Accreditation maintenance @if($person->accreditation?->maintenance_end){{ $person->accreditation->maintenance_end->timezone('Australia/Sydney')->format('j M Y') }} · @endif{{ $maintenanceWatch }}</p>
     @if($onSchoolList)
-        <p class="muted">On the casual list of 30 July 2026. An expiry date on that list is a checked WWCC. A date that has passed stays red. The clearance number was not on the sheet.</p>
+        <p class="muted">On the casual list of 30 July 2026. The expiry from that list stays on the file. It does not, by itself, make the light green. The light stays red until this clearance has the number, the expiry, and the day HR checked with the Office of the Children’s Guardian.</p>
     @else
         <p class="muted">A date inside 30 days is a warning. A missing or lapsed date keeps the light red, and a Director cannot book that casual.</p>
     @endif
@@ -204,7 +204,7 @@
         <h2>WWCC</h2>
         <p class="muted">HR verifies this with the Office of the Children’s Guardian. An APP number is rejected.</p>
         @if($onSchoolList && blank($person->wwcc->wwcc_number ?? null))
-            <p class="muted">The expiry was accepted from the 30 July 2026 list. Add the clearance number when you have it.</p>
+            <p class="muted">The expiry was written from the 30 July 2026 list. Add the clearance number and the day you checked.</p>
         @endif
         <label for="wwcc_number">WWCC number</label>
         <input id="wwcc_number" name="wwcc_number" value="{{ old('wwcc_number', $person->wwcc->wwcc_number ?? '') }}" required>

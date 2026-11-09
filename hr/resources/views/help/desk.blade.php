@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+<p>Pay details stay in payroll.</p>
 @if($kind === 'manage')
 <div class="guide">
     <p class="record-kicker">For {{ $label }}</p>

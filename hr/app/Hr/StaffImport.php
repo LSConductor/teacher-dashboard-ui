@@ -174,13 +174,17 @@ class StaffImport
         }
         if (blank($record->expires_on)) {
             $record->expires_on = $expires;
+            $changed = true;
         }
-        $record->outcome = 'cleared';
-        $record->verified_at = now();
-        $record->verified_by = $author?->id;
-        $record->save();
+        if (blank($record->outcome)) {
+            $record->outcome = 'pending';
+            $changed = true;
+        }
+        if ($changed) {
+            $record->save();
+        }
 
-        return true;
+        return $changed;
     }
 
     /**

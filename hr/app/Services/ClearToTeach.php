@@ -62,10 +62,16 @@ class ClearToTeach
         }
 
         $wwcc = $person->wwcc;
+        $number = is_string($wwcc?->wwcc_number) ? trim($wwcc->wwcc_number) : '';
+        $verified = $wwcc
+            && $wwcc->outcome === 'cleared'
+            && $wwcc->verified_at
+            && $number !== ''
+            && ! WwccCheck::looksLikeApplicationNumber($number);
         $wwccPhrase = null;
-        if ($wwcc && WwccCheck::looksLikeApplicationNumber($wwcc->wwcc_number)) {
+        if ($number !== '' && WwccCheck::looksLikeApplicationNumber($number)) {
             $reasons[] = ['level' => 'red', 'text' => 'An APP number is not a clearance'];
-        } elseif (! $wwcc || $wwcc->outcome !== 'cleared' || ! $wwcc->verified_at) {
+        } elseif (! $verified) {
             $reasons[] = ['level' => 'red', 'text' => 'WWCC is not a verified clearance'];
         } else {
             $wwccPhrase = $this->datePhrase($wwcc->expires_on);

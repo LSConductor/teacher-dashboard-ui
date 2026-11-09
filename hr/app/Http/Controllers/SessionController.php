@@ -25,7 +25,9 @@ class SessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('casuals.index'));
+        $home = \App\Hr\Roles::isCasual($request->user()) ? route('start') : route('today');
+
+        return redirect()->intended($home);
     }
 
     public function destroy(Request $request)

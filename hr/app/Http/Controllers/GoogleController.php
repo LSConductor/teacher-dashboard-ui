@@ -66,6 +66,8 @@ class GoogleController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('casuals.index'));
+        $home = \App\Hr\Roles::isCasual($user) ? route('start') : route('today');
+
+        return redirect()->intended($home);
     }
 }

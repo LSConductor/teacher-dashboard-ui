@@ -68,6 +68,21 @@ class CoverTest extends TestCase
             ])
             ->assertRedirect();
 
+        $hr = User::where('email', 'hr@living.school')->first();
+        $mentor = User::where('email', 'mentor@living.school')->first();
+        $this->actingAs($hr)->get(route('today'))
+            ->assertOk()
+            ->assertSee('Cover still waiting')
+            ->assertSee('The first yes books it.')
+            ->assertSee('S3 Ngul')
+            ->assertSee('Sam Green')
+            ->assertSee('Asked, waiting')
+            ->assertSee('Casey Ngul')
+            ->assertSee('Next');
+        $this->actingAs($mentor)->get(route('today'))
+            ->assertOk()
+            ->assertDontSee('Cover still waiting');
+
         Mail::assertSent(CoverMail::class, 1);
         $url = null;
         Mail::assertSent(CoverMail::class, function (CoverMail $mail) use (&$url) {
@@ -111,6 +126,10 @@ class CoverTest extends TestCase
             Booking::query()->where('person_id', $sam->id)->where('class_label', 'S3 Ngul')->exists()
         );
         $this->get(route('cover.reply', $secondToken))->assertSee('You have this day');
+        $this->actingAs(User::where('email', 'hr@living.school')->first())
+            ->get(route('today'))
+            ->assertOk()
+            ->assertDontSee('Cover still waiting');
     }
 
     public function test_asking_everyone_books_the_first_yes_and_closes_the_rest(): void

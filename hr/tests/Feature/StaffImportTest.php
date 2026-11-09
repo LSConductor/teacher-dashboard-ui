@@ -23,7 +23,7 @@ class StaffImportTest extends TestCase
         $this->seed(HrSeeder::class);
     }
 
-    public function test_the_july_list_treats_an_expiry_as_a_checked_clearance(): void
+    public function test_the_july_list_writes_an_expiry_without_turning_the_light(): void
     {
         $payload = json_decode((string) file_get_contents(database_path('data/casual-staff-2026-07-30.json')), true);
         $school = School::query()->where('slug', 'living-school')->first();
@@ -46,18 +46,22 @@ class StaffImportTest extends TestCase
             && filled($row['wwcc_expires_on'] ?? null)
             && $row['wwcc_expires_on'] > $clearAfter);
         $person = Person::query()->where('email', $clear['email'])->first();
-        $this->assertSame('cleared', $person->wwcc->outcome);
-        $this->assertNotNull($person->wwcc->verified_at);
+        $this->assertSame($clear['wwcc_expires_on'], $person->wwcc->expires_on->toDateString());
+        $this->assertNotSame('cleared', $person->wwcc->outcome);
+        $this->assertNull($person->wwcc->verified_at);
         $this->assertNull($person->wwcc->wwcc_number);
-        $this->assertSame('green', $gate->assess($person)['light']);
+        $clearGate = $gate->assess($person);
+        $this->assertSame('red', $clearGate['light']);
+        $this->assertTrue(collect($clearGate['reasons'])->contains(
+            fn ($reason) => $reason['text'] === 'WWCC is not a verified clearance'
+        ));
 
         $lapsed = collect($payload['people'])->first(fn ($row) => filled($row['wwcc_expires_on'] ?? null) && $row['wwcc_expires_on'] < $today);
         $past = Person::query()->where('email', $lapsed['email'])->first();
+        $this->assertSame($lapsed['wwcc_expires_on'], $past->wwcc->expires_on->toDateString());
+        $this->assertNull($past->wwcc->verified_at);
         $pastGate = $gate->assess($past);
         $this->assertSame('red', $pastGate['light']);
-        $this->assertTrue(collect($pastGate['reasons'])->contains(
-            fn ($reason) => str_contains($reason['text'], 'lapsed')
-        ));
 
         $candidate = collect($payload['people'])->first(fn ($row) => ($row['status'] ?? '') === 'applicant');
         $this->assertSame('applicant', Person::query()->where('email', $candidate['email'])->first()->status);
@@ -123,9 +127,10 @@ class StaffImportTest extends TestCase
         $this->assertSame('Middle', $ellie->neighbourhood);
         $this->assertSame(['Wednesday', 'Thursday', 'Friday'], $ellie->available_days);
         $this->assertSame('2030-01-29', $ellie->wwcc->expires_on->toDateString());
-        $this->assertSame('cleared', $ellie->wwcc->outcome);
+        $this->assertNotSame('cleared', $ellie->wwcc->outcome);
+        $this->assertNull($ellie->wwcc->verified_at);
         $this->assertNull($ellie->wwcc->wwcc_number);
-        $this->assertSame('green', $gate->assess($ellie)['light']);
+        $this->assertSame('red', $gate->assess($ellie)['light']);
         $note = $ellie->dayNotes()->first()->body;
         $this->assertStringContainsString('11 December 2026', $note);
         $this->assertStringContainsString('28 October 2026', $note);

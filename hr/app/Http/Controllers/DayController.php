@@ -6,6 +6,7 @@ use App\Hr\Neighbourhood;
 use App\Hr\Roles;
 use App\Hr\Roll;
 use App\Models\Booking;
+use App\Models\CoverRequest;
 use App\Models\DayRoll;
 use App\Models\Person;
 use App\Models\School;
@@ -61,8 +62,24 @@ class DayController extends Controller
             ];
         })->values();
 
+        $waiting = collect();
+        if (in_array($kind, ['manage', 'front_desk', 'neighbourhood'], true)) {
+            $waiting = CoverRequest::query()
+                ->where('school_id', $user->school_id)
+                ->where('pool', 'casual')
+                ->where('status', 'open')
+                ->with(['asks.person'])
+                ->orderBy('booked_on')
+                ->orderBy('id');
+            if ($kind === 'neighbourhood' && ! Neighbourhood::coversAll($user->neighbourhood)) {
+                $waiting->where('neighbourhood', $user->neighbourhood);
+            }
+            $waiting = $waiting->get();
+        }
+
         return view('today.index', [
             'rows' => $rows,
+            'waiting' => $waiting,
             'code' => $holdsCode ? Roll::code((int) $user->school_id)->code : null,
             'holdsCode' => $holdsCode,
             'canRecord' => $holdsCode,
